@@ -13,9 +13,9 @@ To create an accessible, AI-powered sanctuary that helps users cultivate peace, 
 
 ## Key Features
 - **AI Spiritual Companion:** Uses Google Gemini to offer personalized insights, meditation prompts, and conversation.
-- **Progress Tracking:** Utilizes local storage to track user milestones and journey continuity.
+- **Progress Tracking:** Securely tracks user milestones and journey continuity using a persistent database.
 - **Interactive Experience:** Engaging UI elements (e.g., celebration effects) to encourage user participation and achievement.
-- **Privacy-Focused:** Runs locally with local database storage, ensuring user data privacy.
+- **Secure Data Management:** Uses a robust PostgreSQL database to ensure user data privacy and integrity.
 
 ## Platform
-- **Web Application:** Built with React, TypeScript, and Vite for a fast, modern web experience.
+- **Web Application:** Built with Next.js and React for a fast, secure, and modern full-stack experience.

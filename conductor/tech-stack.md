@@ -2,7 +2,7 @@
 
 ## Core
 - **Language:** TypeScript
-- **Framework:** Next.js (Proposed migration from Vite SPA)
+- **Framework:** Next.js 14+ (App Router)
 
 ## Frontend
 - **Library:** React (v19)
@@ -10,14 +10,15 @@
 - **Icons:** Lucide React
 
 ## Backend
-- **Runtime:** Node.js (via Next.js API Routes / Server Actions)
-- **Database:** PostgreSQL
-- **ORM:** Prisma or Drizzle
+- **Runtime:** Node.js (Next.js API Routes & Server Actions)
+- **Database:** PostgreSQL (v15 Alpine)
+- **ORM:** Prisma (v6)
 - **Authentication Service:**
-    - **Provider:** Auth.js (NextAuth.js) or Supabase Auth / Clerk
+    - **Provider:** Auth.js (v5)
     - **Methods:**
-        - OAuth Providers: Google, Apple, WeChat
-        - Phone/SMS Authentication
+        - Credentials (Email/Password) - Implemented
+        - OAuth Providers: Google, Apple, WeChat - Planned
+        - Phone/SMS Authentication - Planned
 
 ## AI Integration
 - **SDK:** Google Generative AI SDK
