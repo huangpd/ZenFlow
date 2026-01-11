@@ -1,7 +1,7 @@
 # Plan: Initialize Next.js Full-Stack Architecture & Auth
 
 ## Phase 1: Project Initialization & Configuration
-- [ ] Task: Create new Next.js project
+- [~] Task: Create new Next.js project
     - [ ] Subtask: Initialize Next.js app with TypeScript, Tailwind, ESLint (`npx create-next-app@latest`).
     - [ ] Subtask: Clean up default boilerplate code.
     - [ ] Subtask: Verify project builds and runs locally.
