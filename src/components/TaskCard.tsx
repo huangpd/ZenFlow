@@ -4,6 +4,12 @@ import React from 'react';
 import { Circle, CheckCircle2, Edit3, BellRing, BookOpen } from 'lucide-react';
 import { ICON_MAP } from '@/constants';
 import { updateTaskProgress } from '@/actions/tasks';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface TaskCardProps {
   task: any;
@@ -37,8 +43,11 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
   };
 
   const handleFinish = async () => {
-    const nextCurrent = (task.current || 0) + 1;
-    const result = await updateTaskProgress(task.id, 1);
+    // For normal tasks, if there is a target (e.g. 10 times), we log the full target amount at once.
+    const countToLog = (task.target && task.target > 0) ? task.target : 1;
+    const nextCurrent = (task.current || 0) + countToLog;
+    
+    const result = await updateTaskProgress(task.id, countToLog);
     if (result.success) {
       onProgress(task.id, nextCurrent, result.completed || false);
       if (result.completed) onComplete?.();
@@ -46,7 +55,7 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
   };
 
   return (
-    <div className={`group bg-white p-5 rounded-3xl border transition-all ${task.completed ? 'border-emerald-100 opacity-60 shadow-none' : 'border-stone-100 shadow-sm hover:shadow-md'}`}>
+    <div className={`group bg-white p-5 rounded-[2rem] border transition-all ${task.completed ? 'border-emerald-100 opacity-60 shadow-none' : 'border-stone-100 shadow-sm hover:shadow-md'}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-600">
@@ -58,37 +67,60 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
       </div>
       
       {!task.completed && (
-        <div className="pl-16">
-          {(task.type === 'counter' || (task.type === 'sutra' && task.target && task.target > 0)) && (
-            <div className="mb-4 space-y-3">
-              <div className="flex items-baseline justify-between">
-                <div className="flex items-baseline space-x-1">
-                  <span className="text-3xl font-mono font-bold text-stone-800">{task.current || 0}</span>
-                  {task.target && <span className="text-sm text-stone-400">/ {task.target}</span>}
-                </div>
-                <button onClick={handleManual} className="text-[10px] text-stone-400 flex items-center hover:text-emerald-600 transition-colors">
-                  <Edit3 size={10} className="mr-1"/> 修改
-                </button>
+        <div className="pl-16 space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline space-x-1.5">
+                <span className="text-4xl font-mono font-bold text-stone-800 leading-none">
+                  {task.current || 0}
+                </span>
+                <span className="text-xl font-mono text-stone-300 font-medium">/</span>
+                <span className="text-xl font-mono text-stone-400 font-bold">
+                  {task.target || 0}
+                </span>
               </div>
-              <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
-                <div className={`h-full transition-all duration-700 ${task.type === 'sutra' ? 'bg-emerald-600' : 'bg-amber-500'}`} style={{ width: `${Math.min(100, ((task.current || 0) / (task.target || 1)) * 100)}%` }}></div>
-              </div>
+              <button 
+                onClick={handleManual} 
+                className="text-xs font-bold text-stone-400 flex items-center hover:text-emerald-600 transition-colors bg-stone-50 px-3 py-1.5 rounded-full"
+              >
+                <Edit3 size={12} className="mr-1"/> 修改
+              </button>
             </div>
-          )}
+            {(task.type === 'counter' || (task.type === 'sutra' && task.target && task.target > 0)) && (
+              <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
+                <div 
+                  className={cn(
+                    "h-full transition-all duration-700",
+                    task.type === 'sutra' ? 'bg-emerald-600' : 'bg-amber-500'
+                  )} 
+                  style={{ width: `${Math.min(100, ((task.current || 0) / (task.target || 1)) * 100)}%` }}
+                ></div>
+              </div>
+            )}
+          </div>
           
           {task.type === 'counter' ? (
-            <div className="flex space-x-3 pt-1">
-              <button onClick={handleStep} className="flex-1 h-12 bg-stone-100 rounded-2xl text-stone-600 font-bold active:scale-95 transition-all">+{task.step}</button>
-              <button onClick={handleFinish} className="flex-1 h-12 bg-emerald-800 text-white rounded-2xl text-sm font-bold shadow-md active:scale-95 flex items-center justify-center">
-                <BellRing size={16} className="mr-2"/> 提交
+            <div className="flex gap-3">
+              <button 
+                onClick={handleStep} 
+                className="flex-1 h-14 bg-stone-100 text-stone-800 rounded-2xl text-lg font-bold shadow-sm active:scale-[0.98] transition-all flex items-center justify-center hover:bg-stone-200"
+              >
+                <span>+{task.step || 1}</span>
+              </button>
+              <button 
+                onClick={handleFinish} 
+                className="w-1/3 h-14 bg-stone-800 text-white rounded-2xl font-bold shadow-lg active:scale-[0.98] transition-all flex items-center justify-center hover:bg-stone-900"
+              >
+                <BellRing size={20} />
               </button>
             </div>
           ) : task.type === 'sutra' ? (
-            <button onClick={() => onRead(task)} className="w-full py-3.5 bg-stone-800 text-white rounded-2xl text-sm font-bold flex items-center justify-center shadow-lg active:scale-95">
-              <BookOpen size={18} className="mr-2"/> 开始阅经
+            <button onClick={() => onRead(task)} className="w-full h-14 bg-emerald-800 text-white rounded-2xl text-lg font-bold shadow-lg active:scale-[0.98] transition-all flex items-center justify-center space-x-2 hover:bg-emerald-900">
+              <BookOpen size={18} />
+              <span>开始阅经</span>
             </button>
           ) : (
-            <button onClick={handleFinish} className="w-full py-3 bg-stone-50 border border-stone-100 rounded-2xl text-stone-600 text-sm font-medium hover:bg-stone-100 transition-colors">
+            <button onClick={handleFinish} className="w-full h-14 bg-stone-50 border-2 border-stone-100 rounded-2xl text-stone-600 text-lg font-bold hover:bg-stone-100 hover:border-stone-200 transition-all active:scale-[0.98]">
               标记完成
             </button>
           )}
