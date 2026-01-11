@@ -1,0 +1,44 @@
+# Implementation Plan - Dynamic Admin Dashboard
+
+## Phase 1: Security & Setup
+- [~] Task: Admin Access Control
+  - [ ] Sub-task: Add `ADMIN_EMAILS` to `.env` and `types.ts`.
+  - [ ] Sub-task: Create a utility function `isAdmin(email: string)` to check permissions.
+  - [ ] Sub-task: Create `admin-layout` or middleware logic to protect `/admin` routes.
+- [ ] Task: Schema Introspection Setup
+  - [ ] Sub-task: Generate a schema metadata utility (or script) that maps Prisma models to field names, types, and relations.
+  - [ ] Sub-task: Verify the metadata output covers all current models.
+- [ ] Task: Conductor - User Manual Verification 'Security & Setup' (Protocol in workflow.md)
+
+## Phase 2: Dynamic Core UI
+- [ ] Task: Admin Layout & Navigation
+  - [ ] Sub-task: Create `/app/admin/layout.tsx` with a sidebar listing all models dynamically.
+  - [ ] Sub-task: Ensure the sidebar is responsive.
+- [ ] Task: Dynamic Table View
+  - [ ] Sub-task: Implement `/app/admin/data/[model]/page.tsx`.
+  - [ ] Sub-task: Create a generic server action `fetchModelData(modelName, page, limit)` using generic Prisma calls.
+  - [ ] Sub-task: Render the data in a responsive table component.
+- [ ] Task: Conductor - User Manual Verification 'Dynamic Core UI' (Protocol in workflow.md)
+
+## Phase 3: Dynamic Forms & Actions
+- [ ] Task: Dynamic Form Component
+  - [ ] Sub-task: Create a `DynamicForm` component that accepts schema metadata.
+  - [ ] Sub-task: Implement inputs for basic types (Text, Number, Boolean, Date).
+  - [ ] Sub-task: Implement relation picker (Dropdown) for foreign keys (fetching ID + display field).
+- [ ] Task: Create & Update Actions
+  - [ ] Sub-task: Create generic server action `createRecord(model, data)`.
+  - [ ] Sub-task: Create generic server action `updateRecord(model, id, data)`.
+  - [ ] Sub-task: Wire up `DynamicForm` to these actions.
+- [ ] Task: Delete Action
+  - [ ] Sub-task: Implement delete button with confirmation modal.
+  - [ ] Sub-task: Create generic server action `deleteRecord(model, id)`.
+- [ ] Task: Conductor - User Manual Verification 'Dynamic Forms & Actions' (Protocol in workflow.md)
+
+## Phase 4: Refinement & Testing
+- [ ] Task: Error Handling & Validation
+  - [ ] Sub-task: Add basic error messages for constraint violations (e.g., unique fields).
+  - [ ] Sub-task: Ensure invalid data types are caught before submission.
+- [ ] Task: Integration Testing
+  - [ ] Sub-task: Manually verify CRUD for complex models like `JournalEntry` (relations) and `User` (basic).
+  - [ ] Sub-task: Verify security prevents non-admin access.
+- [ ] Task: Conductor - User Manual Verification 'Refinement & Testing' (Protocol in workflow.md)

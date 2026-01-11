@@ -19,7 +19,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Core Features: Daily Practice, Meditation & Analytics
+## [~] Track: Core Features: Daily Practice, Meditation & Analytics
 *Link: [./conductor/tracks/core_practice_features_20260111/](./conductor/tracks/core_practice_features_20260111/)*
 
 ---
@@ -55,3 +55,12 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [x] Track: Refactor: Fully Dynamic Tasks & Sutras from DB
 *Link: [./conductor/tracks/dynamic_db_final_20260111/](./conductor/tracks/dynamic_db_final_20260111/)*
+---
+
+## [ ] Track: Data Table Management (CRUD) for Project Review
+*Link: [./conductor/tracks/data_table_mgmt_20260111/](./conductor/tracks/data_table_mgmt_20260111/)*
+
+---
+
+## [~] Track: Dynamic Admin CRUD Dashboard
+*Link: [./conductor/tracks/dynamic_admin_crud_20260111/](./conductor/tracks/dynamic_admin_crud_20260111/)*
