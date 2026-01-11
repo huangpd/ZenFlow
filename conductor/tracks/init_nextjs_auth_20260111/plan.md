@@ -11,7 +11,7 @@
     - [ ] Subtask: Create a "Hello World" test to verify test runner.
 - [x] Task: Conductor - User Manual Verification 'Project Initialization & Configuration' (Protocol in workflow.md)
 
-## Phase 2: Database & ORM Setup
+## Phase 2: Database & ORM Setup [checkpoint: 0326a39]
 - [x] Task: Setup PostgreSQL Environment (767cd5e)
     - [ ] Subtask: Create a `docker-compose.yml` for a local PostgreSQL instance (or configure a local DB connection string).
     - [ ] Subtask: Verify database connection.
@@ -20,7 +20,7 @@
     - [ ] Subtask: Define the initial `User` schema in `prisma/schema.prisma` (id, email, password/provider info, createdAt, updatedAt).
     - [ ] Subtask: Run migrations to create tables in the local database.
     - [ ] Subtask: Generate Prisma Client.
-- [ ] Task: Conductor - User Manual Verification 'Database & ORM Setup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Database & ORM Setup' (Protocol in workflow.md)
 
 ## Phase 3: Authentication Infrastructure
 - [ ] Task: Install & Configure Auth.js
