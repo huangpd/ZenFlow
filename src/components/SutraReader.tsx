@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Brain, Loader2, Sparkles, Check } from 'lucide-react';
-import { SUTRA_DATABASE } from '@/constants';
 import { getGuidance } from '@/actions/ai';
 import { updateTaskProgress, getSutraContent } from '@/actions/tasks';
 
@@ -22,22 +21,20 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
     async function loadSutra() {
       if (task.sutraId && task.sutraId !== "") {
         try {
-          const dbSutra = await getSutraContent(task.sutraId);
-          if (dbSutra) {
-            setSutraContent(dbSutra);
-            return;
-          }
-        } catch (error) {
+                  const dbSutra = await getSutraContent(task.sutraId);
+                  if (dbSutra) {
+                    setSutraContent({
+                      title: dbSutra.title,
+                      content: dbSutra.content || '暂无内容'
+                    });
+                    return;
+                  }        } catch (error) {
           console.error("Failed to fetch sutra content from DB:", error);
         }
       }
       
-      // Fallback to static or task text
-      console.log("Falling back to static database or task text for:", task.text);
-      const staticSutra = SUTRA_DATABASE[task.sutraId || ''] || 
-                         Object.values(SUTRA_DATABASE).find(s => s.title === task.text.replace('读诵《', '').replace('》', ''));
-      
-      setSutraContent(staticSutra || { title: task.text, content: '暂无经文内容，请在管理后台检查经文设置或静心念诵。' });
+      // Fallback
+      setSutraContent({ title: task.text, content: '暂无经文内容，请在管理后台检查经文设置或静心念诵。' });
     }
     loadSutra();
   }, [task]);

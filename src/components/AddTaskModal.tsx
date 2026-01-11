@@ -1,8 +1,6 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import { Plus, ArrowLeft, Settings2, Hash, BookOpen } from 'lucide-react';
-import { PRESET_LIBRARY, ICON_MAP } from '@/constants';
+import { ICON_MAP } from '@/constants';
 import { createTask, getAvailableSutras } from '@/actions/tasks';
 
 export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpen: boolean; onClose: () => void; onTaskCreated?: (task: any) => void }) {
@@ -24,42 +22,38 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
   };
 
   const handleConfirm = async () => {
-    const text = configuringTask.type === 'sutra' ? `读诵《${configuringTask.text}》` : configuringTask.text;
-    
-    // Auto-determine step based on task ID/type
-    // Default: Sutra = 1, Lyz = 1, Others (Counter) = 108
-    const autoStep = configuringTask.type === 'sutra' 
-      ? 1 
-      : (configuringTask.id === 'lyz' ? 1 : (configuringTask.type === 'counter' ? 108 : 1));
-
-    const newTask = await createTask({
-      text,
-      type: configuringTask.type,
-      iconId: configuringTask.iconId,
-      sutraId: configuringTask.sutraId,
-      target: configTarget,
-      step: autoStep,
-    });
-    
-    if (onTaskCreated) {
-      onTaskCreated(newTask);
+    try {
+      const text = configuringTask.type === 'sutra' ? `读诵《${configuringTask.text}》` : configuringTask.text;
+      
+      const newTask = await createTask({
+        text,
+        type: configuringTask.type,
+        iconId: configuringTask.iconId,
+        sutraId: configuringTask.sutraId,
+        target: configTarget,
+        step: configuringTask.step,
+      });
+      
+      if (onTaskCreated) {
+        onTaskCreated(newTask);
+      }
+      
+      setConfiguringTask(null);
+      onClose();
+    } catch (error: any) {
+      console.error("Confirm Task Error:", error);
+      alert("请领功课失败: " + (error.message || "未知错误"));
     }
-    
-    setConfiguringTask(null);
-    onClose();
   };
 
-  // Merge presets with DB sutras
-  const displayItems = [
-    ...PRESET_LIBRARY.filter(p => p.type !== 'sutra'), // Non-sutra presets
-    ...dbSutras.map(s => ({
-      id: s.id,
-      text: s.title,
-      type: 'sutra',
-      iconId: 'book',
-      sutraId: s.id
-    }))
-  ];
+  const displayItems = dbSutras.map(s => ({
+    id: s.id,
+    text: s.title,
+    type: s.type,
+    iconId: s.iconId,
+    sutraId: s.id,
+    step: s.defaultStep || 1
+  }));
 
   return (
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-[120] flex items-end justify-center">

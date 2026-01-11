@@ -139,10 +139,14 @@ model UserPreference {
 }
 
 model Sutra {
-  id          String   @id @default(cuid())
-  title       String   @unique
-  content     String   @db.Text
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String   @unique
+  content       String?  @db.Text // Optional for non-sutra tasks
+  type          String   @default("sutra") // "normal", "counter", "sutra"
+  iconId        String?  @default("book")
+  defaultTarget Int?     @default(1)
+  defaultStep   Int?     @default(1)
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

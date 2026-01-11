@@ -8,8 +8,33 @@ export async function getTasks() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
+  const userId = session.user.id;
+  const todayStr = new Date().toLocaleDateString();
+
+  // 1. Check if we need a reset (Check any task's updatedAt or a dedicated lastReset field)
+  // For simplicity, we check if there are tasks that were updated BEFORE today.
+  const needsReset = await db.spiritualTask.findFirst({
+    where: {
+      userId,
+      updatedAt: {
+        lt: new Date(new Date().setHours(0, 0, 0, 0))
+      }
+    }
+  });
+
+  if (needsReset) {
+    console.log(`New day detected (${todayStr}), resetting daily tasks for user ${userId}`);
+    await db.spiritualTask.updateMany({
+      where: { userId },
+      data: {
+        current: 0,
+        completed: false
+      }
+    });
+  }
+
   return db.spiritualTask.findMany({
-    where: { userId: session.user.id },
+    where: { userId },
     orderBy: { createdAt: 'asc' },
   });
 }
@@ -51,20 +76,25 @@ export async function createTask(data: {
     });
   }
 
-  const task = await db.spiritualTask.create({
-    data: {
-      userId: session.user.id,
-      ...data,
-    },
-  });
+  try {
+    const task = await db.spiritualTask.create({
+      data: {
+        userId: session.user.id,
+        ...data,
+      },
+    });
 
-  revalidatePath('/dashboard');
-  return task;
+    revalidatePath('/dashboard');
+    return task;
+  } catch (error) {
+    console.error('Create Task Error:', error);
+    throw error;
+  }
 }
 
 export async function getAvailableSutras() {
   return db.sutra.findMany({
-    select: { id: true, title: true, description: true }
+    select: { id: true, title: true, description: true, type: true, iconId: true, defaultStep: true }
   });
 }
 

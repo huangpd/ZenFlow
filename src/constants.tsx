@@ -1,18 +1,5 @@
-
 import React from 'react';
 import { Quote, HandHelping, Users, Leaf, BookOpen, Flame, Hash } from 'lucide-react';
-import { Task } from './types';
-
-export const SUTRA_DATABASE: Record<string, { title: string; content: string }> = {
-  'jgj': { 
-    title: '金刚经', 
-    content: '如是我闻。一时佛在舍卫国。祗树给孤独园。与大比丘众。千二百五十人俱。尔时世尊。食时。著衣持钵。入舍卫大城乞食。于其城中。次第乞已。还至本处。饭食讫。收衣钵。洗足已。敷座而坐。' 
-  },
-  'xj': { 
-    title: '心经', 
-    content: '观自在菩萨，行深般若波罗蜜多时，照见五蕴皆空，度一切苦厄。舍利子，色不异空，空不异色，色即是空，空即是色，受想行识，亦复如是。' 
-  },
-};
 
 // Map for rendering icons based on string IDs
 export const ICON_MAP: Record<string, React.ReactNode> = {
@@ -29,12 +16,5 @@ export const CATEGORIES = [
   { label: '法施', icon: <BookOpen size={16}/>, color: 'bg-blue-50 text-blue-700', border: 'border-blue-200' },
 ];
 
-export const PRESET_LIBRARY: Partial<Task>[] = [
-  { id: 'sx', text: '清晨上香', type: 'normal', iconId: 'flame' },
-  { id: 'lyz', text: '楞严咒', type: 'counter', iconId: 'hash' },
-  { id: 'dbz', text: '大悲咒', type: 'counter', iconId: 'hash' },
-  { id: 'sxz', text: '十小咒', type: 'counter', iconId: 'hash' },
-  { id: 'jgj', text: '金刚经', type: 'sutra', sutraId: 'jgj', iconId: 'book' },
-  { id: 'xj', text: '心经', type: 'sutra', sutraId: 'xj', iconId: 'book' },
-  { id: 'bsbf', text: '八十八佛', type: 'counter', iconId: 'hash' },
-];
+// No more hardcoded presets or sutra content. 
+// Everything is now managed via the database and Admin Panel.

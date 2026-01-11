@@ -51,3 +51,12 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [x] Track: Feature: Sutra Management Admin
 *Link: [./conductor/tracks/feature_admin_sutras_20260111/](./conductor/tracks/feature_admin_sutras_20260111/)*
+---
+
+## [x] Track: Refactor: Fully Dynamic Tasks & Sutras from DB
+*Link: [./conductor/tracks/dynamic_db_final_20260111/](./conductor/tracks/dynamic_db_final_20260111/)*
+
+---
+
+## [x] Track: Maintenance: Data Cleanup & Daily Progress Reset
+*Link: [./conductor/tracks/data_cleanup_reset_20260111/](./conductor/tracks/data_cleanup_reset_20260111/)*
