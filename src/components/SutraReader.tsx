@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Brain, Loader2, Sparkles, Check } from 'lucide-react';
 import { SUTRA_DATABASE } from '@/constants';
 import { getGuidance } from '@/actions/ai';
-import { updateTaskProgress } from '@/actions/tasks';
+import { updateTaskProgress, getSutraContent } from '@/actions/tasks';
 
 interface SutraReaderProps {
   task: any;
@@ -16,11 +16,34 @@ interface SutraReaderProps {
 export default function SutraReader({ task, onBack, onComplete, onProgress }: SutraReaderProps) {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
-  const sutra = SUTRA_DATABASE[task.sutraId || ''] || { title: task.text, content: '' };
+  const [sutraContent, setSutraContent] = useState<{ title: string; content: string } | null>(null);
+
+  useEffect(() => {
+    async function loadSutra() {
+      if (task.sutraId) {
+        const dbSutra = await getSutraContent(task.sutraId);
+        if (dbSutra) {
+          setSutraContent(dbSutra);
+          return;
+        }
+      }
+      // Fallback to static
+      setSutraContent(SUTRA_DATABASE[task.sutraId || ''] || { title: task.text, content: '暂无经文内容，请静心念诵。' });
+    }
+    loadSutra();
+  }, [task]);
+
+  if (!sutraContent) {
+    return (
+      <div className="h-full flex items-center justify-center text-stone-400">
+        <Loader2 className="w-6 h-6 animate-spin mr-2" /> 加载经文中...
+      </div>
+    );
+  }
 
   const handleAiInsight = async () => {
     setAiLoading(true);
-    const result = await getGuidance(sutra.content);
+    const result = await getGuidance(sutraContent.content);
     if (result.success && result.insight) {
       setAiResponse(result.insight);
     }
@@ -45,9 +68,9 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
       <button onClick={onBack} className="mb-4 flex items-center text-stone-500 text-sm font-medium">
         <ChevronLeft size={18} className="mr-1" /> 返回功课
       </button>
-      <h2 className="text-2xl font-bold text-stone-800 text-center mb-6">《{sutra.title}》</h2>
+      <h2 className="text-2xl font-bold text-stone-800 text-center mb-6">《{sutraContent.title}》</h2>
       <div className="flex-1 overflow-y-auto p-6 bg-white rounded-3xl border border-stone-100 shadow-sm text-lg leading-relaxed text-stone-700 whitespace-pre-wrap mb-6">
-        {sutra.content}
+        {sutraContent.content}
       </div>
       
       <div className="space-y-4 pb-12">

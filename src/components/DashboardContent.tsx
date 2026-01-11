@@ -76,7 +76,7 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
   return (
     <button 
       onClick={onClick} 
-      className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 w-14 ${active ? 'text-blue-600 scale-105' : 'text-stone-800 hover:text-stone-600'}`}
+      className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 w-14 ${active ? 'text-emerald-600 scale-105' : 'text-black hover:text-stone-600'}`}
     >
       <div className={`p-1 rounded-xl transition-all`}>{icon}</div>
       <span className={`text-[10px] font-bold tracking-widest ${active ? 'opacity-100' : 'opacity-60'}`}>{label}</span>

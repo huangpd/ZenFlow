@@ -105,7 +105,7 @@ export async function getDetailedTaskStats() {
     }
   });
 
-  const todayStats = Array.from(todayMap.values());
+  const todayStats = Array.from(todayMap.values()).sort((a, b) => b.count - a.count);
 
   return { today: todayStats, allTime: allTimeStats };
 }

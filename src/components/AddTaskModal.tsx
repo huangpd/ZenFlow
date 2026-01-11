@@ -1,21 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Plus, ArrowLeft, Settings2, Hash } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, ArrowLeft, Settings2, Hash, BookOpen } from 'lucide-react';
 import { PRESET_LIBRARY, ICON_MAP } from '@/constants';
-import { createTask } from '@/actions/tasks';
+import { createTask, getAvailableSutras } from '@/actions/tasks';
 
 export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpen: boolean; onClose: () => void; onTaskCreated?: (task: any) => void }) {
   const [configuringTask, setConfiguringTask] = useState<any | null>(null);
   const [configTarget, setConfigTarget] = useState(1);
   const [configStep, setConfigStep] = useState(1);
+  const [dbSutras, setDbSutras] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      getAvailableSutras().then(setDbSutras);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleSelectPreset = (item: any) => {
     setConfiguringTask(item);
     setConfigTarget(1);
-    setConfigStep(item.id === 'lyz' ? 1 : 108);
+    // Default step logic: Sutra = 1, Counter (default) = 108 unless specified
+    setConfigStep(item.type === 'sutra' ? 1 : (item.id === 'lyz' ? 1 : 108));
   };
 
   const handleConfirm = async () => {
@@ -24,9 +32,9 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
       text,
       type: configuringTask.type,
       iconId: configuringTask.iconId,
-      sutraId: configuringTask.sutraId,
+      sutraId: configuringTask.sutraId, // This might be the DB ID for sutras
       target: configTarget,
-      step: configStep,
+      step: configuringTask.type === 'sutra' ? 1 : configStep, // Force step 1 for Sutra
     });
     
     if (onTaskCreated) {
@@ -36,6 +44,18 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
     setConfiguringTask(null);
     onClose();
   };
+
+  // Merge presets with DB sutras
+  const displayItems = [
+    ...PRESET_LIBRARY.filter(p => p.type !== 'sutra'), // Non-sutra presets
+    ...dbSutras.map(s => ({
+      id: s.id,
+      text: s.title,
+      type: 'sutra',
+      iconId: 'book',
+      sutraId: s.id
+    }))
+  ];
 
   return (
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-[120] flex items-end justify-center">
@@ -49,10 +69,10 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
               </button>
             </div>
             <div className="space-y-3 pb-8">
-              {PRESET_LIBRARY.map((item: any) => (
+              {displayItems.map((item: any) => (
                 <button key={item.id} onClick={() => handleSelectPreset(item)} className="w-full flex items-center p-5 bg-stone-50 rounded-[1.5rem] border border-transparent hover:border-emerald-200 transition-all hover:bg-emerald-50 group">
                   <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mr-4 shadow-sm group-hover:scale-110 transition-transform">
-                    {ICON_MAP[item.iconId || '']}
+                    {ICON_MAP[item.iconId || ''] || <BookOpen className="text-blue-600" size={18}/>}
                   </div>
                   <div className="text-left flex-1">
                     <span className="font-bold text-stone-800 block">{item.text}</span>
@@ -73,7 +93,7 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
             </div>
             <div className="space-y-8 mb-10">
                <div className="text-center py-6 bg-stone-50 rounded-[2rem] border border-stone-100 mb-4">
-                  <div className="scale-150 flex justify-center mb-2">{ICON_MAP[configuringTask.iconId || '']}</div>
+                  <div className="scale-150 flex justify-center mb-2">{ICON_MAP[configuringTask.iconId || ''] || <BookOpen className="text-blue-600" size={18}/>}</div>
                   <p className="font-bold text-lg text-stone-800">{configuringTask.text}</p>
                </div>
                <div className="space-y-4">
@@ -82,7 +102,9 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
                   </label>
                   <input type="number" value={configTarget} onChange={(e) => setConfigTarget(Math.max(1, parseInt(e.target.value) || 0))} className="w-full bg-stone-50 border border-stone-200 p-6 rounded-3xl text-center text-4xl font-mono font-bold text-emerald-800 focus:ring-4 focus:ring-emerald-100 transition-all outline-none" />
                </div>
-               {configuringTask.type === 'counter' && (
+               
+               {/* Only show step configuration for non-sutra tasks */}
+               {configuringTask.type !== 'sutra' && (
                  <div className="space-y-4">
                     <label className="text-xs font-bold text-stone-400 tracking-[0.2em] flex items-center">
                       <Hash size={12} className="mr-2"/> 计数器步长 (遍/次)

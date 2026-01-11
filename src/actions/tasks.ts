@@ -25,6 +25,28 @@ export async function createTask(data: {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
+  // Check for duplicates
+  const existingTask = await db.spiritualTask.findFirst({
+    where: {
+      userId: session.user.id,
+      text: data.text,
+    },
+  });
+
+  if (existingTask) {
+    // If exists, reactivate it if completed, or just return it
+    if (existingTask.completed) {
+      return db.spiritualTask.update({
+        where: { id: existingTask.id },
+        data: { completed: false, current: 0 }, // Reset or just reactivate? Let's reset current for a new "cycle" or keep it? 
+        // User asked for "accumulate", so we should NOT reset current if they are "adding" it again, maybe just ensure it's visible.
+        // Actually, if it's already there, we might just want to update target/step if provided.
+        // Let's just return the existing task to prevent duplicates in the list.
+      });
+    }
+    return existingTask;
+  }
+
   const task = await db.spiritualTask.create({
     data: {
       userId: session.user.id,
@@ -34,6 +56,19 @@ export async function createTask(data: {
 
   revalidatePath('/dashboard');
   return task;
+}
+
+export async function getAvailableSutras() {
+  return db.sutra.findMany({
+    select: { id: true, title: true, description: true }
+  });
+}
+
+export async function getSutraContent(id: string) {
+  return db.sutra.findUnique({
+    where: { id },
+    select: { title: true, content: true }
+  });
 }
 
 export async function updateTaskProgress(id: string, increment?: number, manualValue?: number) {

@@ -83,7 +83,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
               <ListTodo size={14} className="mr-2"/> 今日修持
             </h3>
             {taskStats.today.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[260px] overflow-y-auto scrollbar-hide pr-1">
                 {taskStats.today.map((t, i) => (
                   <div key={i} className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100">
                     <span className="text-xs font-bold text-stone-700">{t.text}</span>
@@ -104,7 +104,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
               <Trophy size={14} className="mr-2"/> 累计圆满
             </h3>
             {taskStats.allTime.length > 0 ? (
-              <div className="space-y-2 max-h-[200px] overflow-y-auto scrollbar-hide pr-1">
+              <div className="space-y-2 max-h-[260px] overflow-y-auto scrollbar-hide pr-1">
                 {taskStats.allTime.map((t) => (
                   <div key={t.id} className="flex justify-between items-center p-3 bg-white rounded-xl border border-stone-100 shadow-sm">
                     <span className="text-xs font-bold text-stone-700">{t.text}</span>

@@ -137,3 +137,12 @@ model UserPreference {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model Sutra {
+  id          String   @id @default(cuid())
+  title       String   @unique
+  content     String   @db.Text
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
