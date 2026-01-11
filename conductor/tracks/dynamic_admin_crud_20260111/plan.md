@@ -24,10 +24,10 @@
 - [x] Task: Delete Action a336073
   - [x] Sub-task: Implement delete button with confirmation modal.
   - [x] Sub-task: Create generic server action `deleteRecord(model, id)`.
-- [ ] Task: Dynamic Form Component
-  - [ ] Sub-task: Create a `DynamicForm` component that accepts schema metadata.
-  - [ ] Sub-task: Implement inputs for basic types (Text, Number, Boolean, Date).
-  - [ ] Sub-task: Implement relation picker (Dropdown) for foreign keys (fetching ID + display field).
+- [x] Task: Dynamic Form Component 916c566
+  - [x] Sub-task: Create a `DynamicForm` component that accepts schema metadata.
+  - [x] Sub-task: Implement inputs for basic types (Text, Number, Boolean, Date).
+  - [x] Sub-task: Implement relation picker (Dropdown) for foreign keys (fetching ID + display field).
 - [ ] Task: Create & Update Actions
   - [ ] Sub-task: Create generic server action `createRecord(model, data)`.
   - [ ] Sub-task: Create generic server action `updateRecord(model, id, data)`.
