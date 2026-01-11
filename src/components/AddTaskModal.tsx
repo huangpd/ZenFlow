@@ -12,7 +12,7 @@ function cn(...inputs: ClassValue[]) {
 export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpen: boolean; onClose: () => void; onTaskCreated?: (task: any) => void }) {
   const [configuringTask, setConfiguringTask] = useState<any | null>(null);
   const [configTarget, setConfigTarget] = useState(1);
-  const [isDaily, setIsDaily] = useState(true);
+  const [isDaily, setIsDaily] = useState(false);
   const [dbSutras, setDbSutras] = useState<any[]>([]);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
   const handleSelectPreset = (item: any) => {
     setConfiguringTask(item);
     setConfigTarget(1);
-    setIsDaily(true);
+    setIsDaily(false);
   };
 
   const handleConfirm = async () => {

@@ -111,7 +111,7 @@ model SpiritualTask {
 
   completed   Boolean   @default(false)
 
-  isDaily     Boolean   @default(true)
+  isDaily     Boolean   @default(false)
 
   logs        TaskLog[]
 

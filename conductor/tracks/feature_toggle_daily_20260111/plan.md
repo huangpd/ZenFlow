@@ -14,3 +14,7 @@
   - [x] Sub-task: Implement `handleToggleDaily` function calling `updateTask`.
   - [x] Sub-task: Handle visual feedback (optimistic update or loading).
 - [ ] Task: Conductor - User Manual Verification 'Frontend Implementation' (Protocol in workflow.md)
+
+## Phase 3: Change Default Behavior
+- [x] Task: Update `AddTaskModal` default state.
+- [x] Task: Update Schema default.
