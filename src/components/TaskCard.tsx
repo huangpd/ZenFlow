@@ -67,39 +67,42 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
       </div>
       
       {!task.completed && (
-        <div className="pl-16 space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-baseline justify-between">
-              <div className="flex items-baseline space-x-1.5">
-                <span className="text-4xl font-mono font-bold text-stone-800 leading-none">
-                  {task.current || 0}
-                </span>
-                <span className="text-xl font-mono text-stone-300 font-medium">/</span>
-                <span className="text-xl font-mono text-stone-400 font-bold">
-                  {task.target || 0}
-                </span>
+        <div className="space-y-6">
+          {/* Progress Display */}
+          {(task.type === 'counter' || (task.target && task.target > 1)) && (
+            <div className="flex flex-col space-y-3 px-2">
+              <div className="flex items-end justify-between">
+                <div className="flex items-baseline space-x-2">
+                  <span className="text-5xl font-mono font-bold text-stone-800 tracking-tighter leading-none">
+                    {task.current || 0}
+                  </span>
+                  <span className="text-xl font-medium text-stone-300">/</span>
+                  <span className="text-2xl font-mono font-bold text-stone-400">
+                    {task.target || 0}
+                  </span>
+                </div>
+                <button 
+                  onClick={handleManual} 
+                  className="mb-1 px-4 py-1.5 bg-stone-50 rounded-full text-xs font-bold text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors border border-stone-100"
+                >
+                  修改
+                </button>
               </div>
-              <button 
-                onClick={handleManual} 
-                className="text-xs font-bold text-stone-400 flex items-center hover:text-emerald-600 transition-colors bg-stone-50 px-3 py-1.5 rounded-full"
-              >
-                <Edit3 size={12} className="mr-1"/> 修改
-              </button>
-            </div>
-            {(task.type === 'counter' || (task.type === 'sutra' && task.target && task.target > 0)) && (
-              <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
+              <div className="w-full h-3 bg-stone-100 rounded-full overflow-hidden">
                 <div 
                   className={cn(
-                    "h-full transition-all duration-700",
-                    task.type === 'sutra' ? 'bg-emerald-600' : 'bg-amber-500'
+                    "h-full transition-all duration-1000 ease-out",
+                    task.type === 'sutra' ? 'bg-emerald-500' : 'bg-stone-800'
                   )} 
                   style={{ width: `${Math.min(100, ((task.current || 0) / (task.target || 1)) * 100)}%` }}
                 ></div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
-          {task.type === 'counter' ? (
+          {/* Action Buttons */}
+          <div className="px-1">
+            {task.type === 'counter' ? (
             <div className="flex gap-3">
               <button 
                 onClick={handleStep} 
@@ -124,6 +127,7 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
               标记完成
             </button>
           )}
+          </div>
         </div>
       )}
     </div>
