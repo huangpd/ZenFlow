@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Circle, CheckCircle2, Edit3, BellRing, BookOpen, Star } from 'lucide-react';
+import { Circle, CheckCircle2, Edit3, BellRing, BookOpen, Star, Save } from 'lucide-react';
 import { ICON_MAP } from '@/constants';
 import { updateTaskProgress, updateTask } from '@/actions/tasks';
 import { clsx, type ClassValue } from 'clsx';
@@ -23,7 +23,12 @@ interface TaskCardProps {
 export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskCardProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editValue, setEditValue] = React.useState(task.current?.toString() || '0');
-  const [isDaily, setIsDaily] = React.useState(task.isDaily || false);
+  const [pendingIsDaily, setPendingIsDaily] = React.useState(task.isDaily || false);
+
+  // Sync internal state with external prop changes
+  React.useEffect(() => {
+    setPendingIsDaily(task.isDaily || false);
+  }, [task.isDaily]);
 
   const handleStep = async () => {
     const nextCurrent = (task.current || 0) + (task.step || 1);
@@ -37,11 +42,15 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
   const handleEditSubmit = async () => {
     setIsEditing(false);
     const val = parseInt(editValue);
-    if (!isNaN(val) && val !== task.current) {
-      const result = await updateTaskProgress(task.id, undefined, val);
+    if (!isNaN(val)) {
+      const result = await updateTask(task.id, { 
+        current: val, 
+        isDaily: pendingIsDaily 
+      });
       if (result.success) {
-        onProgress(task.id, val, result.completed || false);
-        if (result.completed) onComplete?.();
+        const isFinished = task.target ? val >= task.target : true;
+        onProgress(task.id, val, isFinished);
+        if (isFinished && !task.completed) onComplete?.();
       }
     }
   };
@@ -63,14 +72,9 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
     }
   };
 
-  const handleToggleDaily = async () => {
-    const newState = !isDaily;
-    setIsDaily(newState);
-    try {
-      await updateTask(task.id, { isDaily: newState });
-    } catch (error) {
-      console.error('Failed to toggle daily status:', error);
-      setIsDaily(!newState);
+  const handleToggleDaily = () => {
+    if (isEditing) {
+      setPendingIsDaily(!pendingIsDaily);
     }
   };
 
@@ -78,7 +82,7 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
 
   return (
     <div className={cn(
-      "group bg-white p-6 rounded-[2.5rem] shadow-sm border transition-all duration-500",
+      "group bg-white p-6 rounded-[2.5rem] shadow-sm border transition-all duration-500 relative overflow-hidden",
       task.completed ? "border-emerald-100 bg-emerald-50/10" : "border-stone-100"
     )}>
       {/* 顶部标题与图标 */}
@@ -99,13 +103,16 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
            {!task.completed && (
              <button
                onClick={handleToggleDaily}
-               className="text-stone-400 hover:text-amber-400 transition-colors p-2 active:scale-95"
-               aria-label={isDaily ? "Unset Daily" : "Set as Daily"}
-               title={isDaily ? "取消每日功课" : "设为每日功课"}
+               className={cn(
+                 "transition-all p-2",
+                 isEditing ? "hover:scale-110 cursor-pointer" : "opacity-50 cursor-default"
+               )}
+               aria-label={pendingIsDaily ? "Unset Daily" : "Set as Daily"}
+               title={pendingIsDaily ? "每日功课" : "点击'修改'以设置为每日"}
              >
                <Star 
                  size={24} 
-                 className={cn("transition-all", isDaily ? "fill-amber-400 text-amber-400" : "text-stone-300")}
+                 className={cn("transition-all", pendingIsDaily ? "fill-amber-400 text-amber-400" : "text-stone-300")}
                />
              </button>
            )}
@@ -116,7 +123,10 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
       {!task.completed && (
         <div className="space-y-6">
           {/* 进度数值与修改按钮 (严谨实现 0/100) */}
-          <div className="bg-stone-50/50 p-5 rounded-3xl border border-stone-100/50">
+          <div className={cn(
+            "p-5 rounded-3xl border transition-all duration-300",
+            isEditing ? "bg-emerald-50/30 border-emerald-100" : "bg-stone-50/50 border-stone-100/50"
+          )}>
             <div className="flex items-end justify-between mb-3">
               <div className="flex items-baseline gap-1 w-full">
                 {isEditing ? (
@@ -124,15 +134,13 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
                     type="number"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={handleEditSubmit}
                     onKeyDown={handleKeyDown}
                     autoFocus
-                    className="text-5xl font-mono font-extrabold text-stone-900 bg-white border border-emerald-200 rounded-xl px-2 w-48 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                    className="text-5xl font-mono font-extrabold text-stone-900 bg-white border border-emerald-200 rounded-xl px-2 w-40 focus:outline-none focus:ring-4 focus:ring-emerald-100"
                   />
                 ) : (
                   <span 
-                    onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditing(true); }}
-                    className="text-5xl font-mono font-extrabold text-stone-900 tabular-nums cursor-pointer hover:text-emerald-700 transition-colors"
+                    className="text-5xl font-mono font-extrabold text-stone-900 tabular-nums"
                   >
                     {task.current || 0}
                   </span>
@@ -144,15 +152,26 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
                 </span>
                 <span className="ml-2 text-xs font-bold text-stone-400 uppercase tracking-widest">次</span>
               </div>
-              {!isEditing && (
-                <button 
-                  onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditing(true); }}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-xs font-bold text-stone-500 hover:text-emerald-600 hover:border-emerald-200 border border-stone-200 transition-all shadow-sm whitespace-nowrap"
-                >
-                  <Edit3 size={12} />
-                  修改
-                </button>
-              )}
+              
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <button 
+                    onClick={handleEditSubmit}
+                    className="flex items-center gap-1.5 px-5 py-2 bg-emerald-600 text-white rounded-full text-xs font-bold hover:bg-emerald-700 transition-all shadow-md active:scale-95"
+                  >
+                    <Save size={12} />
+                    保存
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditing(true); }}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-xs font-bold text-stone-500 hover:text-emerald-600 hover:border-emerald-200 border border-stone-200 transition-all shadow-sm whitespace-nowrap"
+                  >
+                    <Edit3 size={12} />
+                    修改
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* 进度条 (严谨实现) */}
@@ -168,41 +187,43 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
           </div>
           
           {/* 操作按钮区 */}
-          <div className="flex gap-3">
-            {task.type === 'counter' ? (
-              <>
+          {!isEditing && (
+            <div className="flex gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+              {task.type === 'counter' ? (
+                <>
+                  <button 
+                    onClick={handleStep} 
+                    className="flex-[2] h-16 bg-white border-2 border-stone-100 text-stone-800 rounded-2xl text-xl font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50 hover:border-stone-200"
+                  >
+                    <span className="text-stone-400 mr-2 text-sm font-normal">点击</span>
+                    +{task.step || 1}
+                  </button>
+                  <button 
+                    onClick={handleFinish} 
+                    className="flex-1 h-16 bg-stone-800 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center hover:bg-stone-900 gap-2"
+                  >
+                    <BellRing size={20} />
+                    <span>提交</span>
+                  </button>
+                </>
+              ) : task.type === 'sutra' ? (
                 <button 
-                  onClick={handleStep} 
-                  className="flex-[2] h-16 bg-white border-2 border-stone-100 text-stone-800 rounded-2xl text-xl font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50 hover:border-stone-200"
+                  onClick={() => onRead(task)} 
+                  className="w-full h-16 bg-stone-800 text-white rounded-2xl text-lg font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-stone-900"
                 >
-                  <span className="text-stone-400 mr-2 text-sm font-normal">点击</span>
-                  +{task.step || 1}
+                  <BookOpen size={22} />
+                  <span>开始阅经</span>
                 </button>
+              ) : (
                 <button 
                   onClick={handleFinish} 
-                  className="flex-1 h-16 bg-stone-800 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center hover:bg-stone-900 gap-2"
+                  className="w-full h-16 bg-white border-2 border-stone-800 text-stone-800 rounded-2xl text-lg font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50"
                 >
-                  <BellRing size={20} />
-                  <span>提交</span>
+                  标记完成
                 </button>
-              </>
-            ) : task.type === 'sutra' ? (
-              <button 
-                onClick={() => onRead(task)} 
-                className="w-full h-16 bg-stone-800 text-white rounded-2xl text-lg font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-stone-900"
-              >
-                <BookOpen size={22} />
-                <span>开始阅经</span>
-              </button>
-            ) : (
-              <button 
-                onClick={handleFinish} 
-                className="w-full h-16 bg-white border-2 border-stone-800 text-stone-800 rounded-2xl text-lg font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50"
-              >
-                标记完成
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

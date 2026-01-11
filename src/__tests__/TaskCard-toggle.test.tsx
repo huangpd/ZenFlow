@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import TaskCard from '@/components/TaskCard';
 import { updateTask } from '@/actions/tasks';
 import '@testing-library/jest-dom';
@@ -8,27 +8,49 @@ jest.mock('@/actions/tasks', () => ({
   updateTask: jest.fn().mockResolvedValue({ success: true }),
 }));
 
-describe('TaskCard Toggle', () => {
+describe('TaskCard Toggle with Save Button', () => {
   const mockTask = {
     id: '1',
     text: 'Test Task',
-    current: 0,
-    target: 10,
+    current: 10,
+    target: 100,
     isDaily: false,
     type: 'normal',
   };
 
-  it('renders toggle button', () => {
-    render(<TaskCard task={mockTask} onRead={jest.fn()} onProgress={jest.fn()} />);
-    expect(screen.getByLabelText(/Set as Daily/i)).toBeInTheDocument();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('toggles isDaily when clicked', async () => {
+  it('does NOT save immediately when toggling in edit mode', async () => {
     render(<TaskCard task={mockTask} onRead={jest.fn()} onProgress={jest.fn()} />);
-    const toggle = screen.getByLabelText(/Set as Daily/i);
     
+    // Enter edit mode
+    fireEvent.click(screen.getByText('修改'));
+    
+    const toggle = screen.getByLabelText(/Set as Daily/i);
     fireEvent.click(toggle);
     
-    expect(updateTask).toHaveBeenCalledWith('1', { isDaily: true });
+    // Verify action NOT called yet
+    expect(updateTask).not.toHaveBeenCalled();
+    
+    // Click Save
+    const saveButton = screen.getByText('保存');
+    fireEvent.click(saveButton);
+    
+    await waitFor(() => {
+        expect(updateTask).toHaveBeenCalledWith('1', expect.objectContaining({
+            isDaily: true,
+            current: 10
+        }));
+    });
+  });
+
+  it('keeps standalone toggle deactivated when NOT in edit mode', () => {
+      render(<TaskCard task={mockTask} onRead={jest.fn()} onProgress={jest.fn()} />);
+      const toggle = screen.getByLabelText(/Set as Daily/i);
+      
+      fireEvent.click(toggle);
+      expect(updateTask).not.toHaveBeenCalled();
   });
 });
