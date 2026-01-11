@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Circle, CheckCircle2, Edit3, BellRing, BookOpen } from 'lucide-react';
+import { Circle, CheckCircle2, Edit3, BellRing, BookOpen, Star } from 'lucide-react';
 import { ICON_MAP } from '@/constants';
-import { updateTaskProgress } from '@/actions/tasks';
+import { updateTaskProgress, updateTask } from '@/actions/tasks';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -12,7 +12,9 @@ function cn(...inputs: ClassValue[]) {
 }
 
 interface TaskCardProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   task: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRead: (task: any) => void;
   onComplete?: () => void;
   onProgress: (taskId: string, newCurrent: number, completed: boolean) => void;
@@ -21,6 +23,7 @@ interface TaskCardProps {
 export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskCardProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editValue, setEditValue] = React.useState(task.current?.toString() || '0');
+  const [isDaily, setIsDaily] = React.useState(task.isDaily || false);
 
   const handleStep = async () => {
     const nextCurrent = (task.current || 0) + (task.step || 1);
@@ -50,7 +53,6 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
   };
 
   const handleFinish = async () => {
-    // For normal tasks, if there is a target (e.g. 10 times), we log the full target amount at once.
     const countToLog = (task.target && task.target > task.current) ? (task.target - task.current) : 1;
     const nextCurrent = task.target || (task.current + 1);
     
@@ -58,6 +60,17 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
     if (result.success) {
       onProgress(task.id, nextCurrent, true);
       onComplete?.();
+    }
+  };
+
+  const handleToggleDaily = async () => {
+    const newState = !isDaily;
+    setIsDaily(newState);
+    try {
+      await updateTask(task.id, { isDaily: newState });
+    } catch (error) {
+      console.error('Failed to toggle daily status:', error);
+      setIsDaily(!newState);
     }
   };
 
@@ -81,7 +94,23 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
             {task.text}
           </span>
         </div>
-        {task.completed && <CheckCircle2 className="text-emerald-500 animate-in zoom-in duration-300" size={28}/>}
+        
+        <div className="flex items-center gap-2">
+           {!task.completed && (
+             <button
+               onClick={handleToggleDaily}
+               className="text-stone-400 hover:text-amber-400 transition-colors p-2 active:scale-95"
+               aria-label={isDaily ? "Unset Daily" : "Set as Daily"}
+               title={isDaily ? "取消每日功课" : "设为每日功课"}
+             >
+               <Star 
+                 size={24} 
+                 className={cn("transition-all", isDaily ? "fill-amber-400 text-amber-400" : "text-stone-300")}
+               />
+             </button>
+           )}
+           {task.completed && <CheckCircle2 className="text-emerald-500 animate-in zoom-in duration-300" size={28}/>}
+        </div>
       </div>
       
       {!task.completed && (
