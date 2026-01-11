@@ -22,7 +22,7 @@
     - [ ] Subtask: Generate Prisma Client.
 - [x] Task: Conductor - User Manual Verification 'Database & ORM Setup' (Protocol in workflow.md)
 
-## Phase 3: Authentication Infrastructure
+## Phase 3: Authentication Infrastructure [checkpoint: fbf73a2]
 - [x] Task: Install & Configure Auth.js (eb99227)
     - [ ] Subtask: Install `next-auth` (or `@auth/core` etc. depending on version).
     - [ ] Subtask: Implement API route handlers for Auth (e.g., `app/api/auth/[...nextauth]/route.ts`).
@@ -30,6 +30,6 @@
 - [x] Task: Implement Basic Sign-In/Sign-Up Pages (a43b237)
     - [ ] Subtask: Create a basic server component for the Login page.
     - [ ] Subtask: Create a basic client form for credentials input (email/password placeholder).
-    - [ ] Subtask: Protect a sample route (e.g., `/dashboard`) to verify session enforcement.
+    - [ ] Subtask: Protect a sample route (e.g., `/dashboard`).
     - [ ] Subtask: Write a test to check if unauthenticated access to protected route is redirected.
-- [ ] Task: Conductor - User Manual Verification 'Authentication Infrastructure' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Authentication Infrastructure' (Protocol in workflow.md)
