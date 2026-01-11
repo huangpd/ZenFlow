@@ -11,8 +11,7 @@ export async function getTasks() {
   const userId = session.user.id;
   const todayStr = new Date().toLocaleDateString();
 
-  // 1. Check if we need a reset (Check any task's updatedAt or a dedicated lastReset field)
-  // For simplicity, we check if there are tasks that were updated BEFORE today.
+  // 1. Check if we need a reset (Check any task's updatedAt)
   const needsReset = await db.spiritualTask.findFirst({
     where: {
       userId,
@@ -23,14 +22,22 @@ export async function getTasks() {
   });
 
   if (needsReset) {
-    console.log(`New day detected (${todayStr}), resetting daily tasks for user ${userId}`);
-    await db.spiritualTask.updateMany({
-      where: { userId },
-      data: {
-        current: 0,
-        completed: false
-      }
-    });
+    console.log(`New day detected (${todayStr}), resetting daily tasks and removing one-off tasks for user ${userId}`);
+    
+    await db.$transaction([
+      // A. Delete tasks that are NOT marked as daily
+      db.spiritualTask.deleteMany({
+        where: { userId, isDaily: false }
+      }),
+      // B. Reset progress for tasks marked as daily
+      db.spiritualTask.updateMany({
+        where: { userId, isDaily: true },
+        data: {
+          current: 0,
+          completed: false
+        }
+      })
+    ]);
   }
 
   return db.spiritualTask.findMany({
@@ -46,6 +53,7 @@ export async function createTask(data: {
   sutraId?: string;
   target?: number;
   step?: number;
+  isDaily?: boolean;
 }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -62,15 +70,16 @@ export async function createTask(data: {
   });
 
   if (existingTask) {
-    // If exists, update its configuration (target/step/text) and reactivate if completed
+    // If exists, update its configuration (target/step/text/isDaily) and reactivate if completed
     return db.spiritualTask.update({
       where: { id: existingTask.id },
       data: { 
         completed: false, 
-        text: data.text, // Update text in case Sutra title changed
+        text: data.text,
         target: data.target,
         step: data.step,
         sutraId: data.sutraId,
+        isDaily: data.isDaily ?? true,
         current: existingTask.completed ? 0 : existingTask.current
       },
     });
