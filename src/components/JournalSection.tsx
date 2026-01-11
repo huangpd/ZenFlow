@@ -139,16 +139,16 @@ export default function JournalSection({ entries }: { entries: any[] }) {
           </div>
         ) : (
           filteredEntries.map((entry) => (
-            <div key={entry.id} className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm hover:shadow-md transition-all group relative">
-              <div className="flex justify-between items-center mb-3">
+            <div key={entry.id} className="bg-white p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 group relative border border-stone-50/50">
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-[10px] text-stone-400 font-mono tracking-widest uppercase bg-stone-50 px-3 py-1 rounded-full">
+                  {new Date(entry.createdAt).toLocaleDateString()}
+                </span>
                 <span className={cn("px-3 py-1 text-[10px] font-bold rounded-full", CATEGORIES.find(c => c.label === entry.category)?.color)}>
                   {entry.category}
                 </span>
-                <span className="text-[10px] text-stone-300 font-mono tracking-wider">
-                  {new Date(entry.createdAt).toLocaleDateString()}
-                </span>
               </div>
-              <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+              <p className="text-sm text-stone-600 leading-loose whitespace-pre-wrap font-serif tracking-wide">{entry.content}</p>
               
               <button
                 onClick={async () => {
@@ -156,7 +156,7 @@ export default function JournalSection({ entries }: { entries: any[] }) {
                      await deleteJournalEntry(entry.id);
                    }
                 }}
-                className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-500 transition-opacity"
+                className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-400 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

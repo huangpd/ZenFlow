@@ -21,3 +21,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [ ] Track: Core Features: Daily Practice, Meditation & Analytics
 *Link: [./conductor/tracks/core_practice_features_20260111/](./conductor/tracks/core_practice_features_20260111/)*
+
+---
+
+## [~] Track: Feature: Detailed Practice Statistics
+*Link: [./conductor/tracks/feature_stats_20260111/](./conductor/tracks/feature_stats_20260111/)*

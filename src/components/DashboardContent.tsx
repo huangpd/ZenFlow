@@ -14,12 +14,14 @@ interface DashboardContentProps {
   initialTasks: any[];
   initialHistory: any[];
   initialJournal: any[];
+  userName: string;
 }
 
 export default function DashboardContent({ 
   initialTasks, 
   initialHistory, 
-  initialJournal 
+  initialJournal,
+  userName
 }: DashboardContentProps) {
   const [activeTab, setActiveTab] = useState<'homework' | 'log' | 'chat' | 'timer' | 'stats'>('homework');
 
@@ -30,39 +32,39 @@ export default function DashboardContent({
         {activeTab === 'log' && <JournalSection entries={initialJournal} />}
         {activeTab === 'chat' && <ChatInterface initialMessages={initialHistory} />}
         {activeTab === 'timer' && <MeditationTimer />}
-        {activeTab === 'stats' && <PracticeStats />}
+        {activeTab === 'stats' && <PracticeStats userName={userName} />}
       </div>
 
-      {/* Bottom Navigation (Restoring Original Feel) */}
-      <nav className="fixed bottom-0 left-0 right-0 md:absolute h-20 bg-white/80 backdrop-blur-xl border-t border-stone-100 flex items-center justify-around px-4 pb-2 z-50">
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 md:absolute h-20 bg-white/95 backdrop-blur-xl border-t border-stone-100 flex items-center justify-around px-4 pb-2 z-50">
         <NavItem 
           active={activeTab === 'homework'} 
           onClick={() => setActiveTab('homework')} 
-          icon={<ClipboardList size={22} />} 
+          icon={<ClipboardList size={24} strokeWidth={activeTab === 'homework' ? 2.5 : 2} />} 
           label="功课" 
         />
         <NavItem 
           active={activeTab === 'log'} 
           onClick={() => setActiveTab('log')} 
-          icon={<PenLine size={22} />} 
+          icon={<PenLine size={24} strokeWidth={activeTab === 'log' ? 2.5 : 2} />} 
           label="随喜" 
         />
         <NavItem 
           active={activeTab === 'chat'} 
           onClick={() => setActiveTab('chat')} 
-          icon={<Bot size={22} />} 
+          icon={<Bot size={24} strokeWidth={activeTab === 'chat' ? 2.5 : 2} />} 
           label="问道" 
         />
         <NavItem 
           active={activeTab === 'timer'} 
           onClick={() => setActiveTab('timer')} 
-          icon={<TimerIcon size={22} />} 
+          icon={<TimerIcon size={24} strokeWidth={activeTab === 'timer' ? 2.5 : 2} />} 
           label="静坐" 
         />
         <NavItem 
           active={activeTab === 'stats'} 
           onClick={() => setActiveTab('stats')} 
-          icon={<BarChart3 size={22} />} 
+          icon={<BarChart3 size={24} strokeWidth={activeTab === 'stats' ? 2.5 : 2} />} 
           label="精进" 
         />
       </nav>
@@ -74,10 +76,10 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
   return (
     <button 
       onClick={onClick} 
-      className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 w-14 ${active ? 'text-emerald-800' : 'text-stone-300'}`}
+      className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 w-14 ${active ? 'text-blue-600 scale-105' : 'text-stone-800 hover:text-stone-600'}`}
     >
-      <div className={`p-2 rounded-xl transition-all ${active ? 'bg-emerald-50' : ''}`}>{icon}</div>
-      <span className={`text-[10px] font-bold tracking-widest ${active ? 'opacity-100' : 'opacity-40'}`}>{label}</span>
+      <div className={`p-1 rounded-xl transition-all`}>{icon}</div>
+      <span className={`text-[10px] font-bold tracking-widest ${active ? 'opacity-100' : 'opacity-60'}`}>{label}</span>
     </button>
   );
 }

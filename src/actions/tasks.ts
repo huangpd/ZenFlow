@@ -40,8 +40,10 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
+  const userId = session.user.id;
+
   const task = await db.spiritualTask.findUnique({ where: { id } });
-  if (!task || task.userId !== session.user.id) throw new Error('Forbidden');
+  if (!task || task.userId !== userId) throw new Error('Forbidden');
 
   let nextCurrent = task.current;
   if (manualValue !== undefined) {
@@ -57,7 +59,7 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
     await tx.taskLog.create({
       data: {
         taskId: id,
-        userId: session.user.id!,
+        userId: userId,
         count: nextCurrent - task.current,
       },
     });

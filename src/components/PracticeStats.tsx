@@ -5,7 +5,7 @@ import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, S
 import { getPracticeStats, getDetailedTaskStats } from '@/actions/stats';
 import { getDailyGuidance } from '@/actions/ai';
 
-export default function PracticeStats() {
+export default function PracticeStats({ userName }: { userName: string }) {
   const [stats, setStats] = useState<any[]>([]);
   const [taskStats, setTaskStats] = useState<{ today: any[], allTime: any[] }>({ today: [], allTime: [] });
   const [selectedDay, setSelectedDay] = useState<any>(null);
@@ -40,7 +40,12 @@ export default function PracticeStats() {
 
   return (
     <div className="space-y-8 pb-12 h-full animate-in fade-in duration-500">
-      <h2 className="text-3xl font-bold text-stone-800">精进点滴</h2>
+      <div className="flex flex-col items-start space-y-1 pt-4 px-2">
+        <h2 className="text-3xl font-bold text-stone-800">精进点滴</h2>
+        <p className="text-sm text-stone-400 font-medium tracking-wide">
+          {userName} · <span className="text-emerald-600">持续修持中</span>
+        </p>
+      </div>
       
       <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 p-7 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform"><Sparkles size={120} /></div>
