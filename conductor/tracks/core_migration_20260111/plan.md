@@ -1,11 +1,11 @@
 # Plan: Core Features Migration: AI Companion & Spiritual Tools
 
-## Phase 1: Database Modeling & Migration
+## Phase 1: Database Modeling & Migration [checkpoint: 66bd8f3]
 - [x] Task: Define Spiritual Data Models (e2c8a29)
     - [ ] Subtask: Update `prisma/schema.prisma` to include `JournalEntry`, `ChatMessage`, and `UserPreference` models.
     - [ ] Subtask: Run migrations (`npx prisma migrate dev`).
     - [ ] Subtask: Update `src/lib/db.ts` or create new data access utilities if needed.
-- [ ] Task: Conductor - User Manual Verification 'Database Modeling & Migration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Database Modeling & Migration' (Protocol in workflow.md)
 
 ## Phase 2: AI Service Integration
 - [ ] Task: Implement Gemini Service (Server-Side)
