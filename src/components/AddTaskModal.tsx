@@ -8,7 +8,6 @@ import { createTask, getAvailableSutras } from '@/actions/tasks';
 export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpen: boolean; onClose: () => void; onTaskCreated?: (task: any) => void }) {
   const [configuringTask, setConfiguringTask] = useState<any | null>(null);
   const [configTarget, setConfigTarget] = useState(1);
-  const [configStep, setConfigStep] = useState(1);
   const [dbSutras, setDbSutras] = useState<any[]>([]);
 
   useEffect(() => {
@@ -22,19 +21,24 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
   const handleSelectPreset = (item: any) => {
     setConfiguringTask(item);
     setConfigTarget(1);
-    // Default step logic: Sutra = 1, Counter (default) = 108 unless specified
-    setConfigStep(item.type === 'sutra' ? 1 : (item.id === 'lyz' ? 1 : 108));
   };
 
   const handleConfirm = async () => {
     const text = configuringTask.type === 'sutra' ? `读诵《${configuringTask.text}》` : configuringTask.text;
+    
+    // Auto-determine step based on task ID/type
+    // Default: Sutra = 1, Lyz = 1, Others (Counter) = 108
+    const autoStep = configuringTask.type === 'sutra' 
+      ? 1 
+      : (configuringTask.id === 'lyz' ? 1 : (configuringTask.type === 'counter' ? 108 : 1));
+
     const newTask = await createTask({
       text,
       type: configuringTask.type,
       iconId: configuringTask.iconId,
-      sutraId: configuringTask.sutraId, // This might be the DB ID for sutras
+      sutraId: configuringTask.sutraId,
       target: configTarget,
-      step: configuringTask.type === 'sutra' ? 1 : configStep, // Force step 1 for Sutra
+      step: autoStep,
     });
     
     if (onTaskCreated) {
@@ -102,17 +106,6 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
                   </label>
                   <input type="number" value={configTarget} onChange={(e) => setConfigTarget(Math.max(1, parseInt(e.target.value) || 0))} className="w-full bg-stone-50 border border-stone-200 p-6 rounded-3xl text-center text-4xl font-mono font-bold text-emerald-800 focus:ring-4 focus:ring-emerald-100 transition-all outline-none" />
                </div>
-               
-               {/* Only show step configuration for non-sutra tasks */}
-               {configuringTask.type !== 'sutra' && (
-                 <div className="space-y-4">
-                    <label className="text-xs font-bold text-stone-400 tracking-[0.2em] flex items-center">
-                      <Hash size={12} className="mr-2"/> 计数器步长 (遍/次)
-                    </label>
-                    <input type="number" value={configStep} onChange={(e) => setConfigStep(Math.max(1, parseInt(e.target.value) || 0))} className="w-full bg-stone-50 border border-stone-200 p-6 rounded-3xl text-center text-4xl font-mono font-bold text-amber-700 focus:ring-4 focus:ring-amber-100 transition-all outline-none" />
-                    <p className="text-[10px] text-stone-400 italic px-2 tracking-tighter">例如：念珠一圈通常为 108 遍，步长可设为 108。</p>
-                 </div>
-               )}
             </div>
             <button onClick={handleConfirm} className="w-full h-16 bg-stone-800 text-white rounded-[1.5rem] font-bold text-lg shadow-xl active:scale-95 transition-all">
               确定请领

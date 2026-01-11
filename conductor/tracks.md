@@ -31,3 +31,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [x] Track: Refactor: Unique Tasks & Dynamic Sutra DB
 *Link: [./conductor/tracks/refactor_tasks_20260111/](./conductor/tracks/refactor_tasks_20260111/)*
+
+---
+
+## [~] Track: Refactor: Simplify Task Creation
+*Link: [./conductor/tracks/refactor_simplify_20260111/](./conductor/tracks/refactor_simplify_20260111/)*
