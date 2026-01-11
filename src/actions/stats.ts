@@ -58,3 +58,54 @@ export async function getPracticeStats() {
 
   return Object.values(stats);
 }
+
+export async function getDetailedTaskStats() {
+  const session = await auth();
+  if (!session?.user?.id) return { today: [], allTime: [] };
+
+  const userId = session.user.id;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // 1. Get All Time Stats (from SpiritualTask)
+  const allTasks = await db.spiritualTask.findMany({
+    where: { userId },
+    orderBy: { current: 'desc' }, // Show most practiced first
+  });
+
+  const allTimeStats = allTasks.map(t => ({
+    id: t.id,
+    text: t.text,
+    count: t.current,
+    type: t.type
+  }));
+
+  // 2. Get Today's Stats (from TaskLog)
+  const todayLogs = await db.taskLog.findMany({
+    where: { 
+      userId,
+      createdAt: { gte: today }
+    },
+    include: { task: true }
+  });
+
+  // Aggregate today's logs by task
+  const todayMap = new Map<string, { text: string; count: number; type: string }>();
+  
+  todayLogs.forEach(log => {
+    const existing = todayMap.get(log.taskId);
+    if (existing) {
+      existing.count += log.count;
+    } else {
+      todayMap.set(log.taskId, {
+        text: log.task.text,
+        count: log.count,
+        type: log.task.type
+      });
+    }
+  });
+
+  const todayStats = Array.from(todayMap.values());
+
+  return { today: todayStats, allTime: allTimeStats };
+}
