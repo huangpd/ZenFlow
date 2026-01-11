@@ -27,7 +27,7 @@
 
 - [x] Task: Conductor - User Manual Verification 'AI Service Integration' (Protocol in workflow.md)
 
-## Phase 3: Journaling & User Progress
+## Phase 3: Journaling & User Progress [checkpoint: 336193c]
 - [x] Task: Implement Journaling Feature (df3ea1b)
     - [ ] Subtask: Create UI for writing journal/diary entries.
     - [ ] Subtask: Implement Server Actions for CRUD operations on `JournalEntry`.
@@ -35,4 +35,4 @@
 - [x] Task: Port UI Effects & Polish (8f2185e)
     - [ ] Subtask: Port `CelebrationEffect` component.
     - [ ] Subtask: Apply "Zen Minimalist" styling globally.
-- [ ] Task: Conductor - User Manual Verification 'Journaling & User Progress' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Journaling & User Progress' (Protocol in workflow.md)
