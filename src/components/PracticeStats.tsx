@@ -105,10 +105,28 @@ export default function PracticeStats() {
                   </div>
                   <div className="p-4 bg-stone-50 rounded-2xl flex flex-col items-center justify-center">
                      <CheckCircle2 size={16} className="text-emerald-500 mb-1" />
-                     <span className="text-xs font-bold text-stone-800">{selectedDay.dailyTasks.length} 项</span>
-                     <span className="text-[9px] text-stone-400 uppercase font-medium">圆满功课</span>
+                     <span className="text-xs font-bold text-stone-800">{selectedDay.dailyTasks.length} 次</span>
+                     <span className="text-[9px] text-stone-400 uppercase font-medium">修持记录</span>
                   </div>
                </div>
+
+               {selectedDay.dailyTasks.length > 0 && (
+                 <div className="space-y-3">
+                    <h5 className="text-[10px] font-bold text-stone-400 tracking-widest uppercase flex items-center">
+                       <CheckCircle2 size={12} className="mr-2" /> 功课修持
+                    </h5>
+                    <div className="space-y-2">
+                       {selectedDay.dailyTasks.map((log: any) => (
+                         <div key={log.id} className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100">
+                            <span className="text-xs font-bold text-stone-700">{log.task.text}</span>
+                            <span className="text-[10px] font-mono text-stone-500 bg-white px-2 py-1 rounded-md border border-stone-100">
+                              +{log.count}
+                            </span>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+               )}
 
                {selectedDay.dailyLogs.length > 0 && (
                  <div className="space-y-3">

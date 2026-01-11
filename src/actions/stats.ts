@@ -19,6 +19,7 @@ export async function getPracticeStats() {
     }),
     db.taskLog.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
+      include: { task: true },
     }),
     db.journalEntry.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
