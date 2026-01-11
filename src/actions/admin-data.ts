@@ -53,3 +53,26 @@ export async function deleteRecord(modelName: string, id: string) {
   
   revalidatePath(`/admin/data/${modelName}`);
 }
+
+export async function fetchRelatedList(modelName: string) {
+  const session = await auth();
+  if (!session?.user?.email || !isAdmin(session.user.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const modelDelegate = (db as any)[prismaModelName];
+
+  if (!modelDelegate) return [];
+
+  const records = await modelDelegate.findMany({
+    take: 100, // Limit for dropdown
+  });
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return records.map((r: any) => ({
+    id: r.id,
+    label: r.name || r.title || r.email || r.text || r.id
+  }));
+}
