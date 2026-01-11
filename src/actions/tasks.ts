@@ -167,3 +167,23 @@ export async function deleteTask(id: string) {
   revalidatePath('/dashboard');
   return { success: true };
 }
+
+export async function updateTask(id: string, data: { isDaily?: boolean }) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  const userId = session.user.id;
+
+  const task = await db.spiritualTask.findUnique({ where: { id } });
+  if (!task || task.userId !== userId) throw new Error('Forbidden');
+
+  await db.spiritualTask.update({
+    where: { id },
+    data: {
+      isDaily: data.isDaily,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
