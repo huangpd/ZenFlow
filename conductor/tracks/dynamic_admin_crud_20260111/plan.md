@@ -38,7 +38,7 @@
 - [x] Task: Error Handling & Validation 6048725
   - [x] Sub-task: Add basic error messages for constraint violations (e.g., unique fields).
   - [x] Sub-task: Ensure invalid data types are caught before submission.
-- [ ] Task: Integration Testing
-  - [ ] Sub-task: Manually verify CRUD for complex models like `JournalEntry` (relations) and `User` (basic).
-  - [ ] Sub-task: Verify security prevents non-admin access.
-- [ ] Task: Conductor - User Manual Verification 'Refinement & Testing' (Protocol in workflow.md)
+- [x] Task: Integration Testing
+  - [x] Sub-task: Manually verify CRUD for complex models like `JournalEntry` (relations) and `User` (basic).
+  - [x] Sub-task: Verify security prevents non-admin access.
+- [x] Task: Conductor - User Manual Verification 'Refinement & Testing' (Protocol in workflow.md)
