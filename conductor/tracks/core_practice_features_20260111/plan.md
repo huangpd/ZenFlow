@@ -5,7 +5,7 @@
     - [ ] Subtask: Add `SpiritualTask`, `TaskLog`, `MeditationSession` models to Prisma.
     - [ ] Subtask: Update `JournalEntry` to support categories and image URLs.
     - [ ] Subtask: Run migrations.
-- [ ] Task: Daily Task UI & Logic
+- [x] Task: Daily Task UI & Logic (63c5557)
     - [ ] Subtask: Create `TaskConfig` UI for setting up daily routines.
     - [ ] Subtask: Implement `TaskCounter` component with custom step logic.
     - [ ] Subtask: Implement `SutraReader` component with distraction-free mode.
