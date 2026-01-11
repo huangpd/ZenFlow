@@ -28,7 +28,7 @@
 - [x] Task: Conductor - User Manual Verification 'AI Service Integration' (Protocol in workflow.md)
 
 ## Phase 3: Journaling & User Progress
-- [ ] Task: Implement Journaling Feature
+- [x] Task: Implement Journaling Feature (df3ea1b)
     - [ ] Subtask: Create UI for writing journal/diary entries.
     - [ ] Subtask: Implement Server Actions for CRUD operations on `JournalEntry`.
     - [ ] Subtask: Display past entries on the Dashboard.
