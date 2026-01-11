@@ -20,7 +20,7 @@
     - [ ] Subtask: Save completed sessions to database via Server Action.
 - [ ] Task: Conductor - User Manual Verification 'Meditation Timer' (Protocol in workflow.md)
 
-## Phase 3: Analytics & Enhanced Journaling
+## Phase 3: Analytics ## Phase 3: Analytics & Enhanced Journaling Enhanced Journaling [checkpoint: 654397d]
 - [ ] Task: Practice Heatmap
     - [ ] Subtask: Implement data aggregation logic (calculate daily "intensity").
     - [ ] Subtask: Render Heatmap component (similar to GitHub contributions).
