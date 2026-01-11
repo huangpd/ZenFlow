@@ -51,3 +51,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [x] Track: Feature: Sutra Management Admin
 *Link: [./conductor/tracks/feature_admin_sutras_20260111/](./conductor/tracks/feature_admin_sutras_20260111/)*
+
+---
+
+## [x] Track: Bugfix: Incomplete Sutra Content in Tasks
+*Link: [./conductor/tracks/bugfix_sutra_content_20260111/](./conductor/tracks/bugfix_sutra_content_20260111/)*

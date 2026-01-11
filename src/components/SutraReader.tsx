@@ -20,15 +20,24 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
 
   useEffect(() => {
     async function loadSutra() {
-      if (task.sutraId) {
-        const dbSutra = await getSutraContent(task.sutraId);
-        if (dbSutra) {
-          setSutraContent(dbSutra);
-          return;
+      if (task.sutraId && task.sutraId !== "") {
+        try {
+          const dbSutra = await getSutraContent(task.sutraId);
+          if (dbSutra) {
+            setSutraContent(dbSutra);
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to fetch sutra content from DB:", error);
         }
       }
-      // Fallback to static
-      setSutraContent(SUTRA_DATABASE[task.sutraId || ''] || { title: task.text, content: '暂无经文内容，请静心念诵。' });
+      
+      // Fallback to static or task text
+      console.log("Falling back to static database or task text for:", task.text);
+      const staticSutra = SUTRA_DATABASE[task.sutraId || ''] || 
+                         Object.values(SUTRA_DATABASE).find(s => s.title === task.text.replace('读诵《', '').replace('》', ''));
+      
+      setSutraContent(staticSutra || { title: task.text, content: '暂无经文内容，请在管理后台检查经文设置或静心念诵。' });
     }
     loadSutra();
   }, [task]);

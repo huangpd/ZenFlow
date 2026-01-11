@@ -25,26 +25,27 @@ export async function createTask(data: {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
-  // Check for duplicates
+  // Check for duplicates based on sutraId (preferred) or text
   const existingTask = await db.spiritualTask.findFirst({
     where: {
       userId: session.user.id,
-      text: data.text,
+      OR: [
+        { sutraId: data.sutraId && data.sutraId !== "" ? data.sutraId : undefined },
+        { text: data.text }
+      ].filter(Boolean) as any,
     },
   });
 
   if (existingTask) {
-    // If exists, update its configuration (target/step) and reactivate if completed
+    // If exists, update its configuration (target/step/text) and reactivate if completed
     return db.spiritualTask.update({
       where: { id: existingTask.id },
       data: { 
         completed: false, 
-        // Always update target and step to new config
+        text: data.text, // Update text in case Sutra title changed
         target: data.target,
         step: data.step,
-        // Optional: decide whether to reset current. 
-        // If user is "adding" it again, they likely want to start a new round or continue.
-        // If it was completed, we reset current. If not, we keep current but update target.
+        sutraId: data.sutraId,
         current: existingTask.completed ? 0 : existingTask.current
       },
     });
