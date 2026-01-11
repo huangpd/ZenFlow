@@ -5,7 +5,7 @@ import { Plus, ArrowLeft, Settings2, Hash } from 'lucide-react';
 import { PRESET_LIBRARY, ICON_MAP } from '@/constants';
 import { createTask } from '@/actions/tasks';
 
-export default function AddTaskModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpen: boolean; onClose: () => void; onTaskCreated?: (task: any) => void }) {
   const [configuringTask, setConfiguringTask] = useState<any | null>(null);
   const [configTarget, setConfigTarget] = useState(1);
   const [configStep, setConfigStep] = useState(1);
@@ -20,7 +20,7 @@ export default function AddTaskModal({ isOpen, onClose }: { isOpen: boolean; onC
 
   const handleConfirm = async () => {
     const text = configuringTask.type === 'sutra' ? `读诵《${configuringTask.text}》` : configuringTask.text;
-    await createTask({
+    const newTask = await createTask({
       text,
       type: configuringTask.type,
       iconId: configuringTask.iconId,
@@ -28,6 +28,11 @@ export default function AddTaskModal({ isOpen, onClose }: { isOpen: boolean; onC
       target: configTarget,
       step: configStep,
     });
+    
+    if (onTaskCreated) {
+      onTaskCreated(newTask);
+    }
+    
     setConfiguringTask(null);
     onClose();
   };

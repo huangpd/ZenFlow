@@ -65,6 +65,7 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
       <AddTaskModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
+        onTaskCreated={(newTask) => setTasks([...tasks, newTask])}
       />
     </div>
   );
