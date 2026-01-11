@@ -1,0 +1,67 @@
+'use client';
+
+import React, { useState } from 'react';
+import { ChevronLeft, Brain, Loader2, Sparkles, Check } from 'lucide-react';
+import { SUTRA_DATABASE } from '@/constants';
+import { getGuidance } from '@/actions/ai';
+import { updateTaskProgress } from '@/actions/tasks';
+
+interface SutraReaderProps {
+  task: any;
+  onBack: () => void;
+  onComplete?: () => void;
+}
+
+export default function SutraReader({ task, onBack, onComplete }: SutraReaderProps) {
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState('');
+  const sutra = SUTRA_DATABASE[task.sutraId || ''] || { title: task.text, content: '' };
+
+  const handleAiInsight = async () => {
+    setAiLoading(true);
+    const result = await getGuidance(sutra.content);
+    if (result.success && result.insight) {
+      setAiResponse(result.insight);
+    }
+    setAiLoading(false);
+  };
+
+  const handleSubmit = async () => {
+    const result = await updateTaskProgress(task.id, 1);
+    if (result.completed) onComplete?.();
+    onBack();
+  };
+
+  return (
+    <div className="animate-in fade-in slide-in-from-right duration-300 h-full flex flex-col py-4">
+      <button onClick={onBack} className="mb-4 flex items-center text-stone-500 text-sm font-medium">
+        <ChevronLeft size={18} className="mr-1" /> 返回功课
+      </button>
+      <h2 className="text-2xl font-bold text-stone-800 text-center mb-6">《{sutra.title}》</h2>
+      <div className="flex-1 overflow-y-auto p-6 bg-white rounded-3xl border border-stone-100 shadow-sm text-lg leading-relaxed text-stone-700 whitespace-pre-wrap mb-6">
+        {sutra.content}
+      </div>
+      
+      <div className="space-y-4 pb-12">
+        <button onClick={handleAiInsight} disabled={aiLoading} className="w-full py-4 bg-emerald-800/5 border border-emerald-800/10 text-emerald-800 rounded-2xl flex items-center justify-center space-x-2 font-medium">
+          {aiLoading ? <Loader2 size={18} className="animate-spin" /> : <Brain size={18} />}
+          <span>AI 禅意开解</span>
+        </button>
+
+        {aiResponse && (
+          <div className="p-5 bg-white border border-emerald-100 rounded-2xl animate-in zoom-in-95">
+            <h4 className="text-xs font-bold text-emerald-600 mb-2 flex items-center">
+              <Sparkles size={12} className="mr-1"/> 智慧启迪
+            </h4>
+            <p className="text-sm text-stone-600 italic leading-relaxed">{aiResponse}</p>
+          </div>
+        )}
+
+        <button onClick={handleSubmit} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-lg active:scale-95 transition-transform">
+          <Check size={20} />
+          <span>读诵圆满</span>
+        </button>
+      </div>
+    </div>
+  );
+}

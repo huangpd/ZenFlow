@@ -12,8 +12,8 @@ To create an accessible, AI-powered sanctuary that helps users cultivate peace, 
 - People looking for AI-assisted emotional or spiritual support.
 
 ## Key Features
-- **AI Spiritual Companion:** Uses Google Gemini to offer personalized insights, meditation prompts, and conversation.
-- **Progress Tracking:** Securely tracks user milestones and journey continuity using a persistent database.
+- **AI Spiritual Companion:** Integrated Google Gemini for deep sutra insights, daily guidance, and real-time conversational support.
+- **Spiritual Journaling:** Comprehensive journaling system with mood tracking and database persistence to record the user's growth.
 - **Interactive Experience:** Engaging UI elements (e.g., celebration effects) to encourage user participation and achievement.
 - **Secure Data Management:** Uses a robust PostgreSQL database to ensure user data privacy and integrity.
 

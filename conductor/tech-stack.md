@@ -21,7 +21,11 @@
         - Phone/SMS Authentication - Planned
 
 ## AI Integration
-- **SDK:** Google Generative AI SDK
+- **SDK:** @google/genai (Legacy compatible)
+- **Capabilities:**
+    - Sutra Insight: AI-powered analysis of sacred texts.
+    - Daily Guidance: Personalized spiritual encouragement based on progress.
+    - Conversational Support: Persistent AI chat for spiritual exploration.
 
 ## Multi-Platform Strategy (Future)
 - **Mobile:** React Native (sharing core logic/hooks)

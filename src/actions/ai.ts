@@ -38,7 +38,7 @@ export async function chat(content: string) {
     formattedHistory.push({ role: 'user', content });
 
     // 2. 调用 AI
-    const responseText = await generateChatResponse(formattedHistory);
+    const responseText = await generateChatResponse(formattedHistory) || "抱歉，我现在无法回答。";
 
     // 3. 保存到数据库
     await db.chatMessage.createMany({
@@ -50,7 +50,7 @@ export async function chat(content: string) {
 
     return { success: true, response: responseText };
   } catch (error) {
-    console.error('Chat Error:', error);
+    console.error('Chat Error Details:', error);
     return { success: false, error: '对话服务暂时不可用' };
   }
 }

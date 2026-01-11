@@ -1,7 +1,6 @@
 import { auth, signOut } from '@/auth';
 import { redirect } from 'next/navigation';
-import ChatInterface from '@/components/ChatInterface';
-import JournalSection from '@/components/JournalSection';
+import DashboardContent from '@/components/DashboardContent';
 import { db } from '@/lib/db';
 
 export default async function DashboardPage() {
@@ -13,7 +12,7 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
   
-  const [chatHistory, journalEntries] = await Promise.all([
+  const [chatHistory, journalEntries, tasks] = await Promise.all([
     db.chatMessage.findMany({
       where: { userId },
       orderBy: { createdAt: 'asc' },
@@ -22,7 +21,11 @@ export default async function DashboardPage() {
     db.journalEntry.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      take: 10,
+      take: 20,
+    }),
+    db.spiritualTask.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
     })
   ]);
 
@@ -32,35 +35,34 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-stone-50 py-12 px-4">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Sidebar / Header Area */}
-        <div className="lg:col-span-3 flex justify-between items-center mb-4">
-          <div>
-            <h1 className="text-3xl font-serif text-stone-800">ZenFlow</h1>
-            <p className="text-stone-500 text-sm">Welcome, {session.user?.name || session.user?.email}</p>
-          </div>
-          <form
-            action={async () => {
-              'use server';
-              await signOut({ redirectTo: '/auth/login' });
-            }}
-          >
-            <button type="submit" className="text-sm text-stone-500 hover:text-stone-800 transition-colors">
-              Sign Out
-            </button>
-          </form>
-        </div>
+    <div className="min-h-screen bg-stone-50 flex flex-col items-center">
+      <div className="w-full max-w-4xl min-h-screen flex flex-col bg-white shadow-xl relative overflow-hidden md:border-x border-stone-200">
+        
+        {/* Header */}
+        <header className="h-16 flex-shrink-0 flex items-center justify-between px-6 border-b bg-white/80 backdrop-blur-md z-40 sticky top-0">
+           <h1 className="text-xl font-serif text-stone-800 font-bold tracking-tight">ZenFlow</h1>
+           <div className="flex items-center gap-4">
+             <span className="text-stone-400 text-xs hidden sm:inline">{session.user?.name || session.user?.email}</span>
+             <form
+               action={async () => {
+                 'use server';
+                 await signOut({ redirectTo: '/auth/login' });
+               }}
+             >
+               <button type="submit" className="text-xs text-stone-400 hover:text-stone-800 transition-colors">
+                 Sign Out
+               </button>
+             </form>
+           </div>
+        </header>
 
-        {/* Main Chat Area */}
-        <div className="lg:col-span-2 space-y-8">
-          <ChatInterface initialMessages={formattedHistory} />
-        </div>
-
-        {/* Journal Sidebar */}
-        <div className="lg:col-span-1">
-          <JournalSection entries={journalEntries} />
-        </div>
+        <main className="flex-1 overflow-y-auto px-6 py-6 scrollbar-hide">
+          <DashboardContent 
+            initialTasks={tasks}
+            initialHistory={formattedHistory}
+            initialJournal={journalEntries}
+          />
+        </main>
       </div>
     </div>
   );

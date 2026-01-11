@@ -7,6 +7,26 @@ import bcrypt from 'bcryptjs';
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
+  trustHost: true,
+  cookies: {
+    sessionToken: {
+      name: `authjs.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
+  callbacks: {
+    async session({ session, token }) {
+      if (token.sub && session.user) {
+        session.user.id = token.sub;
+      }
+      return session;
+    },
+  },
   providers: [
     Credentials({
       name: 'Credentials',
@@ -21,15 +41,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { email: credentials.email as string },
         });
 
-        if (!user || !user.password) return null;
+        if (!user || !user.password) {
+          console.log('User not found or no password set');
+          return null;
+        }
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password as string,
           user.password
         );
 
-        if (!isPasswordValid) return null;
+        if (!isPasswordValid) {
+          console.log('Invalid password');
+          return null;
+        }
 
+        console.log('User authenticated:', user.email);
         return {
           id: user.id,
           email: user.email,
