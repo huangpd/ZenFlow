@@ -23,11 +23,10 @@ export default async function ModelPage({ params }: { params: Promise<{ model: s
         </button>
       </div>
       
-      <DataTable data={data} fields={modelMeta.fields} />
+      <DataTable data={data} fields={modelMeta.fields} modelName={model} />
       
       <div className="flex justify-between items-center text-sm text-gray-600">
          <div>Page {page} of {totalPages || 1} ({total} items)</div>
-         {/* Pagination controls would go here */}
       </div>
     </div>
   );

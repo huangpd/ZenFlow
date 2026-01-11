@@ -2,19 +2,32 @@
 
 import React from 'react';
 import { FieldMetadata } from '@/lib/schema-metadata';
+import { deleteRecord } from '@/actions/admin-data';
 
 interface DataTableProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[];
   fields: FieldMetadata[];
+  modelName: string;
 }
 
-export default function DataTable({ data, fields }: DataTableProps) {
+export default function DataTable({ data, fields, modelName }: DataTableProps) {
   if (!data || data.length === 0) {
     return <div className="p-4 text-gray-500 border rounded-lg bg-white">No records found.</div>;
   }
 
   const displayFields = fields.filter(f => f.kind === 'scalar' || f.kind === 'enum');
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this record?')) {
+      try {
+        await deleteRecord(modelName, id);
+      } catch (error) {
+        console.error('Failed to delete:', error);
+        alert('Failed to delete record');
+      }
+    }
+  };
 
   return (
     <div className="overflow-x-auto rounded-lg border bg-white shadow-sm">
@@ -39,7 +52,13 @@ export default function DataTable({ data, fields }: DataTableProps) {
               ))}
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                  <button className="text-indigo-600 hover:text-indigo-900 mr-2">Edit</button>
-                 <button className="text-red-600 hover:text-red-900">Delete</button>
+                 <button 
+                   className="text-red-600 hover:text-red-900"
+                   onClick={() => row.id && handleDelete(row.id)}
+                   disabled={!row.id}
+                 >
+                   Delete
+                 </button>
               </td>
             </tr>
           ))}
