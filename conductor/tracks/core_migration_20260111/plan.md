@@ -32,7 +32,7 @@
     - [ ] Subtask: Create UI for writing journal/diary entries.
     - [ ] Subtask: Implement Server Actions for CRUD operations on `JournalEntry`.
     - [ ] Subtask: Display past entries on the Dashboard.
-- [ ] Task: Port UI Effects & Polish
+- [x] Task: Port UI Effects & Polish (8f2185e)
     - [ ] Subtask: Port `CelebrationEffect` component.
     - [ ] Subtask: Apply "Zen Minimalist" styling globally.
 - [ ] Task: Conductor - User Manual Verification 'Journaling & User Progress' (Protocol in workflow.md)
