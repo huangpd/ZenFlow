@@ -88,7 +88,7 @@ export async function createTask(data: {
         target: data.target,
         step: data.step,
         sutraId: data.sutraId,
-        isDaily: data.isDaily ?? true,
+        isDaily: data.isDaily ?? false, // Default to false as per user request
         current: existingTask.completed ? 0 : existingTask.current
       },
     });
@@ -98,6 +98,7 @@ export async function createTask(data: {
     const task = await db.spiritualTask.create({
       data: {
         userId: session.user.id,
+        isDaily: false, // Default to false as per user request
         ...data,
       },
     });
@@ -177,7 +178,7 @@ export async function deleteTask(id: string) {
   return { success: true };
 }
 
-export async function updateTask(id: string, data: { isDaily?: boolean }) {
+export async function updateTask(id: string, data: { isDaily?: boolean; current?: number }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
@@ -186,12 +187,37 @@ export async function updateTask(id: string, data: { isDaily?: boolean }) {
   const task = await db.spiritualTask.findUnique({ where: { id } });
   if (!task || task.userId !== userId) throw new Error('Forbidden');
 
-  await db.spiritualTask.update({
-    where: { id },
-    data: {
-      isDaily: data.isDaily,
-    },
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updates: any = {};
+  if (data.isDaily !== undefined) updates.isDaily = data.isDaily;
+  if (data.current !== undefined) updates.current = data.current;
+
+  const isProgressChanged = data.current !== undefined && data.current !== task.current;
+
+  if (isProgressChanged) {
+    const isFinished = task.target ? data.current! >= task.target : true;
+    updates.completed = isFinished || task.completed;
+
+    await db.$transaction(async (tx) => {
+      await tx.taskLog.create({
+        data: {
+          taskId: id,
+          userId: userId,
+          count: data.current! - task.current,
+        },
+      });
+
+      return tx.spiritualTask.update({
+        where: { id },
+        data: updates,
+      });
+    });
+  } else {
+    await db.spiritualTask.update({
+      where: { id },
+      data: updates,
+    });
+  }
 
   revalidatePath('/dashboard');
   return { success: true };
