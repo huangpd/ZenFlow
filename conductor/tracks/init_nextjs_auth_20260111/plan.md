@@ -1,6 +1,6 @@
 # Plan: Initialize Next.js Full-Stack Architecture & Auth
 
-## Phase 1: Project Initialization & Configuration
+## Phase 1: Project Initialization & Configuration [checkpoint: 3448d0d]
 - [x] Task: Create new Next.js project (f0a9ee7)
     - [ ] Subtask: Initialize Next.js app with TypeScript, Tailwind, ESLint (`npx create-next-app@latest`).
     - [ ] Subtask: Clean up default boilerplate code.
@@ -9,7 +9,7 @@
     - [ ] Subtask: Configure Prettier and ensure integration with ESLint.
     - [ ] Subtask: Set up Jest and React Testing Library for unit testing.
     - [ ] Subtask: Create a "Hello World" test to verify test runner.
-- [ ] Task: Conductor - User Manual Verification 'Project Initialization & Configuration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Project Initialization & Configuration' (Protocol in workflow.md)
 
 ## Phase 2: Database & ORM Setup
 - [ ] Task: Setup PostgreSQL Environment
