@@ -21,6 +21,8 @@ model User {
   sessions      Session[]
   journalEntries JournalEntry[]
   chatMessages   ChatMessage[]
+  tasks          SpiritualTask[]
+  meditationSessions MeditationSession[]
   preferences    UserPreference?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -66,7 +68,9 @@ model JournalEntry {
   userId    String
   title     String?
   content   String   @db.Text
-  mood      String?
+  mood      String?  // Legacy mood
+  category  String   @default("感悟")
+  imageUrl  String?
   tags      String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -79,6 +83,32 @@ model ChatMessage {
   userId    String
   role      String
   content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SpiritualTask {
+  id          String   @id @default(cuid())
+  userId      String
+  text        String
+  type        String   // "normal", "counter", "sutra"
+  iconId      String?
+  sutraId     String?
+  current     Int      @default(0)
+  target      Int?
+  step        Int      @default(1)
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MeditationSession {
+  id        String   @id @default(cuid())
+  userId    String
+  duration  Int      // minutes
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
