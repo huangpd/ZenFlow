@@ -28,10 +28,10 @@
   - [x] Sub-task: Create a `DynamicForm` component that accepts schema metadata.
   - [x] Sub-task: Implement inputs for basic types (Text, Number, Boolean, Date).
   - [x] Sub-task: Implement relation picker (Dropdown) for foreign keys (fetching ID + display field).
-- [ ] Task: Create & Update Actions
-  - [ ] Sub-task: Create generic server action `createRecord(model, data)`.
-  - [ ] Sub-task: Create generic server action `updateRecord(model, id, data)`.
-  - [ ] Sub-task: Wire up `DynamicForm` to these actions.
+- [x] Task: Create & Update Actions 1c11b36
+  - [x] Sub-task: Create generic server action `createRecord(model, data)`.
+  - [x] Sub-task: Create generic server action `updateRecord(model, id, data)`.
+  - [x] Sub-task: Wire up `DynamicForm` to these actions.
 - [ ] Task: Conductor - User Manual Verification 'Dynamic Forms & Actions' (Protocol in workflow.md)
 
 ## Phase 4: Refinement & Testing
