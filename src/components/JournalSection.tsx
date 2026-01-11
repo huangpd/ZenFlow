@@ -1,10 +1,11 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import { createJournalEntry, deleteJournalEntry } from '@/actions/journal';
 import { Loader2, Trash2, PenLine } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import CelebrationEffect from './CelebrationEffect';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,10 +15,21 @@ const moods = ['peaceful', 'happy', 'neutral', 'anxious', 'sad'];
 
 export default function JournalSection({ entries }: { entries: any[] }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const [state, formAction, pending] = useActionState(createJournalEntry, null);
+
+  useEffect(() => {
+    if (state?.success) {
+      setIsExpanded(false);
+      setShowCelebration(true);
+      const timer = setTimeout(() => setShowCelebration(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [state]);
 
   return (
     <div className="space-y-6">
+      {showCelebration && <CelebrationEffect />}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-medium text-stone-800 flex items-center gap-2">
           <PenLine className="w-5 h-5" />
