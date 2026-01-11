@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@/auth';
-import { generateChatResponse, getSutraInsight } from '@/lib/ai/gemini';
+import { generateChatResponse, getSutraInsight, getDailyGuidance as getGeminiGuidance } from '@/lib/ai/gemini';
 import { db } from '@/lib/db';
 
 export async function getGuidance(sutraContent: string) {
@@ -14,6 +14,18 @@ export async function getGuidance(sutraContent: string) {
   } catch (error) {
     console.error('AI Error:', error);
     return { success: false, error: 'AI 服务暂时不可用' };
+  }
+}
+
+export async function getDailyGuidance(meditationMins: number, tasksCount: number) {
+  const session = await auth();
+  if (!session) throw new Error('Unauthorized');
+
+  try {
+    return await getGeminiGuidance(meditationMins, tasksCount);
+  } catch (error) {
+    console.error('AI Daily Guidance Error:', error);
+    return '精进修行，功不唐捐。';
   }
 }
 

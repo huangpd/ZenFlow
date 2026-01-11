@@ -1,0 +1,145 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, ScrollText, HandHelping } from 'lucide-react';
+import { getPracticeStats } from '@/actions/stats';
+import { getDailyGuidance } from '@/actions/ai';
+
+export default function PracticeStats() {
+  const [stats, setStats] = useState<any[]>([]);
+  const [selectedDay, setSelectedDay] = useState<any>(null);
+  const [aiInsight, setAiInsight] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getPracticeStats().then(setStats);
+  }, []);
+
+  const getHeatmapColor = (value: number) => {
+    switch (value) {
+      case 0: return 'bg-stone-100';
+      case 1: return 'bg-emerald-100';
+      case 2: return 'bg-emerald-300';
+      case 3: return 'bg-emerald-500';
+      case 4: return 'bg-emerald-800';
+      default: return 'bg-stone-100';
+    }
+  };
+
+  const handleGuidance = async () => {
+    setLoading(true);
+    // Passing some dummy context for now as per original logic
+    const result = await getDailyGuidance(25, 3);
+    setAiInsight(result);
+    setLoading(false);
+  };
+
+  const totalMeds = stats.reduce((acc, s) => acc + s.meditationMins, 0);
+
+  return (
+    <div className="space-y-8 pb-12 h-full animate-in fade-in duration-500">
+      <h2 className="text-3xl font-bold text-stone-800">精进点滴</h2>
+      
+      <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 p-7 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform"><Sparkles size={120} /></div>
+        <div className="relative z-10 space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md"><Brain size={24} /></div>
+            <button onClick={handleGuidance} className="text-[10px] bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md hover:bg-white/30 transition-all font-bold tracking-widest">刷新启示</button>
+          </div>
+          <h4 className="text-xl font-bold">每日修行指引</h4>
+          <p className="text-emerald-50/80 text-sm leading-relaxed italic font-serif font-light">
+            {aiInsight || (loading ? "正在请教 AI 向导..." : "点击下方按钮开启今日智慧。")}
+          </p>
+          {!aiInsight && !loading && (
+            <button onClick={handleGuidance} className="w-full py-3.5 bg-white text-emerald-900 rounded-2xl font-bold text-sm shadow-xl active:scale-95">开启修行寄语</button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-amber-50/50 p-6 rounded-[2rem] border border-amber-100 text-center">
+          <div className="text-[10px] text-amber-800 font-bold tracking-[0.2em] mb-1 uppercase">坐禅总时长</div>
+          <div className="text-4xl font-light text-stone-800 font-serif">{Math.floor(totalMeds / 60)}<span className="text-sm ml-1">h</span></div>
+        </div>
+        <div className="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100 text-center">
+          <div className="text-[10px] text-emerald-800 font-bold tracking-[0.2em] mb-1 uppercase">精进指数</div>
+          <div className="text-4xl font-light text-stone-800 font-serif">88<span className="text-sm ml-1">%</span></div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold text-stone-400 flex items-center tracking-widest px-1 uppercase">
+          <Calendar size={14} className="mr-2"/> 修行热力图
+        </h3>
+        <div className="bg-white p-6 rounded-[2.5rem] border border-stone-100 shadow-sm">
+          <div className="flex flex-wrap gap-1.5 justify-center">
+            {stats.map((d) => (
+              <div 
+                key={d.day} 
+                onClick={() => setSelectedDay(d)} 
+                className={`w-3.5 h-3.5 rounded-[3px] cursor-pointer transition-all hover:scale-110 ${getHeatmapColor(d.value)} ${selectedDay?.day === d.day ? 'ring-2 ring-stone-400 scale-125 z-10' : ''}`}
+              ></div>
+            ))}
+          </div>
+          <div className="mt-5 flex justify-between items-center text-[10px] text-stone-400 px-4 font-medium tracking-tighter uppercase">
+            <span>懈怠</span>
+            <div className="flex gap-1">{[0,1,2,3,4].map(v => <div key={v} className={`w-2 h-2 rounded-[1px] ${getHeatmapColor(v)}`}></div>)}</div>
+            <span>非常精进</span>
+          </div>
+        </div>
+        
+        {selectedDay && (
+          <div className="bg-white p-7 rounded-[2.5rem] border border-stone-100 shadow-md animate-in slide-in-from-top-4 duration-300 space-y-6">
+            <div className="flex justify-between items-center pb-2 border-b border-stone-50">
+              <h4 className="font-bold text-stone-700 flex items-center tracking-tight"><Calendar size={18} className="mr-2 text-emerald-600"/>{selectedDay.fullDate}</h4>
+              <span className={`px-4 py-1 rounded-full text-[10px] font-bold text-white shadow-sm ${selectedDay.value > 2 ? 'bg-emerald-600' : 'bg-stone-400'}`}>{selectedDay.value > 2 ? '法喜充满' : '初心勿忘'}</span>
+            </div>
+
+            <div className="space-y-4">
+               <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 bg-stone-50 rounded-2xl flex flex-col items-center justify-center">
+                     <TimerIcon size={16} className="text-stone-400 mb-1" />
+                     <span className="text-xs font-bold text-stone-800">{selectedDay.meditationMins} 分钟</span>
+                     <span className="text-[9px] text-stone-400 uppercase font-medium">坐禅修持</span>
+                  </div>
+                  <div className="p-4 bg-stone-50 rounded-2xl flex flex-col items-center justify-center">
+                     <CheckCircle2 size={16} className="text-emerald-500 mb-1" />
+                     <span className="text-xs font-bold text-stone-800">{selectedDay.dailyTasks.length} 项</span>
+                     <span className="text-[9px] text-stone-400 uppercase font-medium">圆满功课</span>
+                  </div>
+               </div>
+
+               {selectedDay.dailyLogs.length > 0 && (
+                 <div className="space-y-3">
+                    <h5 className="text-[10px] font-bold text-stone-400 tracking-widest uppercase flex items-center">
+                       <ScrollText size={12} className="mr-2" /> 随喜回顾
+                    </h5>
+                    <div className="space-y-3">
+                       {selectedDay.dailyLogs.map((log: any) => (
+                         <div key={log.id} className="p-4 bg-emerald-50/30 border border-emerald-100 rounded-2xl">
+                            <p className="text-sm text-stone-600 leading-relaxed italic">"{log.content}"</p>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+               )}
+
+               {selectedDay.meditationMins === 0 && selectedDay.dailyTasks.length === 0 && selectedDay.dailyLogs.length === 0 && (
+                 <div className="text-center py-10 space-y-2 opacity-30">
+                    <HandHelping size={32} className="mx-auto text-stone-300" />
+                    <p className="text-xs italic tracking-widest">此日无迹 · 亦是修行</p>
+                 </div>
+               )}
+            </div>
+          </div>
+        )}
+        {!selectedDay && (
+          <div className="text-center py-6 text-stone-300 text-[10px] flex items-center justify-center font-medium tracking-widest">
+             <History size={12} className="mr-2" /> 点击上方格子查看修持往事
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -8,6 +8,7 @@ import PracticeSystem from './PracticeSystem';
 import JournalSection from './JournalSection';
 import ChatInterface from './ChatInterface';
 import MeditationTimer from './MeditationTimer';
+import PracticeStats from './PracticeStats';
 
 interface DashboardContentProps {
   initialTasks: any[];
@@ -29,12 +30,7 @@ export default function DashboardContent({
         {activeTab === 'log' && <JournalSection entries={initialJournal} />}
         {activeTab === 'chat' && <ChatInterface initialMessages={initialHistory} />}
         {activeTab === 'timer' && <MeditationTimer />}
-        {activeTab === 'stats' && (
-          <div className="flex flex-col items-center justify-center h-full text-stone-300 italic">
-            <BarChart3 size={48} strokeWidth={1} className="mb-4" />
-            <p>统计模块开发中...</p>
-          </div>
-        )}
+        {activeTab === 'stats' && <PracticeStats />}
       </div>
 
       {/* Bottom Navigation (Restoring Original Feel) */}

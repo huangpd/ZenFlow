@@ -11,6 +11,7 @@ export async function createJournalEntry(prevState: any, formData: FormData) {
   }
 
   const content = formData.get('content') as string;
+  const category = formData.get('category') as string;
   const mood = formData.get('mood') as string;
 
   if (!content) {
@@ -22,6 +23,7 @@ export async function createJournalEntry(prevState: any, formData: FormData) {
       data: {
         userId: session.user.id,
         content,
+        category: category || '感悟',
         mood: mood || 'neutral',
       },
     });
