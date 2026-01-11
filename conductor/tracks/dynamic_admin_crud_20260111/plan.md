@@ -8,12 +8,12 @@
 - [x] Task: Schema Introspection Setup 402aa2a
   - [x] Sub-task: Generate a schema metadata utility (or script) that maps Prisma models to field names, types, and relations.
   - [x] Sub-task: Verify the metadata output covers all current models.
-- [ ] Task: Conductor - User Manual Verification 'Security & Setup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Security & Setup' (Protocol in workflow.md)
 
 ## Phase 2: Dynamic Core UI
-- [ ] Task: Admin Layout & Navigation
-  - [ ] Sub-task: Create `/app/admin/layout.tsx` with a sidebar listing all models dynamically.
-  - [ ] Sub-task: Ensure the sidebar is responsive.
+- [x] Task: Admin Layout & Navigation a3bddd4
+  - [x] Sub-task: Create `/app/admin/layout.tsx` with a sidebar listing all models dynamically.
+  - [x] Sub-task: Ensure the sidebar is responsive.
 - [ ] Task: Dynamic Table View
   - [ ] Sub-task: Implement `/app/admin/data/[model]/page.tsx`.
   - [ ] Sub-task: Create a generic server action `fetchModelData(modelName, page, limit)` using generic Prisma calls.
