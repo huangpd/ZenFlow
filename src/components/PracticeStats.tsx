@@ -1,18 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, ScrollText, HandHelping } from 'lucide-react';
-import { getPracticeStats } from '@/actions/stats';
+import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, ScrollText, HandHelping, ListTodo, Trophy } from 'lucide-react';
+import { getPracticeStats, getDetailedTaskStats } from '@/actions/stats';
 import { getDailyGuidance } from '@/actions/ai';
 
 export default function PracticeStats() {
   const [stats, setStats] = useState<any[]>([]);
+  const [taskStats, setTaskStats] = useState<{ today: any[], allTime: any[] }>({ today: [], allTime: [] });
   const [selectedDay, setSelectedDay] = useState<any>(null);
   const [aiInsight, setAiInsight] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     getPracticeStats().then(setStats);
+    getDetailedTaskStats().then(setTaskStats);
   }, []);
 
   const getHeatmapColor = (value: number) => {
@@ -65,6 +67,52 @@ export default function PracticeStats() {
         <div className="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100 text-center">
           <div className="text-[10px] text-emerald-800 font-bold tracking-[0.2em] mb-1 uppercase">精进指数</div>
           <div className="text-4xl font-light text-stone-800 font-serif">88<span className="text-sm ml-1">%</span></div>
+        </div>
+      </div>
+
+      <div className="bg-white p-6 rounded-[2.5rem] border border-stone-100 shadow-sm space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Today's Stats */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-stone-400 flex items-center tracking-widest px-1 uppercase">
+              <ListTodo size={14} className="mr-2"/> 今日修持
+            </h3>
+            {taskStats.today.length > 0 ? (
+              <div className="space-y-2">
+                {taskStats.today.map((t, i) => (
+                  <div key={i} className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100">
+                    <span className="text-xs font-bold text-stone-700">{t.text}</span>
+                    <span className="text-xs font-mono text-emerald-600 font-bold bg-white px-2 py-1 rounded-md border border-stone-100">
+                      {t.count} <span className="text-[9px] text-stone-400 font-normal">遍</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-stone-300 text-xs italic">今日暂无功课记录</div>
+            )}
+          </div>
+
+          {/* All Time Stats */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-stone-400 flex items-center tracking-widest px-1 uppercase">
+              <Trophy size={14} className="mr-2"/> 累计圆满
+            </h3>
+            {taskStats.allTime.length > 0 ? (
+              <div className="space-y-2 max-h-[200px] overflow-y-auto scrollbar-hide pr-1">
+                {taskStats.allTime.map((t) => (
+                  <div key={t.id} className="flex justify-between items-center p-3 bg-white rounded-xl border border-stone-100 shadow-sm">
+                    <span className="text-xs font-bold text-stone-700">{t.text}</span>
+                    <span className="text-xs font-mono text-amber-600 font-bold">
+                      {t.count} <span className="text-[9px] text-stone-400 font-normal">次</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-stone-300 text-xs italic">暂无累计数据</div>
+            )}
+          </div>
         </div>
       </div>
 
