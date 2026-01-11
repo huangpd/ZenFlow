@@ -19,6 +19,9 @@ model User {
   password      String?
   accounts      Account[]
   sessions      Session[]
+  journalEntries JournalEntry[]
+  chatMessages   ChatMessage[]
+  preferences    UserPreference?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -56,4 +59,38 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  content   String   @db.Text
+  mood      String?
+  tags      String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  theme     String?
+  language  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
