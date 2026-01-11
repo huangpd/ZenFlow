@@ -11,12 +11,12 @@
 - [x] Task: Conductor - User Manual Verification 'Database Refactoring' (Protocol in workflow.md)
 
 ## Phase 2: Logic & UX Updates
-- [ ] Task: Enforce Unique Tasks
+- [x] Task: Enforce Unique Tasks (Implemented)
     - [ ] Subtask: Update `createTask` action to check if task exists. If so, return error or existing task.
-- [ ] Task: Dynamic Task Loading
+- [x] Task: Dynamic Task Loading (Implemented)
     - [ ] Subtask: Create `getAvailableSutras` action.
     - [ ] Subtask: Update `AddTaskModal` to load list from DB/Action instead of constants.
     - [ ] Subtask: Update `AddTaskModal` to hide "Step Size" for Sutra tasks.
-- [ ] Task: Dynamic Sutra Reader
+- [x] Task: Dynamic Sutra Reader (Implemented)
     - [ ] Subtask: Update `SutraReader` to fetch content via `getSutra` action (by ID) instead of constants.
-- [ ] Task: Conductor - User Manual Verification 'Logic & UX Updates' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Logic & UX Updates' (Protocol in workflow.md)
