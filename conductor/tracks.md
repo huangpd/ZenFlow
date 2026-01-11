@@ -41,3 +41,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [x] Track: Refactor: Simplified Task Submission UI
 *Link: [./conductor/tracks/refactor_submission_20260111/](./conductor/tracks/refactor_submission_20260111/)*
+
+---
+
+## [~] Track: Refactor: Inline Task Editing
+*Link: [./conductor/tracks/refactor_inline_edit_20260111/](./conductor/tracks/refactor_inline_edit_20260111/)*

@@ -19,6 +19,9 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskCardProps) {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editValue, setEditValue] = React.useState(task.current?.toString() || '0');
+
   const handleStep = async () => {
     const nextCurrent = (task.current || 0) + (task.step || 1);
     const result = await updateTaskProgress(task.id, task.step || 1);
@@ -28,19 +31,26 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
     }
   };
 
-  const handleManual = async () => {
-    const val = prompt('请输入今日累计圆满遍数:');
-    if (val !== null && !isNaN(parseInt(val))) {
-      const nextCurrent = parseInt(val);
-      const result = await updateTaskProgress(task.id, undefined, nextCurrent);
+  const handleEditSubmit = async () => {
+    setIsEditing(false);
+    const val = parseInt(editValue);
+    if (!isNaN(val) && val !== task.current) {
+      const result = await updateTaskProgress(task.id, undefined, val);
       if (result.success) {
-        onProgress(task.id, nextCurrent, result.completed || false);
+        onProgress(task.id, val, result.completed || false);
         if (result.completed) onComplete?.();
       }
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleEditSubmit();
+    }
+  };
+
   const handleFinish = async () => {
+    // For normal tasks, if there is a target (e.g. 10 times), we log the full target amount at once.
     const countToLog = (task.target && task.target > task.current) ? (task.target - task.current) : 1;
     const nextCurrent = task.target || (task.current + 1);
     
@@ -79,23 +89,41 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
           {/* 进度数值与修改按钮 (严谨实现 0/100) */}
           <div className="bg-stone-50/50 p-5 rounded-3xl border border-stone-100/50">
             <div className="flex items-end justify-between mb-3">
-              <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-mono font-extrabold text-stone-900 tabular-nums">
-                  {task.current || 0}
-                </span>
+              <div className="flex items-baseline gap-1 w-full">
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={handleEditSubmit}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    className="text-5xl font-mono font-extrabold text-stone-900 bg-white border border-emerald-200 rounded-xl px-2 w-48 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                  />
+                ) : (
+                  <span 
+                    onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditing(true); }}
+                    className="text-5xl font-mono font-extrabold text-stone-900 tabular-nums cursor-pointer hover:text-emerald-700 transition-colors"
+                  >
+                    {task.current || 0}
+                  </span>
+                )}
+                
                 <span className="text-2xl font-medium text-stone-300 mx-1">/</span>
                 <span className="text-2xl font-mono font-bold text-stone-400">
                   {task.target || 0}
                 </span>
                 <span className="ml-2 text-xs font-bold text-stone-400 uppercase tracking-widest">次</span>
               </div>
-              <button 
-                onClick={handleManual} 
-                className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-xs font-bold text-stone-500 hover:text-emerald-600 hover:border-emerald-200 border border-stone-200 transition-all shadow-sm"
-              >
-                <Edit3 size={12} />
-                修改
-              </button>
+              {!isEditing && (
+                <button 
+                  onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditing(true); }}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-xs font-bold text-stone-500 hover:text-emerald-600 hover:border-emerald-200 border border-stone-200 transition-all shadow-sm whitespace-nowrap"
+                >
+                  <Edit3 size={12} />
+                  修改
+                </button>
+              )}
             </div>
 
             {/* 进度条 (严谨实现) */}
