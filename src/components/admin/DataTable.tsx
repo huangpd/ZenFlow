@@ -3,6 +3,7 @@
 import React from 'react';
 import { FieldMetadata } from '@/lib/schema-metadata';
 import { deleteRecord } from '@/actions/admin-data';
+import Link from 'next/link';
 
 interface DataTableProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,7 +52,12 @@ export default function DataTable({ data, fields, modelName }: DataTableProps) {
                 </td>
               ))}
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                 <button className="text-indigo-600 hover:text-indigo-900 mr-2">Edit</button>
+                 <Link 
+                    href={`/admin/data/${modelName}/${row.id}`} 
+                    className="text-indigo-600 hover:text-indigo-900 mr-2"
+                 >
+                    Edit
+                 </Link>
                  <button 
                    className="text-red-600 hover:text-red-900"
                    onClick={() => row.id && handleDelete(row.id)}

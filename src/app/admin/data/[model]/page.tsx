@@ -2,6 +2,7 @@ import { fetchModelData } from '@/actions/admin-data';
 import DataTable from '@/components/admin/DataTable';
 import { getSchemaMetadata } from '@/lib/schema-metadata';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 
 export default async function ModelPage({ params }: { params: Promise<{ model: string }> }) {
   const { model } = await params;
@@ -18,9 +19,12 @@ export default async function ModelPage({ params }: { params: Promise<{ model: s
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{model}</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <Link 
+          href={`/admin/data/${model}/new`}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
           Create New
-        </button>
+        </Link>
       </div>
       
       <DataTable data={data} fields={modelMeta.fields} modelName={model} />

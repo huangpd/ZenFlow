@@ -1,4 +1,4 @@
-import { fetchModelData, deleteRecord } from '@/actions/admin-data';
+import { fetchModelData, deleteRecord, createRecord, updateRecord } from '@/actions/admin-data';
 import { db } from '@/lib/db';
 import { auth } from '@/auth';
 import { isAdmin } from '@/lib/auth-utils';
@@ -10,6 +10,8 @@ jest.mock('@/lib/db', () => ({
       findMany: jest.fn(),
       count: jest.fn(),
       delete: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     },
   }
 }));
@@ -51,5 +53,27 @@ describe('deleteRecord', () => {
       where: { id: '1' },
     });
     expect(revalidatePath).toHaveBeenCalledWith('/admin/data/User');
+  });
+});
+
+describe('createRecord', () => {
+  it('creates a record', async () => {
+    (auth as jest.Mock).mockResolvedValue({ user: { email: 'admin@example.com' } });
+    (isAdmin as unknown as jest.Mock).mockReturnValue(true);
+    (db.user.create as jest.Mock).mockResolvedValue({ id: '2', name: 'New' });
+
+    await createRecord('User', { name: 'New' });
+    expect(db.user.create).toHaveBeenCalledWith({ data: { name: 'New' } });
+  });
+});
+
+describe('updateRecord', () => {
+  it('updates a record', async () => {
+    (auth as jest.Mock).mockResolvedValue({ user: { email: 'admin@example.com' } });
+    (isAdmin as unknown as jest.Mock).mockReturnValue(true);
+    (db.user.update as jest.Mock).mockResolvedValue({ id: '1', name: 'Updated' });
+
+    await updateRecord('User', '1', { name: 'Updated' });
+    expect(db.user.update).toHaveBeenCalledWith({ where: { id: '1' }, data: { name: 'Updated' } });
   });
 });

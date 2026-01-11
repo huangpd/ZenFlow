@@ -67,7 +67,7 @@ export async function fetchRelatedList(modelName: string) {
   if (!modelDelegate) return [];
 
   const records = await modelDelegate.findMany({
-    take: 100, // Limit for dropdown
+    take: 100,
   });
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,4 +75,59 @@ export async function fetchRelatedList(modelName: string) {
     id: r.id,
     label: r.name || r.title || r.email || r.text || r.id
   }));
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function createRecord(modelName: string, data: any) {
+  const session = await auth();
+  if (!session?.user?.email || !isAdmin(session.user.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const modelDelegate = (db as any)[prismaModelName];
+
+  if (!modelDelegate) throw new Error(`Invalid model: ${modelName}`);
+
+  await modelDelegate.create({ data });
+  revalidatePath(`/admin/data/${modelName}`);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function updateRecord(modelName: string, id: string, data: any) {
+  const session = await auth();
+  if (!session?.user?.email || !isAdmin(session.user.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const modelDelegate = (db as any)[prismaModelName];
+
+  if (!modelDelegate) throw new Error(`Invalid model: ${modelName}`);
+
+  await modelDelegate.update({
+    where: { id },
+    data,
+  });
+  revalidatePath(`/admin/data/${modelName}`);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function fetchRecord(modelName: string, id: string) {
+  const session = await auth();
+  if (!session?.user?.email || !isAdmin(session.user.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const modelDelegate = (db as any)[prismaModelName];
+
+  if (!modelDelegate) throw new Error(`Invalid model: ${modelName}`);
+
+  return await modelDelegate.findUnique({
+    where: { id },
+  });
 }
