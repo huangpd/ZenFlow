@@ -34,17 +34,20 @@ export async function createTask(data: {
   });
 
   if (existingTask) {
-    // If exists, reactivate it if completed, or just return it
-    if (existingTask.completed) {
-      return db.spiritualTask.update({
-        where: { id: existingTask.id },
-        data: { completed: false, current: 0 }, // Reset or just reactivate? Let's reset current for a new "cycle" or keep it? 
-        // User asked for "accumulate", so we should NOT reset current if they are "adding" it again, maybe just ensure it's visible.
-        // Actually, if it's already there, we might just want to update target/step if provided.
-        // Let's just return the existing task to prevent duplicates in the list.
-      });
-    }
-    return existingTask;
+    // If exists, update its configuration (target/step) and reactivate if completed
+    return db.spiritualTask.update({
+      where: { id: existingTask.id },
+      data: { 
+        completed: false, 
+        // Always update target and step to new config
+        target: data.target,
+        step: data.step,
+        // Optional: decide whether to reset current. 
+        // If user is "adding" it again, they likely want to start a new round or continue.
+        // If it was completed, we reset current. If not, we keep current but update target.
+        current: existingTask.completed ? 0 : existingTask.current
+      },
+    });
   }
 
   const task = await db.spiritualTask.create({
