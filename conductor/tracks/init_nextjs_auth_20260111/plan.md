@@ -12,7 +12,7 @@
 - [x] Task: Conductor - User Manual Verification 'Project Initialization & Configuration' (Protocol in workflow.md)
 
 ## Phase 2: Database & ORM Setup
-- [ ] Task: Setup PostgreSQL Environment
+- [x] Task: Setup PostgreSQL Environment (767cd5e)
     - [ ] Subtask: Create a `docker-compose.yml` for a local PostgreSQL instance (or configure a local DB connection string).
     - [ ] Subtask: Verify database connection.
 - [ ] Task: Configure Prisma ORM
