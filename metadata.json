@@ -1,0 +1,7 @@
+{
+  "name": "ZenPath - Spiritual Companion",
+  "description": "A high-end meditation and mindfulness companion featuring daily merit tracking, sutra reading with AI insights, and generative zen art.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
