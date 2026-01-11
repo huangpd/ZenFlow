@@ -5,9 +5,9 @@
   - [x] Sub-task: Add `ADMIN_EMAILS` to `.env` and `types.ts`.
   - [x] Sub-task: Create a utility function `isAdmin(email: string)` to check permissions.
   - [x] Sub-task: Create `admin-layout` or middleware logic to protect `/admin` routes.
-- [ ] Task: Schema Introspection Setup
-  - [ ] Sub-task: Generate a schema metadata utility (or script) that maps Prisma models to field names, types, and relations.
-  - [ ] Sub-task: Verify the metadata output covers all current models.
+- [x] Task: Schema Introspection Setup 402aa2a
+  - [x] Sub-task: Generate a schema metadata utility (or script) that maps Prisma models to field names, types, and relations.
+  - [x] Sub-task: Verify the metadata output covers all current models.
 - [ ] Task: Conductor - User Manual Verification 'Security & Setup' (Protocol in workflow.md)
 
 ## Phase 2: Dynamic Core UI
