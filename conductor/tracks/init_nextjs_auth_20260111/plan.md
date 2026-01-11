@@ -23,7 +23,7 @@
 - [x] Task: Conductor - User Manual Verification 'Database & ORM Setup' (Protocol in workflow.md)
 
 ## Phase 3: Authentication Infrastructure
-- [ ] Task: Install & Configure Auth.js
+- [x] Task: Install & Configure Auth.js (eb99227)
     - [ ] Subtask: Install `next-auth` (or `@auth/core` etc. depending on version).
     - [ ] Subtask: Implement API route handlers for Auth (e.g., `app/api/auth/[...nextauth]/route.ts`).
     - [ ] Subtask: Configure the PrismaAdapter for Auth.js to save users to DB.
