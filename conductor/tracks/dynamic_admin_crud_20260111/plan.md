@@ -14,10 +14,10 @@
 - [x] Task: Admin Layout & Navigation a3bddd4
   - [x] Sub-task: Create `/app/admin/layout.tsx` with a sidebar listing all models dynamically.
   - [x] Sub-task: Ensure the sidebar is responsive.
-- [ ] Task: Dynamic Table View
-  - [ ] Sub-task: Implement `/app/admin/data/[model]/page.tsx`.
-  - [ ] Sub-task: Create a generic server action `fetchModelData(modelName, page, limit)` using generic Prisma calls.
-  - [ ] Sub-task: Render the data in a responsive table component.
+- [x] Task: Dynamic Table View f2e8a42
+  - [x] Sub-task: Implement `/app/admin/data/[model]/page.tsx`.
+  - [x] Sub-task: Create a generic server action `fetchModelData(modelName, page, limit)` using generic Prisma calls.
+  - [x] Sub-task: Render the data in a responsive table component.
 - [ ] Task: Conductor - User Manual Verification 'Dynamic Core UI' (Protocol in workflow.md)
 
 ## Phase 3: Dynamic Forms & Actions
