@@ -11,7 +11,7 @@
     - [ ] Subtask: Implement `SutraReader` component with distraction-free mode.
 - [ ] Task: Conductor - User Manual Verification 'Daily Practice & Sutra System' (Protocol in workflow.md)
 
-## Phase 2: Meditation Timer
+## Phase 2: Meditation Timer [checkpoint: ffddd62]
 - [ ] Task: Immersive Timer UI
     - [ ] Subtask: Create `BreathingCircle` component (SVG/CSS animation).
     - [ ] Subtask: Implement countdown logic with presets.
