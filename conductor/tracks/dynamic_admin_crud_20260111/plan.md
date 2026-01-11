@@ -18,9 +18,12 @@
   - [x] Sub-task: Implement `/app/admin/data/[model]/page.tsx`.
   - [x] Sub-task: Create a generic server action `fetchModelData(modelName, page, limit)` using generic Prisma calls.
   - [x] Sub-task: Render the data in a responsive table component.
-- [ ] Task: Conductor - User Manual Verification 'Dynamic Core UI' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Dynamic Core UI' (Protocol in workflow.md)
 
 ## Phase 3: Dynamic Forms & Actions
+- [x] Task: Delete Action a336073
+  - [x] Sub-task: Implement delete button with confirmation modal.
+  - [x] Sub-task: Create generic server action `deleteRecord(model, id)`.
 - [ ] Task: Dynamic Form Component
   - [ ] Sub-task: Create a `DynamicForm` component that accepts schema metadata.
   - [ ] Sub-task: Implement inputs for basic types (Text, Number, Boolean, Date).
@@ -29,9 +32,6 @@
   - [ ] Sub-task: Create generic server action `createRecord(model, data)`.
   - [ ] Sub-task: Create generic server action `updateRecord(model, id, data)`.
   - [ ] Sub-task: Wire up `DynamicForm` to these actions.
-- [ ] Task: Delete Action
-  - [ ] Sub-task: Implement delete button with confirmation modal.
-  - [ ] Sub-task: Create generic server action `deleteRecord(model, id)`.
 - [ ] Task: Conductor - User Manual Verification 'Dynamic Forms & Actions' (Protocol in workflow.md)
 
 ## Phase 4: Refinement & Testing
