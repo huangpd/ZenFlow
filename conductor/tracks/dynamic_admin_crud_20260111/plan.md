@@ -32,12 +32,12 @@
   - [x] Sub-task: Create generic server action `createRecord(model, data)`.
   - [x] Sub-task: Create generic server action `updateRecord(model, id, data)`.
   - [x] Sub-task: Wire up `DynamicForm` to these actions.
-- [ ] Task: Conductor - User Manual Verification 'Dynamic Forms & Actions' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Dynamic Forms & Actions' (Protocol in workflow.md)
 
 ## Phase 4: Refinement & Testing
-- [ ] Task: Error Handling & Validation
-  - [ ] Sub-task: Add basic error messages for constraint violations (e.g., unique fields).
-  - [ ] Sub-task: Ensure invalid data types are caught before submission.
+- [x] Task: Error Handling & Validation 6048725
+  - [x] Sub-task: Add basic error messages for constraint violations (e.g., unique fields).
+  - [x] Sub-task: Ensure invalid data types are caught before submission.
 - [ ] Task: Integration Testing
   - [ ] Sub-task: Manually verify CRUD for complex models like `JournalEntry` (relations) and `User` (basic).
   - [ ] Sub-task: Verify security prevents non-admin access.
