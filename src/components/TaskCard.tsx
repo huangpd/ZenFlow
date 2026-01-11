@@ -9,25 +9,40 @@ interface TaskCardProps {
   task: any;
   onRead: (task: any) => void;
   onComplete?: () => void;
+  onProgress: (taskId: string, newCurrent: number, completed: boolean) => void;
 }
 
-export default function TaskCard({ task, onRead, onComplete }: TaskCardProps) {
+export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskCardProps) {
   const handleStep = async () => {
+    const nextCurrent = (task.current || 0) + (task.step || 1);
+    // Optimistic UI update could happen here if we passed a setter, but triggering parent update is safer
+    
     const result = await updateTaskProgress(task.id, task.step || 1);
-    if (result.completed) onComplete?.();
+    if (result.success) {
+      onProgress(task.id, nextCurrent, result.completed || false);
+      if (result.completed) onComplete?.();
+    }
   };
 
   const handleManual = async () => {
     const val = prompt('请输入今日累计圆满遍数:');
     if (val !== null && !isNaN(parseInt(val))) {
-      const result = await updateTaskProgress(task.id, undefined, parseInt(val));
-      if (result.completed) onComplete?.();
+      const nextCurrent = parseInt(val);
+      const result = await updateTaskProgress(task.id, undefined, nextCurrent);
+      if (result.success) {
+        onProgress(task.id, nextCurrent, result.completed || false);
+        if (result.completed) onComplete?.();
+      }
     }
   };
 
   const handleFinish = async () => {
+    const nextCurrent = (task.current || 0) + 1;
     const result = await updateTaskProgress(task.id, 1);
-    if (result.completed) onComplete?.();
+    if (result.success) {
+      onProgress(task.id, nextCurrent, result.completed || false);
+      if (result.completed) onComplete?.();
+    }
   };
 
   return (

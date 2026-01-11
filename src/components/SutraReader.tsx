@@ -10,9 +10,10 @@ interface SutraReaderProps {
   task: any;
   onBack: () => void;
   onComplete?: () => void;
+  onProgress?: (taskId: string, newCurrent: number, completed: boolean) => void;
 }
 
-export default function SutraReader({ task, onBack, onComplete }: SutraReaderProps) {
+export default function SutraReader({ task, onBack, onComplete, onProgress }: SutraReaderProps) {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
   const sutra = SUTRA_DATABASE[task.sutraId || ''] || { title: task.text, content: '' };
@@ -27,8 +28,15 @@ export default function SutraReader({ task, onBack, onComplete }: SutraReaderPro
   };
 
   const handleSubmit = async () => {
+    const nextCurrent = (task.current || 0) + 1;
     const result = await updateTaskProgress(task.id, 1);
-    if (result.completed) onComplete?.();
+    
+    if (result.success) {
+      if (onProgress) {
+        onProgress(task.id, nextCurrent, result.completed || false);
+      }
+      if (result.completed) onComplete?.();
+    }
     onBack();
   };
 

@@ -18,6 +18,12 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
     setTimeout(() => setShowCelebration(false), 3000);
   };
 
+  const handleTaskProgress = (taskId: string, newCurrent: number, completed: boolean) => {
+    setTasks(prevTasks => prevTasks.map(t => 
+      t.id === taskId ? { ...t, current: newCurrent, completed } : t
+    ));
+  };
+
   if (readingTask) {
     return (
       <div className="h-full">
@@ -26,6 +32,7 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
           task={readingTask} 
           onBack={() => setReadingTask(null)} 
           onComplete={triggerCelebration}
+          onProgress={(id, curr, comp) => handleTaskProgress(id, curr, comp)}
         />
       </div>
     );
@@ -57,6 +64,7 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
               task={task} 
               onRead={setReadingTask} 
               onComplete={triggerCelebration}
+              onProgress={handleTaskProgress}
             />
           ))
         )}
