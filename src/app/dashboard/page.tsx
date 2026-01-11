@@ -1,6 +1,7 @@
 import { auth, signOut } from '@/auth';
 import { redirect } from 'next/navigation';
 import ChatInterface from '@/components/ChatInterface';
+import JournalSection from '@/components/JournalSection';
 import { db } from '@/lib/db';
 
 export default async function DashboardPage() {
@@ -11,21 +12,30 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id;
-  const history = await db.chatMessage.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'asc' },
-    take: 50,
-  });
+  
+  const [chatHistory, journalEntries] = await Promise.all([
+    db.chatMessage.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+      take: 50,
+    }),
+    db.journalEntry.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    })
+  ]);
 
-  const formattedHistory = history.map((msg) => ({
+  const formattedHistory = chatHistory.map((msg) => ({
     role: msg.role as 'user' | 'assistant',
     content: msg.content,
   }));
 
   return (
     <div className="min-h-screen bg-stone-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex justify-between items-center">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Sidebar / Header Area */}
+        <div className="lg:col-span-3 flex justify-between items-center mb-4">
           <div>
             <h1 className="text-3xl font-serif text-stone-800">ZenFlow</h1>
             <p className="text-stone-500 text-sm">Welcome, {session.user?.name || session.user?.email}</p>
@@ -42,7 +52,15 @@ export default async function DashboardPage() {
           </form>
         </div>
 
-        <ChatInterface initialMessages={formattedHistory} />
+        {/* Main Chat Area */}
+        <div className="lg:col-span-2 space-y-8">
+          <ChatInterface initialMessages={formattedHistory} />
+        </div>
+
+        {/* Journal Sidebar */}
+        <div className="lg:col-span-1">
+          <JournalSection entries={journalEntries} />
+        </div>
       </div>
     </div>
   );
