@@ -1,0 +1,1230 @@
+{
+  "models": [
+    {
+      "name": "User",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": true,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "emailVerified",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "image",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "accounts",
+          "type": "Account",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "relationName": "AccountToUser",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "sessions",
+          "type": "Session",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "relationName": "SessionToUser",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "journalEntries",
+          "type": "JournalEntry",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "relationName": "JournalEntryToUser",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "chatMessages",
+          "type": "ChatMessage",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "relationName": "ChatMessageToUser",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "tasks",
+          "type": "SpiritualTask",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "relationName": "SpiritualTaskToUser",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "taskLogs",
+          "type": "TaskLog",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "relationName": "TaskLogToUser",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "meditationSessions",
+          "type": "MeditationSession",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "relationName": "MeditationSessionToUser",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "preferences",
+          "type": "UserPreference",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "relationName": "UserToUserPreference",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "now",
+            "args": []
+          }
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "Account",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "provider",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "providerAccountId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "refresh_token",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "access_token",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "expires_at",
+          "type": "Int",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "token_type",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "scope",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "id_token",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "session_state",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "AccountToUser",
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "Session",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "sessionToken",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": true,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "expires",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "SessionToUser",
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "VerificationToken",
+      "fields": [
+        {
+          "name": "identifier",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "token",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": true,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "expires",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "JournalEntry",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "content",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "mood",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "category",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": "感悟"
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "tags",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "now",
+            "args": []
+          }
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "JournalEntryToUser",
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "ChatMessage",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "content",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "now",
+            "args": []
+          }
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "ChatMessageToUser",
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "SpiritualTask",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "text",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "iconId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "sutraId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "current",
+          "type": "Int",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": 0
+        },
+        {
+          "name": "target",
+          "type": "Int",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "step",
+          "type": "Int",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": 1
+        },
+        {
+          "name": "completed",
+          "type": "Boolean",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": false
+        },
+        {
+          "name": "isDaily",
+          "type": "Boolean",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": true
+        },
+        {
+          "name": "logs",
+          "type": "TaskLog",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": true,
+          "relationName": "SpiritualTaskToTaskLog",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "now",
+            "args": []
+          }
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "SpiritualTaskToUser",
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "TaskLog",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "taskId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "count",
+          "type": "Int",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "now",
+            "args": []
+          }
+        },
+        {
+          "name": "task",
+          "type": "SpiritualTask",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "SpiritualTaskToTaskLog",
+          "relationFromFields": [
+            "taskId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "TaskLogToUser",
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "MeditationSession",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "duration",
+          "type": "Int",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "now",
+            "args": []
+          }
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "MeditationSessionToUser",
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "UserPreference",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": true,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "theme",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "language",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "now",
+            "args": []
+          }
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "kind": "object",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "relationName": "UserToUserPreference",
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "hasDefaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "Sutra",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "kind": "scalar",
+          "isId": true,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "cuid",
+            "args": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": true,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "content",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": "sutra"
+        },
+        {
+          "name": "iconId",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": "book"
+        },
+        {
+          "name": "defaultTarget",
+          "type": "Int",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": 1
+        },
+        {
+          "name": "defaultStep",
+          "type": "Int",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": 1
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": false,
+          "isList": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": true,
+          "default": {
+            "name": "now",
+            "args": []
+          }
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "kind": "scalar",
+          "isId": false,
+          "isUnique": false,
+          "isRequired": true,
+          "isList": false,
+          "hasDefaultValue": false
+        }
+      ]
+    }
+  ]
+}
