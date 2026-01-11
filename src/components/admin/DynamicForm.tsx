@@ -71,7 +71,7 @@ export default function DynamicForm({ fields, initialData = {}, onSubmit }: Dyna
              <select
                 id={field.name}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-                value={String(formData[field.name] || 'false')}
+                value={formData[field.name] === undefined || formData[field.name] === null ? 'false' : String(formData[field.name])}
                 onChange={e => handleChange(field.name, e.target.value, 'Boolean')}
              >
                  <option value="true">Yes</option>

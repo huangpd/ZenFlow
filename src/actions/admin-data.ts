@@ -107,11 +107,14 @@ export async function updateRecord(modelName: string, id: string, data: any) {
 
   if (!modelDelegate) throw new Error(`Invalid model: ${modelName}`);
 
+  console.log(`Updating ${modelName} ${id}:`, data);
+
   await modelDelegate.update({
     where: { id },
     data,
   });
   revalidatePath(`/admin/data/${modelName}`);
+  revalidatePath(`/admin/data/${modelName}/${id}`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
