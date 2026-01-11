@@ -178,7 +178,7 @@ export async function deleteTask(id: string) {
   return { success: true };
 }
 
-export async function updateTask(id: string, data: { isDaily?: boolean; current?: number }) {
+export async function updateTask(id: string, data: { isDaily?: boolean; current?: number; target?: number }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
@@ -191,6 +191,7 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
   const updates: any = {};
   if (data.isDaily !== undefined) updates.isDaily = data.isDaily;
   if (data.current !== undefined) updates.current = data.current;
+  if (data.target !== undefined) updates.target = data.target;
 
   const isProgressChanged = data.current !== undefined && data.current !== task.current;
 

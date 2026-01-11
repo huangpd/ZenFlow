@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, ArrowLeft, Settings2, Hash, BookOpen } from 'lucide-react';
 import { ICON_MAP } from '@/constants';
-import { createTask, getAvailableSutras } from '@/actions/tasks';
+import { createTask, getAvailableSutras, updateTask } from '@/actions/tasks';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -9,7 +9,19 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpen: boolean; onClose: () => void; onTaskCreated?: (task: any) => void }) {
+export default function AddTaskModal({ 
+  isOpen, 
+  onClose, 
+  onTaskCreated,
+  onTaskUpdated,
+  taskToEdit 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onTaskCreated?: (task: any) => void;
+  onTaskUpdated?: (task: any) => void;
+  taskToEdit?: any;
+}) {
   const [configuringTask, setConfiguringTask] = useState<any | null>(null);
   const [configTarget, setConfigTarget] = useState(1);
   const [isDaily, setIsDaily] = useState(false);
@@ -18,8 +30,26 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
   useEffect(() => {
     if (isOpen) {
       getAvailableSutras().then(setDbSutras);
+      
+      if (taskToEdit) {
+        // Initialize state for editing
+        const text = taskToEdit.text.startsWith("读诵《") && taskToEdit.text.endsWith("》") 
+          ? taskToEdit.text.slice(3, -1) 
+          : taskToEdit.text;
+          
+        setConfiguringTask({
+          ...taskToEdit,
+          text
+        });
+        setConfigTarget(taskToEdit.target || 1);
+        setIsDaily(taskToEdit.isDaily || false);
+      } else {
+        setConfiguringTask(null);
+        setConfigTarget(1);
+        setIsDaily(false);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, taskToEdit]);
 
   if (!isOpen) return null;
 
@@ -33,25 +63,37 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
     try {
       const text = configuringTask.type === 'sutra' ? `读诵《${configuringTask.text}》` : configuringTask.text;
       
-      const newTask = await createTask({
-        text,
-        type: configuringTask.type,
-        iconId: configuringTask.iconId,
-        sutraId: configuringTask.sutraId,
-        target: configTarget,
-        step: configuringTask.step,
-        isDaily: isDaily,
-      });
-      
-      if (onTaskCreated) {
-        onTaskCreated(newTask);
+      if (taskToEdit) {
+        // Update mode
+        await updateTask(taskToEdit.id, {
+          isDaily: isDaily,
+          target: configTarget
+        });
+        if (onTaskUpdated) {
+          onTaskUpdated({ ...taskToEdit, isDaily, target: configTarget });
+        }
+      } else {
+        // Create mode
+        const newTask = await createTask({
+          text,
+          type: configuringTask.type,
+          iconId: configuringTask.iconId,
+          sutraId: configuringTask.sutraId,
+          target: configTarget,
+          step: configuringTask.step,
+          isDaily: isDaily,
+        });
+        
+        if (onTaskCreated) {
+          onTaskCreated(newTask);
+        }
       }
       
       setConfiguringTask(null);
       onClose();
     } catch (error: any) {
       console.error("Confirm Task Error:", error);
-      alert("请领功课失败: " + (error.message || "未知错误"));
+      alert("操作失败: " + (error.message || "未知错误"));
     }
   };
 
@@ -96,7 +138,7 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
               <button onClick={() => setConfiguringTask(null)} className="w-10 h-10 bg-stone-50 rounded-full flex items-center justify-center mr-3">
                 <ArrowLeft size={20} />
               </button>
-              <h3 className="text-2xl font-bold text-stone-800">修持设定</h3>
+              <h3 className="text-2xl font-bold text-stone-800">{taskToEdit ? "修改设定" : "修持设定"}</h3>
             </div>
             <div className="space-y-8 mb-10">
                <div className="text-center py-6 bg-stone-50 rounded-[2rem] border border-stone-100 mb-4">
@@ -131,7 +173,7 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
                </div>
             </div>
             <button onClick={handleConfirm} className="w-full h-16 bg-stone-800 text-white rounded-[1.5rem] font-bold text-lg shadow-xl active:scale-95 transition-all">
-              确定请领
+              {taskToEdit ? "保存设置" : "保存并请领"}
             </button>
           </div>
         )}

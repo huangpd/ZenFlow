@@ -10,6 +10,7 @@ import CelebrationEffect from './CelebrationEffect';
 export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [readingTask, setReadingTask] = useState<any | null>(null);
+  const [editingTask, setEditingTask] = useState<any | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -21,6 +22,12 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
   const handleTaskProgress = (taskId: string, newCurrent: number, completed: boolean) => {
     setTasks(prevTasks => prevTasks.map(t => 
       t.id === taskId ? { ...t, current: newCurrent, completed } : t
+    ));
+  };
+
+  const handleTaskUpdate = (updatedTask: any) => {
+    setTasks(prevTasks => prevTasks.map(t => 
+      t.id === updatedTask.id ? { ...t, ...updatedTask } : t
     ));
   };
 
@@ -42,19 +49,19 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
     <div className="space-y-6 pb-12 h-full">
       {showCelebration && <CelebrationEffect />}
       
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center px-4">
         <h2 className="text-3xl font-bold tracking-tight text-stone-800">每日功课</h2>
         <button 
           onClick={() => setIsAddModalOpen(true)}
-          className="p-2 bg-stone-100 rounded-full active:bg-stone-200 transition-colors"
+          className="p-3 bg-stone-100 rounded-full active:bg-stone-200 transition-all active:scale-90 shadow-sm"
         >
-          <Plus size={24} />
+          <Plus size={24} className="text-stone-600" />
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 px-4">
         {tasks.length === 0 ? (
-          <div className="text-center py-12 text-stone-400 border-2 border-dashed rounded-[2rem]">
+          <div className="text-center py-12 text-stone-400 border-2 border-dashed rounded-[2rem] border-stone-100">
             暂无功课，点击右上方按钮请领
           </div>
         ) : (
@@ -63,6 +70,7 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
               key={task.id} 
               task={task} 
               onRead={setReadingTask} 
+              onEdit={setEditingTask}
               onComplete={triggerCelebration}
               onProgress={handleTaskProgress}
             />
@@ -71,9 +79,14 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
       </div>
 
       <AddTaskModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
+        isOpen={isAddModalOpen || !!editingTask} 
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEditingTask(null);
+        }} 
         onTaskCreated={(newTask) => setTasks([...tasks, newTask])}
+        onTaskUpdated={handleTaskUpdate}
+        taskToEdit={editingTask}
       />
     </div>
   );

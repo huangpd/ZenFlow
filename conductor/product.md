@@ -16,6 +16,8 @@ To create an accessible, AI-powered sanctuary that helps users cultivate peace, 
 - **Spiritual Journaling:** Comprehensive journaling system with mood tracking and database persistence to record the user's growth.
 - **Interactive Experience:** Engaging UI elements (e.g., celebration effects) to encourage user participation and achievement.
 - **Secure Data Management:** Uses a robust PostgreSQL database to ensure user data privacy and integrity.
+- **Admin Dashboard:** Dynamic CRUD interface for managing all application data and content.
+- **Task Management:** Users can manage tasks and toggle "Daily Homework" status directly from the task card.
 
 ## Platform
 - **Web Application:** Built with Next.js and React for a fast, secure, and modern full-stack experience.

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Circle, CheckCircle2, Edit3, BellRing, BookOpen, Star, Save } from 'lucide-react';
+import { Circle, CheckCircle2, Edit3, BellRing, BookOpen, Star, Save, Settings2 } from 'lucide-react';
 import { ICON_MAP } from '@/constants';
 import { updateTaskProgress, updateTask } from '@/actions/tasks';
 import { clsx, type ClassValue } from 'clsx';
@@ -17,18 +17,13 @@ interface TaskCardProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRead: (task: any) => void;
   onComplete?: () => void;
+  onEdit: (task: any) => void;
   onProgress: (taskId: string, newCurrent: number, completed: boolean) => void;
 }
 
-export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskCardProps) {
-  const [isEditing, setIsEditing] = React.useState(false);
+export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress }: TaskCardProps) {
+  const [isEditingProgress, setIsEditingProgress] = React.useState(false);
   const [editValue, setEditValue] = React.useState(task.current?.toString() || '0');
-  const [pendingIsDaily, setPendingIsDaily] = React.useState(task.isDaily || false);
-
-  // Sync internal state with external prop changes
-  React.useEffect(() => {
-    setPendingIsDaily(task.isDaily || false);
-  }, [task.isDaily]);
 
   const handleStep = async () => {
     const nextCurrent = (task.current || 0) + (task.step || 1);
@@ -39,13 +34,12 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
     }
   };
 
-  const handleEditSubmit = async () => {
-    setIsEditing(false);
+  const handleProgressEditSubmit = async () => {
+    setIsEditingProgress(false);
     const val = parseInt(editValue);
-    if (!isNaN(val)) {
+    if (!isNaN(val) && val !== task.current) {
       const result = await updateTask(task.id, { 
         current: val, 
-        isDaily: pendingIsDaily 
       });
       if (result.success) {
         const isFinished = task.target ? val >= task.target : true;
@@ -57,7 +51,7 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleEditSubmit();
+      handleProgressEditSubmit();
     }
   };
 
@@ -69,12 +63,6 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
     if (result.success) {
       onProgress(task.id, nextCurrent, true);
       onComplete?.();
-    }
-  };
-
-  const handleToggleDaily = () => {
-    if (isEditing) {
-      setPendingIsDaily(!pendingIsDaily);
     }
   };
 
@@ -101,20 +89,20 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
         
         <div className="flex items-center gap-2">
            {!task.completed && (
-             <button
-               onClick={handleToggleDaily}
-               className={cn(
-                 "transition-all p-2",
-                 isEditing ? "hover:scale-110 cursor-pointer" : "opacity-50 cursor-default"
+             <div className="flex items-center gap-1">
+               {task.isDaily && (
+                 <div className="p-2 text-amber-400" title="每日功课">
+                   <Star size={24} className="fill-amber-400" />
+                 </div>
                )}
-               aria-label={pendingIsDaily ? "Unset Daily" : "Set as Daily"}
-               title={pendingIsDaily ? "每日功课" : "点击'修改'以设置为每日"}
-             >
-               <Star 
-                 size={24} 
-                 className={cn("transition-all", pendingIsDaily ? "fill-amber-400 text-amber-400" : "text-stone-300")}
-               />
-             </button>
+               <button 
+                 onClick={() => onEdit(task)}
+                 className="p-2 text-stone-300 hover:text-emerald-500 transition-all hover:bg-stone-50 rounded-xl active:scale-95"
+                 title="修持设定"
+               >
+                 <Settings2 size={24} />
+               </button>
+             </div>
            )}
            {task.completed && <CheckCircle2 className="text-emerald-500 animate-in zoom-in duration-300" size={28}/>}
         </div>
@@ -125,11 +113,11 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
           {/* 进度数值与修改按钮 (严谨实现 0/100) */}
           <div className={cn(
             "p-5 rounded-3xl border transition-all duration-300",
-            isEditing ? "bg-emerald-50/30 border-emerald-100" : "bg-stone-50/50 border-stone-100/50"
+            isEditingProgress ? "bg-emerald-50/30 border-emerald-100" : "bg-stone-50/50 border-stone-100/50"
           )}>
             <div className="flex items-end justify-between mb-3">
               <div className="flex items-baseline gap-1 w-full">
-                {isEditing ? (
+                {isEditingProgress ? (
                   <input
                     type="number"
                     value={editValue}
@@ -140,7 +128,8 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
                   />
                 ) : (
                   <span 
-                    className="text-5xl font-mono font-extrabold text-stone-900 tabular-nums"
+                    onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditingProgress(true); }}
+                    className="text-5xl font-mono font-extrabold text-stone-900 tabular-nums cursor-pointer hover:text-emerald-700 transition-colors"
                   >
                     {task.current || 0}
                   </span>
@@ -154,9 +143,9 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
               </div>
               
               <div className="flex gap-2">
-                {isEditing ? (
+                {isEditingProgress ? (
                   <button 
-                    onClick={handleEditSubmit}
+                    onClick={handleProgressEditSubmit}
                     className="flex items-center gap-1.5 px-5 py-2 bg-emerald-600 text-white rounded-full text-xs font-bold hover:bg-emerald-700 transition-all shadow-md active:scale-95"
                   >
                     <Save size={12} />
@@ -164,11 +153,11 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
                   </button>
                 ) : (
                   <button 
-                    onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditing(true); }}
+                    onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditingProgress(true); }}
                     className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-xs font-bold text-stone-500 hover:text-emerald-600 hover:border-emerald-200 border border-stone-200 transition-all shadow-sm whitespace-nowrap"
                   >
                     <Edit3 size={12} />
-                    修改
+                    修改进度
                   </button>
                 )}
               </div>
@@ -187,7 +176,7 @@ export default function TaskCard({ task, onRead, onComplete, onProgress }: TaskC
           </div>
           
           {/* 操作按钮区 */}
-          {!isEditing && (
+          {!isEditingProgress && (
             <div className="flex gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
               {task.type === 'counter' ? (
                 <>
