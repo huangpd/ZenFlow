@@ -39,5 +39,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [~] Track: Refactor: Simplified Task Submission UI
+## [x] Track: Refactor: Simplified Task Submission UI
 *Link: [./conductor/tracks/refactor_submission_20260111/](./conductor/tracks/refactor_submission_20260111/)*
