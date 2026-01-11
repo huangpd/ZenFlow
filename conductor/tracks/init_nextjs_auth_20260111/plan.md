@@ -27,7 +27,7 @@
     - [ ] Subtask: Install `next-auth` (or `@auth/core` etc. depending on version).
     - [ ] Subtask: Implement API route handlers for Auth (e.g., `app/api/auth/[...nextauth]/route.ts`).
     - [ ] Subtask: Configure the PrismaAdapter for Auth.js to save users to DB.
-- [ ] Task: Implement Basic Sign-In/Sign-Up Pages
+- [x] Task: Implement Basic Sign-In/Sign-Up Pages (a43b237)
     - [ ] Subtask: Create a basic server component for the Login page.
     - [ ] Subtask: Create a basic client form for credentials input (email/password placeholder).
     - [ ] Subtask: Protect a sample route (e.g., `/dashboard`) to verify session enforcement.
