@@ -52,12 +52,24 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
 
   const isFinished = task.target ? nextCurrent >= task.target : true;
 
-  const updatedTask = await db.spiritualTask.update({
-    where: { id },
-    data: {
-      current: nextCurrent,
-      completed: isFinished || task.completed,
-    },
+  const updatedTask = await db.$transaction(async (tx) => {
+    // Create log entry
+    await tx.taskLog.create({
+      data: {
+        taskId: id,
+        userId: session.user.id!,
+        count: nextCurrent - task.current,
+      },
+    });
+
+    // Update task
+    return tx.spiritualTask.update({
+      where: { id },
+      data: {
+        current: nextCurrent,
+        completed: isFinished || task.completed,
+      },
+    });
   });
 
   revalidatePath('/dashboard');

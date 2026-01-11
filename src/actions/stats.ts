@@ -13,12 +13,12 @@ export async function getPracticeStats() {
   const eightyFourDaysAgo = new Date();
   eightyFourDaysAgo.setDate(eightyFourDaysAgo.getDate() - 83);
 
-  const [meditations, tasks, logs] = await Promise.all([
+  const [meditations, taskLogs, logs] = await Promise.all([
     db.meditationSession.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
     }),
-    db.spiritualTask.findMany({
-      where: { userId, updatedAt: { gte: eightyFourDaysAgo }, completed: true },
+    db.taskLog.findMany({
+      where: { userId, createdAt: { gte: eightyFourDaysAgo } },
     }),
     db.journalEntry.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
@@ -36,13 +36,13 @@ export async function getPracticeStats() {
     const dayMeds = meditations.filter(m => m.createdAt.toLocaleDateString() === dateStr);
     const dayMins = dayMeds.reduce((acc, m) => acc + m.duration, 0);
     const dayLogs = logs.filter(l => l.createdAt.toLocaleDateString() === dateStr);
-    const dayTasks = tasks.filter(t => t.updatedAt.toLocaleDateString() === dateStr);
+    const dayTaskLogs = taskLogs.filter(t => t.createdAt.toLocaleDateString() === dateStr);
 
     let value = 0;
     if (dayMins > 0) value += 1;
     if (dayLogs.length > 0) value += 1;
-    if (dayTasks.length > 0) value += 1;
-    if (dayMins > 45 || dayTasks.length > 3) value += 1;
+    if (dayTaskLogs.length > 0) value += 1;
+    if (dayMins > 45 || dayTaskLogs.length > 3) value += 1;
 
     stats[dateStr] = {
       day: i,
@@ -50,7 +50,7 @@ export async function getPracticeStats() {
       fullDate: date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
       value,
       meditationMins: dayMins,
-      dailyTasks: dayTasks,
+      dailyTasks: dayTaskLogs, // Note: This is now logs, not task definitions
       dailyLogs: dayLogs
     };
   }
