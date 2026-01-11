@@ -1,16 +1,16 @@
 # Plan: Feature: Selective Daily Tasks & Persistence Logic
 
 ## Phase 1: Database & Backend
-- [ ] Task: Update Schema
+- [x] Task: Update Schema (Completed)
     - [ ] Subtask: Add `isDaily` field to `SpiritualTask`.
     - [ ] Subtask: Run migrations.
-- [ ] Task: Update Actions
+- [x] Task: Update Actions (Completed)
     - [ ] Subtask: Modify `createTask` to handle `isDaily`.
     - [ ] Subtask: Update `getTasks` reset logic (reset dailies, delete non-dailies).
-- [ ] Task: Conductor - User Manual Verification 'Backend Logic' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Backend Logic' (Protocol in workflow.md) (checkpoint: 0b48d77)
 
 ## Phase 2: UI Implementation
-- [ ] Task: Update AddTaskModal
+- [x] Task: Update AddTaskModal (Completed)
     - [ ] Subtask: Add a toggle/switch for "设为每日功课".
     - [ ] Subtask: Pass the state to the `createTask` action.
-- [ ] Task: Conductor - User Manual Verification 'UI Implementation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'UI Implementation' (Protocol in workflow.md) (checkpoint: 7ebbc0d)

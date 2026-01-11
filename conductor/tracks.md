@@ -57,5 +57,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 *Link: [./conductor/tracks/dynamic_db_final_20260111/](./conductor/tracks/dynamic_db_final_20260111/)*
 ---
 
-## [~] Track: Feature: Selective Daily Tasks & Persistence Logic
+## [x] Track: Feature: Selective Daily Tasks & Persistence Logic
 *Link: [./conductor/tracks/feature_daily_tasks_20260111/](./conductor/tracks/feature_daily_tasks_20260111/)*

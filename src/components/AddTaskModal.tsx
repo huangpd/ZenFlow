@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Plus, ArrowLeft, Settings2, Hash, BookOpen } from 'lucide-react';
 import { ICON_MAP } from '@/constants';
 import { createTask, getAvailableSutras } from '@/actions/tasks';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpen: boolean; onClose: () => void; onTaskCreated?: (task: any) => void }) {
   const [configuringTask, setConfiguringTask] = useState<any | null>(null);
   const [configTarget, setConfigTarget] = useState(1);
+  const [isDaily, setIsDaily] = useState(true);
   const [dbSutras, setDbSutras] = useState<any[]>([]);
 
   useEffect(() => {
@@ -19,6 +26,7 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
   const handleSelectPreset = (item: any) => {
     setConfiguringTask(item);
     setConfigTarget(1);
+    setIsDaily(true);
   };
 
   const handleConfirm = async () => {
@@ -32,6 +40,7 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
         sutraId: configuringTask.sutraId,
         target: configTarget,
         step: configuringTask.step,
+        isDaily: isDaily,
       });
       
       if (onTaskCreated) {
@@ -94,6 +103,26 @@ export default function AddTaskModal({ isOpen, onClose, onTaskCreated }: { isOpe
                   <div className="scale-150 flex justify-center mb-2">{ICON_MAP[configuringTask.iconId || ''] || <BookOpen className="text-blue-600" size={18}/>}</div>
                   <p className="font-bold text-lg text-stone-800">{configuringTask.text}</p>
                </div>
+
+               <div className="flex items-center justify-between px-6 py-4 bg-stone-50 rounded-3xl border border-stone-100">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-stone-800">设为每日功课</span>
+                    <span className="text-[10px] text-stone-400">每天凌晨自动重置进度</span>
+                  </div>
+                  <button 
+                    onClick={() => setIsDaily(!isDaily)}
+                    className={cn(
+                      "w-12 h-6 rounded-full transition-colors relative",
+                      isDaily ? "bg-emerald-500" : "bg-stone-300"
+                    )}
+                  >
+                    <div className={cn(
+                      "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                      isDaily ? "right-1" : "left-1"
+                    )} />
+                  </button>
+               </div>
+
                <div className="space-y-4">
                   <label className="text-xs font-bold text-stone-400 tracking-[0.2em] flex items-center">
                     <Settings2 size={12} className="mr-2"/> 每日发愿目标 (遍/日)
