@@ -5,7 +5,7 @@
     - [ ] Subtask: Initialize Next.js app with TypeScript, Tailwind, ESLint (`npx create-next-app@latest`).
     - [ ] Subtask: Clean up default boilerplate code.
     - [ ] Subtask: Verify project builds and runs locally.
-- [~] Task: Configure Code Quality Tools
+- [x] Task: Configure Code Quality Tools (91e3606)
     - [ ] Subtask: Configure Prettier and ensure integration with ESLint.
     - [ ] Subtask: Set up Jest and React Testing Library for unit testing.
     - [ ] Subtask: Create a "Hello World" test to verify test runner.
