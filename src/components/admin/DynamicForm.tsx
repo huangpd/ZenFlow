@@ -9,13 +9,14 @@ interface DynamicFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialData?: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any) => Promise<void> | void;
   modelName: string;
 }
 
 export default function DynamicForm({ fields, initialData = {}, onSubmit }: DynamicFormProps) {
   const [formData, setFormData] = useState(initialData);
   const [relationOptions, setRelationOptions] = useState<Record<string, {id: string, label: string}[]>>({});
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadRelations = async () => {
@@ -55,13 +56,24 @@ export default function DynamicForm({ fields, initialData = {}, onSubmit }: Dyna
     setFormData({ ...formData, [name]: parsedValue });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setError(null);
+    try {
+        await onSubmit(formData);
+    } catch (err: any) {
+        console.error(err);
+        setError(err.message || "An error occurred during submission.");
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-lg bg-white p-6 rounded-lg shadow">
+      {error && (
+          <div className="p-3 bg-red-100 border border-red-200 text-red-700 rounded text-sm">
+              {error}
+          </div>
+      )}
       {editableFields.map(field => (
         <div key={field.name}>
           <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
