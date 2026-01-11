@@ -46,3 +46,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [x] Track: Refactor: Inline Task Editing
 *Link: [./conductor/tracks/refactor_inline_edit_20260111/](./conductor/tracks/refactor_inline_edit_20260111/)*
+
+---
+
+## [x] Track: Feature: Sutra Management Admin
+*Link: [./conductor/tracks/feature_admin_sutras_20260111/](./conductor/tracks/feature_admin_sutras_20260111/)*
