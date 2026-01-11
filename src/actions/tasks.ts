@@ -10,13 +10,14 @@ export async function getTasks() {
 
   const userId = session.user.id;
   const todayStr = new Date().toLocaleDateString();
+  const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
 
   // 1. Check if we need a reset (Check any task's updatedAt)
   const needsReset = await db.spiritualTask.findFirst({
     where: {
       userId,
       updatedAt: {
-        lt: new Date(new Date().setHours(0, 0, 0, 0))
+        lt: todayStart
       }
     }
   });
@@ -25,13 +26,21 @@ export async function getTasks() {
     console.log(`New day detected (${todayStr}), resetting daily tasks and removing one-off tasks for user ${userId}`);
     
     await db.$transaction([
-      // A. Delete tasks that are NOT marked as daily
+      // A. Delete tasks that are NOT marked as daily AND are old
       db.spiritualTask.deleteMany({
-        where: { userId, isDaily: false }
+        where: { 
+          userId, 
+          isDaily: false,
+          updatedAt: { lt: todayStart }
+        }
       }),
-      // B. Reset progress for tasks marked as daily
+      // B. Reset progress for tasks marked as daily AND are old
       db.spiritualTask.updateMany({
-        where: { userId, isDaily: true },
+        where: { 
+          userId, 
+          isDaily: true, 
+          updatedAt: { lt: todayStart }
+        },
         data: {
           current: 0,
           completed: false
