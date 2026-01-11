@@ -12,7 +12,7 @@
     - [ ] Subtask: Create `src/lib/ai/gemini.ts` to encapsulate Google GenAI logic.
     - [ ] Subtask: Securely load `GEMINI_API_KEY` from environment variables.
     - [ ] Subtask: Create a Server Action `generateGuidance` to call Gemini.
-- [ ] Task: Implement Chat Interface
+- [x] Task: Implement ChatInterface (751c18c)
     - [ ] Subtask: Create `src/components/ChatInterface.tsx` (Client Component).
     - [ ] Subtask: Implement the UI for sending messages and displaying responses (streaming support recommended).
     - [ ] Subtask: Integrate with `generateGuidance` Server Action.
