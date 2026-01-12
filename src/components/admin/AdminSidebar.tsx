@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ModelMetadata } from '@/lib/schema-metadata';
-import { Menu, X, Database } from 'lucide-react';
+import { Menu, X, Database, BookOpen, Home } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +37,30 @@ export default function AdminSidebar({ models }: AdminSidebarProps) {
            </Link>
         </div>
         <nav className="p-4 space-y-2 h-full overflow-y-auto">
+          <div className="pb-4 mb-4 border-b border-slate-700 space-y-2">
+            <Link 
+              href="/dashboard"
+              className="flex items-center gap-2 p-2 rounded hover:bg-slate-800 transition-colors text-slate-400"
+            >
+              <Home size={18} />
+              返回主站
+            </Link>
+            <Link 
+              href="/admin/sutras"
+              className={cn(
+                "flex items-center gap-2 p-2 rounded hover:bg-slate-800 transition-colors",
+                pathname === '/admin/sutras' ? "bg-slate-800 text-emerald-400" : "text-white"
+              )}
+              onClick={() => setIsOpen(false)}
+            >
+              <BookOpen size={18} />
+              佛经管理 (专业版)
+            </Link>
+          </div>
+
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2 mb-2">
+            数据底座
+          </div>
           {models.map(model => (
             <Link 
               key={model.name} 

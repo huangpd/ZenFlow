@@ -3,18 +3,31 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, ScrollText, HandHelping, ListTodo, Trophy } from 'lucide-react';
 import { getPracticeStats, getDetailedTaskStats } from '@/actions/stats';
+import { calculateProgressIndex } from '@/lib/progressIndex';
 import { getDailyGuidance } from '@/actions/ai';
+import { getTodayJournals } from '@/actions/journal';
 
 export default function PracticeStats({ userName }: { userName: string }) {
   const [stats, setStats] = useState<any[]>([]);
   const [taskStats, setTaskStats] = useState<{ today: any[], allTime: any[] }>({ today: [], allTime: [] });
+  const [todayJournals, setTodayJournals] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<any>(null);
   const [aiInsight, setAiInsight] = useState('');
   const [loading, setLoading] = useState(false);
+  const [progressIndex, setProgressIndex] = useState(0);
 
   useEffect(() => {
-    getPracticeStats().then(setStats);
-    getDetailedTaskStats().then(setTaskStats);
+    const loadStats = async () => {
+      const statsData = await getPracticeStats();
+      const taskData = await getDetailedTaskStats();
+      const journalData = await getTodayJournals();
+      setStats(statsData);
+      setTaskStats(taskData);
+      setTodayJournals(journalData);
+      const index = calculateProgressIndex(statsData, taskData);
+      setProgressIndex(index);
+    };
+    loadStats();
   }, []);
 
   const getHeatmapColor = (value: number) => {
@@ -30,8 +43,21 @@ export default function PracticeStats({ userName }: { userName: string }) {
 
   const handleGuidance = async () => {
     setLoading(true);
-    // Passing some dummy context for now as per original logic
-    const result = await getDailyGuidance(25, 3);
+    // 获取今日数据
+    const today = stats[stats.length - 1]; // 最后一个是今天
+    const todayMeditationMins = today ? today.meditationMins : 0;
+    const todayTasksCount = taskStats.today.length;
+    const todayTasksCompleted = taskStats.today.filter(t => t.completed).length;
+    const journalCount = todayJournals.length;
+    const journalCategories = [...new Set(todayJournals.map(j => j.category))];
+    
+    const result = await getDailyGuidance(
+      todayMeditationMins,
+      todayTasksCount,
+      todayTasksCompleted,
+      journalCount,
+      journalCategories
+    );
     setAiInsight(result);
     setLoading(false);
   };
@@ -41,8 +67,8 @@ export default function PracticeStats({ userName }: { userName: string }) {
   return (
     <div className="space-y-8 pb-12 h-full animate-in fade-in duration-500">
       <div className="flex flex-col items-start space-y-1 pt-4 px-2">
-        <h2 className="text-3xl font-bold text-stone-800">精进点滴</h2>
-        <p className="text-sm text-stone-400 font-medium tracking-wide">
+        <h2 className="text-2xl font-serif text-stone-800 tracking-wide">精进点滴</h2>
+        <p className="text-sm text-stone-400 tracking-wide">
           {userName} · <span className="text-emerald-600">持续修持中</span>
         </p>
       </div>
@@ -52,26 +78,26 @@ export default function PracticeStats({ userName }: { userName: string }) {
         <div className="relative z-10 space-y-4">
           <div className="flex justify-between items-start">
             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md"><Brain size={24} /></div>
-            <button onClick={handleGuidance} className="text-[10px] bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md hover:bg-white/30 transition-all font-bold tracking-widest">刷新启示</button>
+            <button onClick={handleGuidance} className="text-[10px] bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md hover:bg-white/30 transition-all tracking-widest">刷新启示</button>
           </div>
-          <h4 className="text-xl font-bold">每日修行指引</h4>
+          <h4 className="text-xl text-white">每日修行指引</h4>
           <p className="text-emerald-50/80 text-sm leading-relaxed italic font-serif font-light">
             {aiInsight || (loading ? "正在请教 AI 向导..." : "点击下方按钮开启今日智慧。")}
           </p>
           {!aiInsight && !loading && (
-            <button onClick={handleGuidance} className="w-full py-3.5 bg-white text-emerald-900 rounded-2xl font-bold text-sm shadow-xl active:scale-95">开启修行寄语</button>
+            <button onClick={handleGuidance} className="w-full py-3.5 bg-white text-emerald-700 rounded-2xl text-sm shadow-sm active:scale-95">开启修行寄语</button>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-amber-50/50 p-6 rounded-[2rem] border border-amber-100 text-center">
-          <div className="text-[10px] text-amber-800 font-bold tracking-[0.2em] mb-1 uppercase">坐禅总时长</div>
+          <div className="text-[10px] text-amber-600 tracking-[0.2em] mb-1 uppercase">坐禅总时长</div>
           <div className="text-4xl font-light text-stone-800 font-serif">{Math.floor(totalMeds / 60)}<span className="text-sm ml-1">h</span></div>
         </div>
         <div className="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100 text-center">
-          <div className="text-[10px] text-emerald-800 font-bold tracking-[0.2em] mb-1 uppercase">精进指数</div>
-          <div className="text-4xl font-light text-stone-800 font-serif">88<span className="text-sm ml-1">%</span></div>
+          <div className="text-[10px] text-emerald-600 tracking-[0.2em] mb-1 uppercase">精进指数</div>
+          <div className="text-4xl font-light text-stone-800 font-serif">{progressIndex}<span className="text-sm ml-1">%</span></div>
         </div>
       </div>
 

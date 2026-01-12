@@ -81,9 +81,9 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
             <Link href="/dashboard" className="p-2 bg-white rounded-full text-stone-400 hover:text-stone-800 transition-colors shadow-sm">
               <ChevronLeft size={20} />
             </Link>
-            <h1 className="text-3xl font-bold text-stone-800">功课库管理</h1>
+            <h1 className="text-2xl font-serif text-stone-800 tracking-wide">功课库管理</h1>
           </div>
-          <button onClick={openAdd} className="px-6 py-3 bg-stone-800 text-white rounded-2xl font-bold shadow-lg active:scale-95 flex items-center gap-2 hover:bg-stone-900 transition-all">
+          <button onClick={openAdd} className="px-6 py-3 bg-emerald-100 text-emerald-700 rounded-2xl shadow-sm active:scale-95 flex items-center gap-2 hover:bg-emerald-200 transition-all">
             <Plus size={20} /> 新增功课模板
           </button>
         </div>
@@ -93,8 +93,8 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
             <div key={sutra.id} className="bg-white p-6 rounded-[2rem] border border-stone-100 shadow-sm hover:shadow-md transition-all group flex justify-between items-center">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded text-stone-500">{sutra.type}</span>
-                  <h3 className="text-xl font-bold text-stone-800">{sutra.title}</h3>
+                  <span className="text-xs uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded text-stone-500">{sutra.type}</span>
+                  <h3 className="text-lg text-stone-800">{sutra.title}</h3>
                 </div>
                 <p className="text-stone-400 text-sm line-clamp-1 max-w-lg">{sutra.description || '暂无简介'}</p>
               </div>
@@ -115,28 +115,28 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
         <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
-              <h3 className="text-xl font-bold text-stone-800">{editingSutra ? '编辑模板' : '新增模板'}</h3>
+              <h3 className="text-lg text-stone-800">{editingSutra ? '编辑模板' : '新增模板'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-stone-100 rounded-full transition-colors"><X size={24} /></button>
             </div>
             
             <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">功课名称</label>
+                  <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">功课名称</label>
                   <input 
                     required 
                     value={formData.title} 
                     onChange={e => setFormData({...formData, title: e.target.value})}
-                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-800 transition-all font-bold text-stone-800"
+                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-800"
                     placeholder="如：金刚经 或 大悲咒"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">任务类型</label>
+                  <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">任务类型</label>
                   <select 
                     value={formData.type}
                     onChange={e => setFormData({...formData, type: e.target.value})}
-                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-800 transition-all text-stone-800 font-bold"
+                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-800"
                   >
                     <option value="sutra">诵经 (Sutra)</option>
                     <option value="counter">计数 (Counter)</option>
@@ -147,11 +147,11 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">图标 ID</label>
+                  <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">图标 ID</label>
                   <select 
                     value={formData.iconId}
                     onChange={e => setFormData({...formData, iconId: e.target.value})}
-                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-800 transition-all text-stone-800"
+                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-800"
                   >
                     <option value="book">Book (经文)</option>
                     <option value="hash">Hash (计数)</option>
@@ -159,34 +159,34 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">默认步长</label>
+                  <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">默认步长</label>
                   <input 
                     type="number"
                     value={formData.defaultStep} 
                     onChange={e => setFormData({...formData, defaultStep: parseInt(e.target.value) || 1})}
-                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-800 transition-all text-stone-800 font-mono font-bold"
+                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-800"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">简介</label>
+                <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">简介</label>
                 <input 
                   value={formData.description} 
                   onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-800 transition-all text-stone-600"
+                  className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-600"
                   placeholder="简要描述..."
                 />
               </div>
 
               {formData.type === 'sutra' && (
                 <div className="space-y-2 h-full flex-1">
-                  <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">经文全文</label>
+                  <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">经文全文</label>
                   <textarea 
                     required 
                     value={formData.content} 
                     onChange={e => setFormData({...formData, content: e.target.value})}
-                    className="w-full h-64 p-5 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-800 transition-all text-lg leading-relaxed font-serif resize-none"
+                    className="w-full h-64 p-5 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-lg leading-relaxed font-serif resize-none"
                     placeholder="请输入经文内容..."
                   />
                 </div>
@@ -196,7 +196,7 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="px-8 py-4 bg-stone-800 text-white rounded-2xl font-bold shadow-lg hover:bg-stone-900 active:scale-95 transition-all flex items-center gap-2"
+                  className="px-8 py-4 bg-emerald-100 text-emerald-700 rounded-2xl shadow-sm hover:bg-emerald-200 active:scale-95 transition-all flex items-center gap-2"
                 >
                   {loading ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
                   保存功课模板

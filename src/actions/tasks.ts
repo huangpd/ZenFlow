@@ -9,21 +9,32 @@ export async function getTasks() {
   if (!session?.user?.id) return [];
 
   const userId = session.user.id;
-  const todayStr = new Date().toLocaleDateString();
-  const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
+  
+  // Get reset time from env (default to 00:00)
+  const resetTime = process.env.DAILY_RESET_TIME || '00:00';
+  const [resetHour, resetMinute] = resetTime.split(':').map(n => parseInt(n) || 0);
+  
+  const now = new Date();
+  const resetThreshold = new Date(now);
+  resetThreshold.setHours(resetHour, resetMinute, 0, 0);
+  
+  // If we haven't reached the reset time yet today, the threshold should be yesterday's reset time
+  if (now < resetThreshold) {
+    resetThreshold.setDate(resetThreshold.getDate() - 1);
+  }
 
   // 1. Check if we need a reset (Check any task's updatedAt)
   const needsReset = await db.spiritualTask.findFirst({
     where: {
       userId,
       updatedAt: {
-        lt: todayStart
+        lt: resetThreshold
       }
     }
   });
 
   if (needsReset) {
-    console.log(`New day detected (${todayStr}), resetting daily tasks and removing one-off tasks for user ${userId}`);
+    console.log(`Reset threshold reached, resetting daily tasks and removing one-off tasks for user ${userId}`);
     
     await db.$transaction([
       // A. Delete tasks that are NOT marked as daily AND are old
@@ -31,7 +42,7 @@ export async function getTasks() {
         where: { 
           userId, 
           isDaily: false,
-          updatedAt: { lt: todayStart }
+          updatedAt: { lt: resetThreshold }
         }
       }),
       // B. Reset progress for tasks marked as daily AND are old
@@ -39,7 +50,7 @@ export async function getTasks() {
         where: { 
           userId, 
           isDaily: true, 
-          updatedAt: { lt: todayStart }
+          updatedAt: { lt: resetThreshold }
         },
         data: {
           current: 0,
@@ -80,7 +91,7 @@ export async function createTask(data: {
 
   if (existingTask) {
     // If exists, update its configuration (target/step/text/isDaily) and reactivate if completed
-    return db.spiritualTask.update({
+    const updated = await db.spiritualTask.update({
       where: { id: existingTask.id },
       data: { 
         completed: false, 
@@ -88,10 +99,13 @@ export async function createTask(data: {
         target: data.target,
         step: data.step,
         sutraId: data.sutraId,
-        isDaily: data.isDaily ?? false, // Default to false as per user request
+        // Preserve isDaily status if it exists, don't reset to false on re-selection
+        isDaily: existingTask.isDaily,
         current: existingTask.completed ? 0 : existingTask.current
       },
     });
+    revalidatePath('/dashboard');
+    return updated;
   }
 
   try {
@@ -195,11 +209,12 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
 
   const isProgressChanged = data.current !== undefined && data.current !== task.current;
 
+  let updated;
   if (isProgressChanged) {
     const isFinished = task.target ? data.current! >= task.target : true;
     updates.completed = isFinished || task.completed;
 
-    await db.$transaction(async (tx) => {
+    updated = await db.$transaction(async (tx) => {
       await tx.taskLog.create({
         data: {
           taskId: id,
@@ -214,12 +229,12 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
       });
     });
   } else {
-    await db.spiritualTask.update({
+    updated = await db.spiritualTask.update({
       where: { id },
       data: updates,
     });
   }
 
   revalidatePath('/dashboard');
-  return { success: true };
+  return { success: true, task: updated };
 }

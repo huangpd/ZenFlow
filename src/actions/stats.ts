@@ -34,7 +34,10 @@ export async function getPracticeStats() {
     date.setDate(date.getDate() - (83 - i));
     const dateStr = date.toLocaleDateString();
     
-    const dayMeds = meditations.filter(m => m.createdAt.toLocaleDateString() === dateStr);
+    const dayMeds = meditations.filter(m => {
+      const d = m.createdAt instanceof Date ? m.createdAt : new Date(m.createdAt);
+      return d.toLocaleDateString() === dateStr;
+    });
     const dayMins = dayMeds.reduce((acc, m) => acc + m.duration, 0);
     const dayLogs = logs.filter(l => l.createdAt.toLocaleDateString() === dateStr);
     const dayTaskLogs = taskLogs.filter(t => t.createdAt.toLocaleDateString() === dateStr);
@@ -67,18 +70,30 @@ export async function getDetailedTaskStats() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // 1. Get All Time Stats (from SpiritualTask)
-  const allTasks = await db.spiritualTask.findMany({
+  // 1. Get All Time Stats (from TaskLog - actual completions)
+  const allLogs = await db.taskLog.findMany({
     where: { userId },
-    orderBy: { current: 'desc' }, // Show most practiced first
+    include: { task: true }
   });
 
-  const allTimeStats = allTasks.map(t => ({
-    id: t.id,
-    text: t.text,
-    count: t.current,
-    type: t.type
-  }));
+  // Aggregate all-time logs by task
+  const allTimeMap = new Map<string, { id: string; text: string; count: number; type: string }>();
+  
+  allLogs.forEach(log => {
+    const existing = allTimeMap.get(log.taskId);
+    if (existing) {
+      existing.count += log.count;
+    } else {
+      allTimeMap.set(log.taskId, {
+        id: log.taskId,
+        text: log.task.text,
+        count: log.count,
+        type: log.task.type
+      });
+    }
+  });
+
+  const allTimeStats = Array.from(allTimeMap.values()).sort((a, b) => b.count - a.count);
 
   // 2. Get Today's Stats (from TaskLog)
   const todayLogs = await db.taskLog.findMany({
@@ -90,7 +105,7 @@ export async function getDetailedTaskStats() {
   });
 
   // Aggregate today's logs by task
-  const todayMap = new Map<string, { text: string; count: number; type: string }>();
+  const todayMap = new Map<string, { id: string; text: string; count: number; type: string }>();
   
   todayLogs.forEach(log => {
     const existing = todayMap.get(log.taskId);
@@ -98,6 +113,7 @@ export async function getDetailedTaskStats() {
       existing.count += log.count;
     } else {
       todayMap.set(log.taskId, {
+        id: log.taskId,
         text: log.task.text,
         count: log.count,
         type: log.task.type

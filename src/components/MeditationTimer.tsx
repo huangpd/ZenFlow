@@ -16,17 +16,45 @@ export default function MeditationTimer() {
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 1);
-      gain.gain.setValueAtTime(0.5, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 2);
+      
+      // 苹果闹钟音效：快速重复的高频音调
+      const playAlarmTone = () => {
+        const pattern = [
+          { freq: 1000, duration: 0.1 },
+          { freq: 0, duration: 0.1 },
+          { freq: 1000, duration: 0.1 },
+          { freq: 0, duration: 0.1 },
+          { freq: 1200, duration: 0.15 },
+          { freq: 0, duration: 0.1 },
+          { freq: 1200, duration: 0.15 },
+        ];
+        
+        let time = ctx.currentTime;
+        pattern.forEach(({ freq, duration }) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, time);
+          
+          gain.gain.setValueAtTime(freq ? 0.4 : 0, time);
+          gain.gain.linearRampToValueAtTime(freq ? 0.4 : 0, time + duration * 0.9);
+          gain.gain.linearRampToValueAtTime(0, time + duration);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start(time);
+          osc.stop(time + duration);
+          
+          time += duration;
+        });
+      };
+      
+      // 播放3次警报声
+      playAlarmTone();
+      playAlarmTone();
+      playAlarmTone();
     } catch (e) {
       console.warn('Audio Context error', e);
     }
@@ -36,11 +64,24 @@ export default function MeditationTimer() {
     playBell();
     setShowEffect(true);
     await saveMeditationSession(selectedDuration);
-    setTimeout(() => setShowEffect(false), 3000);
+    setTimeout(() => setShowEffect(false), 1800);
   }, [playBell, selectedDuration]);
 
   useEffect(() => {
-    if (timerRunning && timeLeft > 0) {
+    // 后台保活：防止浏览器关闭标签页时杀死定时器
+    let keepAliveInterval: NodeJS.Timeout | null = null;
+    
+    if (timerRunning) {
+      // 保活机制：每10秒发送一次信号给Service Worker保持活动
+      keepAliveInterval = setInterval(() => {
+        if (navigator.serviceWorker?.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'KEEP_ALIVE',
+            timestamp: Date.now()
+          });
+        }
+      }, 10000);
+
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
@@ -48,8 +89,10 @@ export default function MeditationTimer() {
       setTimerRunning(false);
       handleComplete();
     }
+    
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (keepAliveInterval) clearInterval(keepAliveInterval);
     };
   }, [timerRunning, timeLeft, handleComplete]);
 
@@ -103,7 +146,7 @@ export default function MeditationTimer() {
           {timerRunning && (
              <div className="flex items-center mt-2 space-x-1 text-emerald-600 animate-pulse opacity-60">
                 <Wind size={12} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">静心</span>
+                <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-emerald-700">静心</span>
              </div>
           )}
         </div>
@@ -116,7 +159,7 @@ export default function MeditationTimer() {
                 key={mins} 
                 disabled={timerRunning} 
                 onClick={() => handleDurationChange(mins)} 
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedDuration === mins ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
+                className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${selectedDuration === mins ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
               >
                 {mins}m
               </button>

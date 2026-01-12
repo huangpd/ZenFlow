@@ -52,6 +52,7 @@ export async function deleteRecord(modelName: string, id: string) {
   });
   
   revalidatePath(`/admin/data/${modelName}`);
+  revalidatePath('/dashboard');
 }
 
 export async function fetchRelatedList(modelName: string) {
@@ -92,6 +93,7 @@ export async function createRecord(modelName: string, data: any) {
 
   await modelDelegate.create({ data });
   revalidatePath(`/admin/data/${modelName}`);
+  revalidatePath('/dashboard');
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,6 +117,7 @@ export async function updateRecord(modelName: string, id: string, data: any) {
   });
   revalidatePath(`/admin/data/${modelName}`);
   revalidatePath(`/admin/data/${modelName}/${id}`);
+  revalidatePath('/dashboard');
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

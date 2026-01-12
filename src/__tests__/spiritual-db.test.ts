@@ -15,7 +15,7 @@ describe('Spiritual Data Models', () => {
         userId: user.id,
         content: 'Today was a peaceful day.',
         mood: 'calm',
-        tags: ['meditation', 'reflection'],
+        tags: 'meditation, reflection',
       },
     });
 

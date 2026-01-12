@@ -1,30 +1,29 @@
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const API_KEY = process.env.OPENROUTER_API_KEY;
+const API_URL = process.env.AI_API_URL || 'https://geminikey.top/v1/chat/completions';
+const API_KEY = process.env.AI_API_KEY;
+const AI_MODEL = process.env.AI_MODEL || 'gemini-3-flash-preview';
 
 async function openRouterFetch(messages: any[], systemInstruction?: string) {
-  if (!API_KEY) throw new Error('OPENROUTER_API_KEY is not defined');
+  if (!API_KEY) throw new Error('AI_API_KEY is not defined in environment variables');
 
   const finalMessages = systemInstruction 
     ? [{ role: 'system', content: systemInstruction }, ...messages]
     : messages;
 
-  const response = await fetch(OPENROUTER_URL, {
+  const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${API_KEY}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://zenflow.spiritual', // Optional
-      'X-Title': 'ZenFlow', // Optional
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.0-flash-exp:free',
+      model: AI_MODEL,
       messages: finalMessages,
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`OpenRouter Error: ${response.status} - ${error}`);
+    throw new Error(`AI Service Error: ${response.status} - ${error}`);
   }
 
   const data = await response.json();
@@ -38,9 +37,20 @@ export async function getSutraInsight(sutraContent: string) {
   return openRouterFetch([{ role: 'user', content: prompt }], systemInstruction);
 }
 
-export async function getDailyGuidance(meditationMins: number, tasksCount: number) {
+export async function getDailyGuidance(
+  meditationMins: number,
+  tasksCount: number,
+  tasksCompleted: number,
+  journalCount: number,
+  journalCategories: string[]
+) {
   const systemInstruction = '你是一位鼓励修行者的向导。用简短、优美、充满阳光的话语给予指引。';
-  const prompt = `我今天坐禅了${meditationMins}分钟，完成了${tasksCount}项功课。请给我一个今天的修行寄语。`;
+  
+  const categoriesStr = journalCategories.length > 0 
+    ? `（${journalCategories.join('、')}）` 
+    : '';
+  
+  const prompt = `我今天坐禅了${meditationMins}分钟，完成了${tasksCompleted}/${tasksCount}项功课，记录了${journalCount}条随喜${categoriesStr}。请给我一个今天的修行寄语。`;
   
   return openRouterFetch([{ role: 'user', content: prompt }], systemInstruction);
 }

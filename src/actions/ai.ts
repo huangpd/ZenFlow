@@ -17,12 +17,24 @@ export async function getGuidance(sutraContent: string) {
   }
 }
 
-export async function getDailyGuidance(meditationMins: number, tasksCount: number) {
+export async function getDailyGuidance(
+  meditationMins: number, 
+  tasksCount: number,
+  tasksCompleted: number,
+  journalCount: number,
+  journalCategories: string[]
+) {
   const session = await auth();
   if (!session) throw new Error('Unauthorized');
 
   try {
-    return await getGeminiGuidance(meditationMins, tasksCount);
+    return await getGeminiGuidance(
+      meditationMins,
+      tasksCount,
+      tasksCompleted,
+      journalCount,
+      journalCategories
+    );
   } catch (error) {
     console.error('AI Daily Guidance Error:', error);
     return '精进修行，功不唐捐。';
@@ -64,5 +76,20 @@ export async function chat(content: string) {
   } catch (error) {
     console.error('Chat Error Details:', error);
     return { success: false, error: '对话服务暂时不可用' };
+  }
+}
+
+export async function clearChatHistory() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  try {
+    await db.chatMessage.deleteMany({
+      where: { userId: session.user.id },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Clear Chat History Error:', error);
+    return { success: false, error: '清除失败' };
   }
 }

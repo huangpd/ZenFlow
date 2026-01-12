@@ -74,27 +74,27 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
       <button onClick={onBack} className="mb-4 flex items-center text-stone-500 text-sm font-medium">
         <ChevronLeft size={18} className="mr-1" /> 返回功课
       </button>
-      <h2 className="text-2xl font-bold text-stone-800 text-center mb-6">《{sutraContent.title}》</h2>
-      <div className="flex-1 overflow-y-auto p-6 bg-white rounded-3xl border border-stone-100 shadow-sm text-lg leading-relaxed text-stone-700 whitespace-pre-wrap mb-6">
+      <h2 className="text-2xl font-serif text-stone-800 tracking-wide text-center mb-8">《{sutraContent.title}》</h2>
+      <div className="flex-1 overflow-y-auto p-8 bg-stone-50/30 rounded-[2.5rem] border border-stone-100/50 text-xl leading-loose text-stone-700 font-serif tracking-wide whitespace-pre-wrap mb-8">
         {sutraContent.content}
       </div>
       
-      <div className="space-y-4 pb-12">
-        <button onClick={handleAiInsight} disabled={aiLoading} className="w-full py-4 bg-emerald-800/5 border border-emerald-800/10 text-emerald-800 rounded-2xl flex items-center justify-center space-x-2 font-medium">
-          {aiLoading ? <Loader2 size={18} className="animate-spin" /> : <Brain size={18} />}
-          <span>AI 禅意开解</span>
+      <div className="space-y-6 pb-12">
+        <button onClick={handleAiInsight} disabled={aiLoading} className="w-full py-4 bg-white border border-stone-200 text-stone-600 rounded-2xl flex items-center justify-center space-x-2 font-medium hover:bg-stone-50 transition-colors">
+          {aiLoading ? <Loader2 size={18} className="animate-spin" /> : <Brain size={18} className="text-stone-400" />}
+          <span className="font-serif italic tracking-wider">AI 禅意开解</span>
         </button>
 
         {aiResponse && (
-          <div className="p-5 bg-white border border-emerald-100 rounded-2xl animate-in zoom-in-95">
-            <h4 className="text-xs font-bold text-emerald-600 mb-2 flex items-center">
-              <Sparkles size={12} className="mr-1"/> 智慧启迪
+          <div className="p-6 bg-white border border-stone-100 rounded-[2rem] animate-in zoom-in-95 duration-500">
+            <h4 className="text-[10px] uppercase tracking-[0.3em] text-emerald-600/60 mb-3 flex items-center justify-center">
+              <Sparkles size={12} className="mr-2"/> 智慧启迪
             </h4>
-            <p className="text-sm text-stone-600 italic leading-relaxed">{aiResponse}</p>
+            <p className="text-base text-stone-600 font-serif leading-relaxed italic text-center px-4">{aiResponse}</p>
           </div>
         )}
 
-        <button onClick={handleSubmit} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-lg active:scale-95 transition-transform">
+        <button onClick={handleSubmit} className="w-full py-4 bg-emerald-100 text-emerald-700 rounded-2xl tracking-[0.2em] flex items-center justify-center space-x-2 shadow-sm active:scale-95 transition-all">
           <Check size={20} />
           <span>读诵圆满</span>
         </button>

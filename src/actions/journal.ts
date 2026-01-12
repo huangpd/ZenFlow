@@ -56,3 +56,33 @@ export async function deleteJournalEntry(id: string) {
     return { error: 'Failed to delete entry' };
   }
 }
+
+export async function getTodayJournals() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return [];
+  }
+
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const entries = await db.journalEntry.findMany({
+      where: {
+        userId: session.user.id,
+        createdAt: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return entries;
+  } catch (error) {
+    console.error('Get Today Journals Error:', error);
+    return [];
+  }
+}

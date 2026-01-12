@@ -93,7 +93,7 @@ export async function deleteSutra(id: string) {
     revalidatePath('/admin/sutras');
     revalidatePath('/dashboard');
     return { success: true };
-  } catch (error) {
+  } catch (_) {
     return { error: 'Failed to delete sutra' };
   }
 }

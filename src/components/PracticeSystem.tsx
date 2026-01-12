@@ -16,7 +16,7 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
 
   const triggerCelebration = () => {
     setShowCelebration(true);
-    setTimeout(() => setShowCelebration(false), 3000);
+    setTimeout(() => setShowCelebration(false), 1800);
   };
 
   const handleTaskProgress = (taskId: string, newCurrent: number, completed: boolean) => {
@@ -50,7 +50,7 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
       {showCelebration && <CelebrationEffect />}
       
       <div className="flex justify-between items-center px-4">
-        <h2 className="text-3xl font-bold tracking-tight text-stone-800">每日功课</h2>
+        <h2 className="text-2xl font-serif text-stone-800 tracking-wide">每日功课</h2>
         <button 
           onClick={() => setIsAddModalOpen(true)}
           className="p-3 bg-stone-100 rounded-full active:bg-stone-200 transition-all active:scale-90 shadow-sm"
@@ -61,7 +61,7 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
 
       <div className="space-y-4 px-4">
         {tasks.length === 0 ? (
-          <div className="text-center py-12 text-stone-400 border-2 border-dashed rounded-[2rem] border-stone-100">
+          <div className="text-center py-12 text-stone-400 border border-dashed rounded-[2rem] border-stone-100">
             暂无功课，点击右上方按钮请领
           </div>
         ) : (
@@ -84,7 +84,15 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
           setIsAddModalOpen(false);
           setEditingTask(null);
         }} 
-        onTaskCreated={(newTask) => setTasks([...tasks, newTask])}
+        onTaskCreated={(newTask) => {
+          setTasks(prev => {
+            const exists = prev.find(t => t.id === newTask.id);
+            if (exists) {
+              return prev.map(t => t.id === newTask.id ? newTask : t);
+            }
+            return [...prev, newTask];
+          });
+        }}
         onTaskUpdated={handleTaskUpdate}
         taskToEdit={editingTask}
       />

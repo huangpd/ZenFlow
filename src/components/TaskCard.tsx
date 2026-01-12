@@ -35,9 +35,20 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
   };
 
   const handleProgressEditSubmit = async () => {
-    setIsEditingProgress(false);
     const val = parseInt(editValue);
-    if (!isNaN(val) && val !== task.current) {
+    if (isNaN(val) || val < 0) {
+      setIsEditingProgress(false);
+      return;
+    }
+
+    // Validation: current progress cannot exceed target
+    if (task.target && val > task.target) {
+      alert(`进度不能超过目标值 ${task.target}`);
+      return;
+    }
+
+    setIsEditingProgress(false);
+    if (val !== task.current) {
       const result = await updateTask(task.id, { 
         current: val, 
       });
@@ -80,8 +91,8 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
             {ICON_MAP[task.iconId || ''] || <Circle size={20}/>}
           </div>
           <span className={cn(
-            "text-xl font-bold tracking-tight",
-            task.completed ? "text-stone-400 line-through" : "text-stone-800"
+            "text-lg font-serif tracking-wide",
+            task.completed ? "text-stone-400 line-through font-sans" : "text-stone-800"
           )}>
             {task.text}
           </span>
@@ -124,29 +135,29 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
                     onChange={(e) => setEditValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     autoFocus
-                    className="text-5xl font-mono font-extrabold text-stone-900 bg-white border border-emerald-200 rounded-xl px-2 w-40 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                    className="text-4xl font-serif text-stone-800 bg-white border border-stone-200 rounded-xl px-2 w-40 focus:outline-none focus:ring-2 focus:ring-stone-300"
                   />
                 ) : (
                   <span 
                     onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditingProgress(true); }}
-                    className="text-5xl font-mono font-extrabold text-stone-900 tabular-nums cursor-pointer hover:text-emerald-700 transition-colors"
+                    className="text-4xl font-serif text-stone-800 tabular-nums cursor-pointer hover:text-stone-500 transition-colors"
                   >
                     {task.current || 0}
                   </span>
                 )}
                 
                 <span className="text-2xl font-medium text-stone-300 mx-1">/</span>
-                <span className="text-2xl font-mono font-bold text-stone-400">
+                <span className="text-xl font-serif text-stone-300">
                   {task.target || 0}
                 </span>
-                <span className="ml-2 text-xs font-bold text-stone-400 uppercase tracking-widest">次</span>
+                <span className="ml-2 text-[10px] text-stone-300 uppercase tracking-[0.3em]">次</span>
               </div>
               
               <div className="flex gap-2">
                 {isEditingProgress ? (
                   <button 
                     onClick={handleProgressEditSubmit}
-                    className="flex items-center gap-1.5 px-5 py-2 bg-emerald-600 text-white rounded-full text-xs font-bold hover:bg-emerald-700 transition-all shadow-md active:scale-95"
+                    className="flex items-center gap-1.5 px-5 py-2 bg-emerald-100 text-emerald-700 rounded-full text-xs hover:bg-emerald-200 transition-all shadow-sm active:scale-95"
                   >
                     <Save size={12} />
                     保存
@@ -154,7 +165,7 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
                 ) : (
                   <button 
                     onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditingProgress(true); }}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-xs font-bold text-stone-500 hover:text-emerald-600 hover:border-emerald-200 border border-stone-200 transition-all shadow-sm whitespace-nowrap"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-stone-50 rounded-full text-xs text-stone-600 hover:text-stone-800 border border-stone-100 transition-all shadow-sm whitespace-nowrap"
                   >
                     <Edit3 size={12} />
                     修改进度
@@ -182,31 +193,31 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
                 <>
                   <button 
                     onClick={handleStep} 
-                    className="flex-[2] h-16 bg-white border-2 border-stone-100 text-stone-800 rounded-2xl text-xl font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50 hover:border-stone-200"
+                    className="flex-[2] h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl text-base font-serif shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50"
                   >
-                    <span className="text-stone-400 mr-2 text-sm font-normal">点击</span>
+                    <span className="text-stone-300 mr-2 text-xs font-sans italic tracking-widest uppercase">步进</span>
                     +{task.step || 1}
                   </button>
                   <button 
                     onClick={handleFinish} 
-                    className="flex-1 h-16 bg-stone-800 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center hover:bg-stone-900 gap-2"
+                    className="flex-1 h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50 gap-2 tracking-widest"
                   >
-                    <BellRing size={20} />
+                    <BellRing size={18} className="opacity-70" />
                     <span>提交</span>
                   </button>
                 </>
               ) : task.type === 'sutra' ? (
                 <button 
                   onClick={() => onRead(task)} 
-                  className="w-full h-16 bg-stone-800 text-white rounded-2xl text-lg font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-stone-900"
+                  className="w-full h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl text-base tracking-[0.3em] shadow-sm active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-stone-50"
                 >
-                  <BookOpen size={22} />
+                  <BookOpen size={20} className="opacity-70" />
                   <span>开始阅经</span>
                 </button>
               ) : (
                 <button 
                   onClick={handleFinish} 
-                  className="w-full h-16 bg-white border-2 border-stone-800 text-stone-800 rounded-2xl text-lg font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50"
+                  className="w-full h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl text-base shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50"
                 >
                   标记完成
                 </button>

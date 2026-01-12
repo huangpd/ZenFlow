@@ -1,8 +1,0 @@
-{
-  "track_id": "feature_toggle_daily_20260111",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-11T14:00:00Z",
-  "updated_at": "2026-01-11T14:00:00Z",
-  "description": "Add ability to toggle 'Set as Daily Homework' on existing tasks"
-}

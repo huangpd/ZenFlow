@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -35,12 +35,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String? 
+  access_token      String? 
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String? 
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -68,11 +68,11 @@ model JournalEntry {
   id        String   @id @default(cuid())
   userId    String
   title     String?
-  content   String   @db.Text
+  content   String   
   mood      String?  // Legacy mood
   category  String   @default("感悟")
   imageUrl  String?
-  tags      String[]
+  tags      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -83,7 +83,7 @@ model ChatMessage {
   id        String   @id @default(cuid())
   userId    String
   role      String
-  content   String   @db.Text
+  content   String   
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -159,7 +159,7 @@ model UserPreference {
 model Sutra {
   id            String   @id @default(cuid())
   title         String   @unique
-  content       String?  @db.Text // Optional for non-sutra tasks
+  content       String?   // Optional for non-sutra tasks
   type          String   @default("sutra") // "normal", "counter", "sutra"
   iconId        String?  @default("book")
   defaultTarget Int?     @default(1)
