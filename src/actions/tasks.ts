@@ -36,28 +36,27 @@ export async function getTasks() {
   if (needsReset) {
     console.log(`Reset threshold reached, resetting daily tasks and removing one-off tasks for user ${userId}`);
     
-    await db.$transaction([
-      // A. Delete tasks that are NOT marked as daily AND are old
-      db.spiritualTask.deleteMany({
-        where: { 
-          userId, 
-          isDaily: false,
-          updatedAt: { lt: resetThreshold }
-        }
-      }),
-      // B. Reset progress for tasks marked as daily AND are old
-      db.spiritualTask.updateMany({
-        where: { 
-          userId, 
-          isDaily: true, 
-          updatedAt: { lt: resetThreshold }
-        },
-        data: {
-          current: 0,
-          completed: false
-        }
-      })
-    ]);
+    // A. Delete tasks that are NOT marked as daily AND are old
+    await db.spiritualTask.deleteMany({
+      where: { 
+        userId, 
+        isDaily: false,
+        updatedAt: { lt: resetThreshold }
+      }
+    });
+
+    // B. Reset progress for tasks marked as daily AND are old
+    await db.spiritualTask.updateMany({
+      where: { 
+        userId, 
+        isDaily: true, 
+        updatedAt: { lt: resetThreshold }
+      },
+      data: {
+        current: 0,
+        completed: false
+      }
+    });
   }
 
   return db.spiritualTask.findMany({
@@ -156,24 +155,22 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
 
   const isFinished = task.target ? nextCurrent >= task.target : true;
 
-  const updatedTask = await db.$transaction(async (tx) => {
-    // Create log entry
-    await tx.taskLog.create({
-      data: {
-        taskId: id,
-        userId: userId,
-        count: nextCurrent - task.current,
-      },
-    });
+  // Create log entry
+  await db.taskLog.create({
+    data: {
+      taskId: id,
+      userId: userId,
+      count: nextCurrent - task.current,
+    },
+  });
 
-    // Update task
-    return tx.spiritualTask.update({
-      where: { id },
-      data: {
-        current: nextCurrent,
-        completed: isFinished || task.completed,
-      },
-    });
+  // Update task
+  const updatedTask = await db.spiritualTask.update({
+    where: { id },
+    data: {
+      current: nextCurrent,
+      completed: isFinished || task.completed,
+    },
   });
 
   revalidatePath('/dashboard');
@@ -214,19 +211,17 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
     const isFinished = task.target ? data.current! >= task.target : true;
     updates.completed = isFinished || task.completed;
 
-    updated = await db.$transaction(async (tx) => {
-      await tx.taskLog.create({
-        data: {
-          taskId: id,
-          userId: userId,
-          count: data.current! - task.current,
-        },
-      });
+    await db.taskLog.create({
+      data: {
+        taskId: id,
+        userId: userId,
+        count: data.current! - task.current,
+      },
+    });
 
-      return tx.spiritualTask.update({
-        where: { id },
-        data: updates,
-      });
+    updated = await db.spiritualTask.update({
+      where: { id },
+      data: updates,
     });
   } else {
     updated = await db.spiritualTask.update({

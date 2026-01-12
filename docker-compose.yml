@@ -1,16 +1,16 @@
 version: '3.8'
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: zenflow-postgres
-    environment:
-      POSTGRES_USER: zenflow_user
-      POSTGRES_PASSWORD: zenflow_password
-      POSTGRES_DB: zenflow_db
+  mongodb:
+    image: mongo:6
+    container_name: zenflow-mongo
+    restart: always
     ports:
-      - "5432:5432"
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongodb_data:/data/db
 
 volumes:
-  postgres_data:
+  mongodb_data:
