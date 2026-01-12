@@ -53,24 +53,25 @@ export default async function Home() {
   // 已登录时显示 dashboard
   const userId = session.user.id;
   
-  const [chatHistory, journalEntries, tasks] = await Promise.all([
-    db.chatMessage.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'asc' },
-      take: 50,
-    }),
-    db.journalEntry.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    }),
-    db.spiritualTask.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'asc' },
-    })
-  ]);
+  // 获取基础数据，拆分 Promise.all 以便在某些环境下提高稳定性
+  const chatHistory = await db.chatMessage.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'asc' },
+    take: 50,
+  });
 
-  const formattedHistory = chatHistory.map((msg) => ({
+  const journalEntries = await db.journalEntry.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+
+  const tasks = await db.spiritualTask.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const formattedHistory = chatHistory.map((msg: any) => ({
     role: msg.role as 'user' | 'assistant',
     content: msg.content,
   }));

@@ -25,23 +25,25 @@ const LotusPetal = ({ color, opacity }: { color: string; opacity: number }) => (
 
 const DIVINE_COLORS = ['#FFD700', '#FFA500', '#FF4500', '#F0E68C', '#FFFFFF'];
 
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  rotation: number;
+  rotateSpeed: number;
+  opacity: number;
+  life: number;
+  decay: number;
+  color: string;
+  gravity: number;
+}
+
 export default function CelebrationEffect() {
-  const [particles, setParticles] = useState<Array<{
-    id: number;
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    size: number;
-    rotation: number;
-    rotateSpeed: number;
-    opacity: number;
-    life: number;
-    decay: number;
-    color: string;
-    gravity: number;
-  }>>([]);
-  const requestRef = useRef<number>();
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const requestRef = useRef<number | null>(null);
   const screenRef = useRef({ width: 0, height: 0 });
   const hasTriggeredRef = useRef(false);
 
@@ -121,7 +123,9 @@ export default function CelebrationEffect() {
       requestRef.current = requestAnimationFrame(animate);
       return () => {
         window.removeEventListener('resize', handleResize);
-        cancelAnimationFrame(requestRef.current!);
+        if (requestRef.current !== null) {
+          cancelAnimationFrame(requestRef.current);
+        }
       };
     }
   }, []);
