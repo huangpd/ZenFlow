@@ -1,8 +1,14 @@
 import { PrismaClient } from '@prisma/client';
+import path from 'path';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 const prisma = globalForPrisma.prisma || new PrismaClient({
+  datasources: {
+    db: {
+      url: `file:${path.join(process.cwd(), 'prisma', 'dev.db')}`,
+    },
+  },
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 });
 
