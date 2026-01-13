@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ArrowLeft, Settings2, BookOpen } from 'lucide-react';
+import { Plus, ArrowLeft, Settings2, BookOpen, Save, Loader2 } from 'lucide-react';
 import { ICON_MAP } from '@/constants';
-import { createTask, getAvailableSutras, updateTask } from '@/actions/tasks';
+import { createTask, getAvailableSutras, updateTask, checkExistingTask } from '@/actions/tasks';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -26,6 +26,7 @@ export default function AddTaskModal({
   const [configTarget, setConfigTarget] = useState<number | string>(1);
   const [isDaily, setIsDaily] = useState(false);
   const [dbSutras, setDbSutras] = useState<any[]>([]);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -54,30 +55,28 @@ export default function AddTaskModal({
   if (!isOpen) return null;
 
   const handleSelectPreset = async (item: any) => {
-    try {
-      const text = item.type === 'sutra' ? `读诵《${item.text}》` : item.text;
-      const newTask = await createTask({
-        text,
-        type: item.type,
-        iconId: item.iconId,
-        sutraId: item.sutraId,
-        target: 1,
-        step: item.step || 1,
-        isDaily: false,
-      });
-      
-      if (onTaskCreated) {
-        onTaskCreated(newTask);
-      }
-      
-      // 选中后立即创建并切换到“编辑”模式，允许进一步配置
-      // 使用后端返回的真实数据同步 UI 状态
-      setConfiguringTask({ ...newTask, text: item.text });
-      setConfigTarget(newTask.target || 1);
-      setIsDaily(newTask.isDaily || false);
-    } catch (error) {
-      console.error("Auto Create Error:", error);
-    }
+    const text = item.type === 'sutra' ? `读诵《${item.text}》` : item.text;
+    
+    // Check if task already exists to preserve settings
+    const existing = await checkExistingTask(item.sutraId, text);
+    
+    // Create draft task object
+    // If existing found, use its values and ID
+    const draftTask = {
+      id: existing?.id,
+      text,
+      type: item.type,
+      iconId: item.iconId,
+      sutraId: item.sutraId,
+      step: existing?.step || item.step || 1,
+      target: existing?.target || 1,
+      isDaily: existing ? existing.isDaily : false
+    };
+    
+    // Switch to configuration mode with draft
+    setConfiguringTask(draftTask);
+    setConfigTarget(draftTask.target);
+    setIsDaily(draftTask.isDaily);
   };
 
   const updateDailyStatus = async (val: boolean) => {
@@ -87,6 +86,26 @@ export default function AddTaskModal({
       const result = await updateTask(targetTask.id, { isDaily: val });
       if (result.success && onTaskUpdated) {
         onTaskUpdated(result.task);
+        // Sync UI with actual DB state
+        setIsDaily(result.task.isDaily);
+      }
+    }
+  };
+
+  const handleManualSave = async () => {
+    setIsSavingSettings(true);
+    const targetTask = taskToEdit || configuringTask;
+    if (targetTask?.id) {
+      try {
+        const result = await updateTask(targetTask.id, { isDaily: isDaily });
+        if (result.success && onTaskUpdated) {
+          onTaskUpdated(result.task);
+          setIsDaily(result.task.isDaily);
+        }
+      } catch (error) {
+        console.error("Manual save error:", error);
+      } finally {
+        setIsSavingSettings(false);
       }
     }
   };
@@ -129,7 +148,29 @@ export default function AddTaskModal({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (configuringTask && !configuringTask.id) {
+      // It is a new draft task, create it now
+      try {
+        const newTask = await createTask({
+          text: configuringTask.text,
+          type: configuringTask.type,
+          iconId: configuringTask.iconId,
+          sutraId: configuringTask.sutraId,
+          target: typeof configTarget === 'string' ? parseInt(configTarget) : configTarget,
+          step: configuringTask.step || 1,
+          isDaily: isDaily,
+        });
+        
+        if (onTaskCreated) {
+          onTaskCreated(newTask);
+        }
+      } catch (error) {
+        console.error("Create Task Error:", error);
+        return;
+      }
+    }
+
     setConfiguringTask(null);
     onClose();
   };
@@ -183,24 +224,37 @@ export default function AddTaskModal({
                   <p className="text-lg text-stone-800">{configuringTask.text}</p>
                </div>
 
-               <div 
-                 onClick={() => updateDailyStatus(!isDaily)}
-                 className="flex items-center justify-between px-6 py-4 bg-stone-50 rounded-3xl border border-stone-100 cursor-pointer hover:bg-stone-100/50 transition-colors"
-               >
-                  <div className="flex flex-col">
+               <div className="flex items-center justify-between px-6 py-4 bg-stone-50 rounded-3xl border border-stone-100 transition-colors">
+                  <div 
+                    className="flex flex-col flex-1 cursor-pointer"
+                    onClick={() => updateDailyStatus(!isDaily)}
+                  >
                     <span className="text-sm text-stone-800">设为每日功课</span>
                     <span className="text-[10px] text-stone-400">每天凌晨自动重置进度</span>
                   </div>
-                  <div 
-                    className={cn(
-                      "w-12 h-6 rounded-full transition-colors relative",
-                      isDaily ? "bg-emerald-500" : "bg-stone-300"
+                  <div className="flex items-center gap-3">
+                    {configuringTask.id && (
+                      <button 
+                        onClick={handleManualSave}
+                        disabled={isSavingSettings}
+                        className="p-2 bg-stone-100 text-stone-500 rounded-full hover:bg-stone-200 active:scale-90 transition-all"
+                        title="保存设置"
+                      >
+                        {isSavingSettings ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                      </button>
                     )}
-                  >
-                    <div className={cn(
-                      "absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm",
-                      isDaily ? "right-1" : "left-1"
-                    )} />
+                    <div 
+                      onClick={() => updateDailyStatus(!isDaily)}
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-colors relative cursor-pointer",
+                        isDaily ? "bg-emerald-500" : "bg-stone-300"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm",
+                        isDaily ? "right-1" : "left-1"
+                      )} />
+                    </div>
                   </div>
                </div>
 
@@ -218,7 +272,7 @@ export default function AddTaskModal({
                </div>
             </div>
             <button onClick={handleConfirm} className="w-full h-14 bg-emerald-100 text-emerald-700 rounded-[1.5rem] text-base shadow-sm active:scale-95 transition-all hover:bg-emerald-200">
-              完成
+              {configuringTask?.id ? "完成" : "确认请领"}
             </button>
           </div>
         )}

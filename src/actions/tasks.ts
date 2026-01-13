@@ -96,8 +96,8 @@ export async function createTask(data: {
         target: data.target,
         step: data.step,
         sutraId: data.sutraId,
-        // Preserve isDaily status if it exists, don't reset to false on re-selection
-        isDaily: existingTask.isDaily,
+        // Update isDaily if explicitly provided, otherwise preserve existing
+        isDaily: data.isDaily !== undefined ? data.isDaily : existingTask.isDaily,
         current: existingTask.completed ? 0 : existingTask.current
       },
     });
@@ -238,4 +238,19 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
 
   revalidatePath('/dashboard');
   return { success: true, task: updated };
+}
+
+export async function checkExistingTask(sutraId?: string, text?: string) {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  return db.spiritualTask.findFirst({
+    where: {
+      userId: session.user.id,
+      OR: [
+        { sutraId: sutraId && sutraId !== "" ? sutraId : undefined },
+        { text: text }
+      ].filter(Boolean) as any,
+    },
+  });
 }
