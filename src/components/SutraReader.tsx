@@ -14,6 +14,7 @@ interface SutraReaderProps {
 
 export default function SutraReader({ task, onBack, onComplete, onProgress }: SutraReaderProps) {
   const [aiLoading, setAiLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
   const [sutraContent, setSutraContent] = useState<{ title: string; content: string } | null>(null);
 
@@ -57,16 +58,23 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
   };
 
   const handleSubmit = async () => {
-    const nextCurrent = (task.current || 0) + 1;
-    const result = await updateTaskProgress(task.id, 1);
-    
-    if (result.success) {
-      if (onProgress) {
-        onProgress(task.id, nextCurrent, result.completed || false);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const nextCurrent = (task.current || 0) + 1;
+      const result = await updateTaskProgress(task.id, 1);
+      
+      if (result.success) {
+        if (onProgress) {
+          onProgress(task.id, nextCurrent, result.completed || false);
+        }
+        if (result.completed) onComplete?.();
       }
-      if (result.completed) onComplete?.();
+      onBack();
+    } catch (error) {
+      console.error("Submission error:", error);
+      setSubmitting(false);
     }
-    onBack();
   };
 
   return (
@@ -94,9 +102,13 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
           </div>
         )}
 
-        <button onClick={handleSubmit} className="w-full py-4 bg-emerald-100 text-emerald-700 rounded-2xl tracking-[0.2em] flex items-center justify-center space-x-2 shadow-sm active:scale-95 transition-all">
-          <Check size={20} />
-          <span>读诵圆满</span>
+        <button 
+          onClick={handleSubmit} 
+          disabled={submitting}
+          className="w-full py-4 bg-emerald-100 text-emerald-700 rounded-2xl tracking-[0.2em] flex items-center justify-center space-x-2 shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {submitting ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
+          <span>{submitting ? '提交中...' : '读诵圆满'}</span>
         </button>
       </div>
     </div>

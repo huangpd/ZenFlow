@@ -123,5 +123,41 @@ export async function getDetailedTaskStats() {
 
   const todayStats = Array.from(todayMap.values()).sort((a, b) => b.count - a.count);
 
+  // 3. Merge Meditation Stats
+  const [allMeditation, todayMeditation] = await Promise.all([
+    db.meditationSession.aggregate({
+      where: { userId },
+      _sum: { duration: true }
+    }),
+    db.meditationSession.aggregate({
+      where: { 
+        userId,
+        createdAt: { gte: today }
+      },
+      _sum: { duration: true }
+    })
+  ]);
+
+  const totalMeditationMins = allMeditation._sum.duration || 0;
+  const todayMeditationMins = todayMeditation._sum.duration || 0;
+
+  if (totalMeditationMins > 0) {
+    allTimeStats.unshift({
+      id: 'meditation-all-time',
+      text: '静坐冥想',
+      count: totalMeditationMins,
+      type: 'meditation'
+    });
+  }
+
+  if (todayMeditationMins > 0) {
+    todayStats.unshift({
+      id: 'meditation-today',
+      text: '静坐冥想',
+      count: todayMeditationMins,
+      type: 'meditation'
+    });
+  }
+
   return { today: todayStats, allTime: allTimeStats };
 }

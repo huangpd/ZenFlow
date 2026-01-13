@@ -10,54 +10,52 @@ export async function getTasks() {
 
   const userId = session.user.id;
   
-  // Get reset time from env (default to 00:00)
-  const resetTime = process.env.DAILY_RESET_TIME || '00:00';
-  const [resetHour, resetMinute] = resetTime.split(':').map(n => parseInt(n) || 0);
-  
+  // Use local system time for reset threshold (e.g., Today's 00:00)
   const now = new Date();
   const resetThreshold = new Date(now);
+  resetThreshold.setHours(0, 0, 0, 0); 
+
+  // If you want to use a specific DAILY_RESET_TIME from env:
+  const resetTime = process.env.DAILY_RESET_TIME || '00:00';
+  const [resetHour, resetMinute] = resetTime.split(':').map(n => parseInt(n) || 0);
   resetThreshold.setHours(resetHour, resetMinute, 0, 0);
-  
-  // If we haven't reached the reset time yet today, the threshold should be yesterday's reset time
+
+  // If current time is before the reset time, the actual threshold was yesterday
   if (now < resetThreshold) {
     resetThreshold.setDate(resetThreshold.getDate() - 1);
   }
 
-  // 1. Check if we need a reset (Check any task's updatedAt)
-  const needsReset = await db.spiritualTask.findFirst({
-    where: {
-      userId,
-      updatedAt: {
-        lt: resetThreshold
-      }
+  // A. Delete completed non-daily tasks older than threshold
+  const deleted = await db.spiritualTask.deleteMany({
+    where: { 
+      userId, 
+      isDaily: false,
+      completed: true,
+      updatedAt: { lt: resetThreshold }
     }
   });
 
-  if (needsReset) {
-    console.log(`Reset threshold reached, resetting daily tasks and removing one-off tasks for user ${userId}`);
-    
-    // A. Delete tasks that are NOT marked as daily AND are old
-    await db.spiritualTask.deleteMany({
-      where: { 
-        userId, 
-        isDaily: false,
-        updatedAt: { lt: resetThreshold }
-      }
-    });
+  // B. Reset old daily tasks
+  // NOTE: Explicitly setting updatedAt is required because Prisma's updateMany doesn't auto-update it.
+  const updated = await db.spiritualTask.updateMany({
+    where: { 
+      userId, 
+      isDaily: true, 
+      updatedAt: { lt: resetThreshold }
+    },
+    data: {
+      current: 0,
+      completed: false,
+      updatedAt: new Date() 
+    }
+  });
 
-    // B. Reset progress for tasks marked as daily AND are old
-    await db.spiritualTask.updateMany({
-      where: { 
-        userId, 
-        isDaily: true, 
-        updatedAt: { lt: resetThreshold }
-      },
-      data: {
-        current: 0,
-        completed: false
-      }
-    });
-  }
+  // If any changes were made, invalidate the dashboard path to show fresh data
+  // Note: revalidatePath removed to avoid "during render" error. 
+  // Since we fetch fresh data immediately below, the current render will be correct.
+  // if (deleted.count > 0 || updated.count > 0) {
+  //   revalidatePath('/dashboard');
+  // }
 
   return db.spiritualTask.findMany({
     where: { userId },
@@ -189,7 +187,7 @@ export async function deleteTask(id: string) {
   return { success: true };
 }
 
-export async function updateTask(id: string, data: { isDaily?: boolean; current?: number; target?: number }) {
+export async function updateTask(id: string, data: { isDaily?: boolean; current?: number; target?: number; completed?: boolean }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
@@ -207,17 +205,25 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
   const isProgressChanged = data.current !== undefined && data.current !== task.current;
 
   let updated;
-  if (isProgressChanged) {
-    const isFinished = task.target ? data.current! >= task.target : true;
-    updates.completed = isFinished || task.completed;
+  if (isProgressChanged || data.completed !== undefined) {
+    const isFinished = task.target && data.current !== undefined ? data.current >= task.target : true;
+    
+    // Explicit completion overrides calculation if provided, otherwise use calculation or existing state
+    if (data.completed !== undefined) {
+      updates.completed = data.completed;
+    } else if (isProgressChanged) {
+      updates.completed = isFinished || task.completed;
+    }
 
-    await db.taskLog.create({
-      data: {
-        taskId: id,
-        userId: userId,
-        count: data.current! - task.current,
-      },
-    });
+    if (isProgressChanged) {
+      await db.taskLog.create({
+        data: {
+          taskId: id,
+          userId: userId,
+          count: data.current! - task.current,
+        },
+      });
+    }
 
     updated = await db.spiritualTask.update({
       where: { id },

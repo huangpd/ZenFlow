@@ -23,7 +23,7 @@ export default function AddTaskModal({
   taskToEdit?: any;
 }) {
   const [configuringTask, setConfiguringTask] = useState<any | null>(null);
-  const [configTarget, setConfigTarget] = useState(1);
+  const [configTarget, setConfigTarget] = useState<number | string>(1);
   const [isDaily, setIsDaily] = useState(false);
   const [dbSutras, setDbSutras] = useState<any[]>([]);
 
@@ -91,13 +91,40 @@ export default function AddTaskModal({
     }
   };
 
-  const updateTargetValue = async (val: number) => {
+  const updateTargetValue = async (val: string | number) => {
     setConfigTarget(val);
-    const targetTask = taskToEdit || configuringTask;
-    if (targetTask?.id) {
-      const result = await updateTask(targetTask.id, { target: val });
-      if (result.success && onTaskUpdated) {
-        onTaskUpdated(result.task);
+    
+    const numVal = typeof val === 'string' ? parseInt(val) : val;
+    
+    // Only update backend if valid number >= 1
+    if (!isNaN(numVal) && numVal >= 1) {
+      const targetTask = taskToEdit || configuringTask;
+      if (targetTask?.id) {
+        const result = await updateTask(targetTask.id, { target: numVal });
+        if (result.success && onTaskUpdated) {
+          onTaskUpdated(result.task);
+        }
+      }
+    }
+  };
+
+  const handleTargetBlur = async () => {
+    let finalVal = 1;
+    if (typeof configTarget === 'number') {
+      finalVal = Math.max(1, configTarget);
+    } else {
+      const parsed = parseInt(configTarget);
+      finalVal = isNaN(parsed) || parsed < 1 ? 1 : parsed;
+    }
+
+    if (finalVal !== configTarget) {
+      setConfigTarget(finalVal);
+      const targetTask = taskToEdit || configuringTask;
+      if (targetTask?.id) {
+        const result = await updateTask(targetTask.id, { target: finalVal });
+        if (result.success && onTaskUpdated) {
+          onTaskUpdated(result.task);
+        }
       }
     }
   };
@@ -184,7 +211,8 @@ export default function AddTaskModal({
                   <input 
                     type="number" 
                     value={configTarget} 
-                    onChange={(e) => updateTargetValue(Math.max(1, parseInt(e.target.value) || 0))} 
+                    onChange={(e) => updateTargetValue(e.target.value)} 
+                    onBlur={handleTargetBlur}
                     className="w-full bg-stone-50 border border-stone-200 p-6 rounded-3xl text-center text-3xl font-serif text-emerald-700 focus:ring-2 focus:ring-stone-300 transition-all outline-none" 
                   />
                </div>

@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import DashboardContent from '@/components/DashboardContent';
 import { db } from '@/lib/db';
 import Link from 'next/link';
+import { getTasks } from '@/actions/tasks';
 
 export default async function Home() {
   const session = await auth();
@@ -66,10 +67,7 @@ export default async function Home() {
     take: 20,
   });
 
-  const tasks = await db.spiritualTask.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'asc' },
-  });
+  const tasks = await getTasks();
 
   const formattedHistory = chatHistory.map((msg: any) => ({
     role: msg.role as 'user' | 'assistant',

@@ -34,6 +34,9 @@ describe('Daily Reset Logic Fix', () => {
       id: 'old-task',
       updatedAt: yesterday,
     });
+    
+    (db.spiritualTask.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
+    (db.spiritualTask.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
 
     await getTasks();
 

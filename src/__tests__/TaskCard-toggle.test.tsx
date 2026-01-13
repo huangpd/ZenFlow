@@ -23,7 +23,7 @@ describe('TaskCard Toggle with Save Button', () => {
   });
 
   it('does NOT save immediately when toggling in edit mode', async () => {
-    render(<TaskCard task={mockTask} onRead={jest.fn()} onProgress={jest.fn()} />);
+    render(<TaskCard task={mockTask} onRead={jest.fn()} onEdit={jest.fn()} onProgress={jest.fn()} />);
     
     // Enter edit mode
     fireEvent.click(screen.getByText('修改'));
@@ -47,7 +47,7 @@ describe('TaskCard Toggle with Save Button', () => {
   });
 
   it('keeps standalone toggle deactivated when NOT in edit mode', () => {
-      render(<TaskCard task={mockTask} onRead={jest.fn()} onProgress={jest.fn()} />);
+      render(<TaskCard task={mockTask} onRead={jest.fn()} onEdit={jest.fn()} onProgress={jest.fn()} />);
       const toggle = screen.getByLabelText(/Set as Daily/i);
       
       fireEvent.click(toggle);

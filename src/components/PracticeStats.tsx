@@ -63,6 +63,8 @@ export default function PracticeStats({ userName }: { userName: string }) {
   };
 
   const totalMeds = stats.reduce((acc, s) => acc + s.meditationMins, 0);
+  const allTimeMeditation = taskStats.allTime.find(t => t.type === 'meditation');
+  const displayTotalMeds = allTimeMeditation ? allTimeMeditation.count : totalMeds;
 
   return (
     <div className="space-y-8 pb-12 h-full animate-in fade-in duration-500">
@@ -93,7 +95,13 @@ export default function PracticeStats({ userName }: { userName: string }) {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-amber-50/50 p-6 rounded-[2rem] border border-amber-100 text-center">
           <div className="text-[10px] text-amber-600 tracking-[0.2em] mb-1 uppercase">坐禅总时长</div>
-          <div className="text-4xl font-light text-stone-800 font-serif">{Math.floor(totalMeds / 60)}<span className="text-sm ml-1">h</span></div>
+          <div className="text-4xl font-light text-stone-800 font-serif">
+            {displayTotalMeds < 60 ? (
+              <>{displayTotalMeds}<span className="text-sm ml-1">m</span></>
+            ) : (
+              <>{Math.floor(displayTotalMeds / 60)}<span className="text-sm ml-1">h</span></>
+            )}
+          </div>
         </div>
         <div className="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100 text-center">
           <div className="text-[10px] text-emerald-600 tracking-[0.2em] mb-1 uppercase">精进指数</div>
@@ -114,7 +122,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
                   <div key={i} className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100">
                     <span className="text-xs font-bold text-stone-700">{t.text}</span>
                     <span className="text-xs font-mono text-emerald-600 font-bold bg-white px-2 py-1 rounded-md border border-stone-100">
-                      {t.count} <span className="text-[9px] text-stone-400 font-normal">遍</span>
+                      {t.count} <span className="text-[9px] text-stone-400 font-normal">{t.type === 'meditation' ? '分钟' : '遍'}</span>
                     </span>
                   </div>
                 ))}
@@ -135,7 +143,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
                   <div key={t.id} className="flex justify-between items-center p-3 bg-white rounded-xl border border-stone-100 shadow-sm">
                     <span className="text-xs font-bold text-stone-700">{t.text}</span>
                     <span className="text-xs font-mono text-amber-600 font-bold">
-                      {t.count} <span className="text-[9px] text-stone-400 font-normal">次</span>
+                      {t.count} <span className="text-[9px] text-stone-400 font-normal">{t.type === 'meditation' ? '分钟' : '次'}</span>
                     </span>
                   </div>
                 ))}

@@ -1,5 +1,5 @@
 
-export type TaskType = 'normal' | 'counter' | 'sutra';
+export type TaskType = 'normal' | 'counter' | 'sutra' | 'meditation';
 
 export interface Task {
   id: string | number;

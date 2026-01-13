@@ -6,6 +6,7 @@ import { ICON_MAP } from '@/constants';
 import { updateTaskProgress, updateTask } from '@/actions/tasks';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import ConfirmDialog from './ConfirmDialog';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -24,6 +25,7 @@ interface TaskCardProps {
 export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress }: TaskCardProps) {
   const [isEditingProgress, setIsEditingProgress] = React.useState(false);
   const [editValue, setEditValue] = React.useState(task.current?.toString() || '0');
+  const [showConfirm, setShowConfirm] = React.useState(false);
 
   const handleStep = async () => {
     const nextCurrent = (task.current || 0) + (task.step || 1);
@@ -67,6 +69,12 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
   };
 
   const handleFinish = async () => {
+    // Check if incomplete for counter type
+    if (task.type === 'counter' && task.target && (task.current || 0) < task.target) {
+      setShowConfirm(true);
+      return;
+    }
+
     const countToLog = (task.target && task.target > task.current) ? (task.target - task.current) : 1;
     const nextCurrent = task.target || (task.current + 1);
     
@@ -77,6 +85,38 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
     }
   };
 
+  const handleConfirmSubmit = async (value?: string) => {
+    setShowConfirm(false);
+    if (value === undefined) return;
+
+    const val = parseInt(value);
+    if (isNaN(val) || val < 0) {
+      alert("请输入有效的数字");
+      return;
+    }
+
+    if (task.target && val > task.target) {
+      alert(`进度不能超过目标值 ${task.target}`);
+      return;
+    }
+
+    try {
+      // Force completion since user explicitly confirmed "Submit"
+      const result = await updateTask(task.id, { 
+        current: val,
+        completed: true 
+      });
+      
+      if (result.success) {
+        onProgress(task.id, val, true); // Force UI to show as completed
+        onComplete?.();
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      alert("提交失败，请重试");
+    }
+  };
+
   const progressPercent = Math.min(100, (((task.current || 0) / (task.target || 1)) * 100));
 
   return (
@@ -84,6 +124,17 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
       "group bg-white p-6 rounded-[2.5rem] shadow-sm border transition-all duration-500 relative overflow-hidden",
       task.completed ? "border-emerald-100 bg-emerald-50/10" : "border-stone-100"
     )}>
+      <ConfirmDialog
+        isOpen={showConfirm}
+        title="提交确认"
+        message={`您今日功课尚未圆满（当前 ${task.current || 0}/${task.target}）。\n\n是否确认提交？`}
+        confirmText="确认提交"
+        cancelText="取消"
+        defaultValue={(task.current || 0).toString()}
+        inputType="number"
+        onConfirm={handleConfirmSubmit}
+        onCancel={() => setShowConfirm(false)}
+      />
       {/* 顶部标题与图标 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">

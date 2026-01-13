@@ -72,6 +72,13 @@ export default function MeditationTimer() {
     let keepAliveInterval: NodeJS.Timeout | null = null;
     
     if (timerRunning) {
+      if (timeLeft <= 0) {
+        setTimerRunning(false);
+        setTimeLeft(0);
+        handleComplete();
+        return;
+      }
+
       // 保活机制：每10秒发送一次信号给Service Worker保持活动
       keepAliveInterval = setInterval(() => {
         if (navigator.serviceWorker?.controller) {
@@ -85,9 +92,6 @@ export default function MeditationTimer() {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0 && timerRunning) {
-      setTimerRunning(false);
-      handleComplete();
     }
     
     return () => {
@@ -141,7 +145,7 @@ export default function MeditationTimer() {
         </svg>
         <div className="absolute flex flex-col items-center justify-center">
           <div className="text-5xl font-light font-mono text-stone-800 tracking-tighter">
-            {formatTime(timeLeft)}
+            {formatTime(Math.max(0, timeLeft))}
           </div>
           {timerRunning && (
              <div className="flex items-center mt-2 space-x-1 text-emerald-600 animate-pulse opacity-60">
@@ -154,7 +158,7 @@ export default function MeditationTimer() {
 
       <div className="flex flex-col items-center space-y-8 w-full max-w-[280px]">
         <div className="flex justify-between w-full bg-stone-100/50 p-1 rounded-2xl">
-           {[10, 25, 45, 60].map(mins => (
+           {[3, 10, 25, 45, 60].map(mins => (
               <button 
                 key={mins} 
                 disabled={timerRunning} 
