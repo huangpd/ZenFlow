@@ -17,6 +17,10 @@ interface Message {
 }
 
 export default function ChatInterface({ initialMessages = [] }: { initialMessages?: Message[] }) {
+  const cleanContent = (content: string) => {
+    return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  };
+
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -109,7 +113,7 @@ export default function ChatInterface({ initialMessages = [] }: { initialMessage
                         ),
                       blockquote: ({...props}) => <blockquote className="border-l-4 border-emerald-400 pl-4 italic text-stone-600 my-2" {...props} />,                      a: ({...props}) => <a className="text-emerald-600 hover:underline" {...props} />,                    }}
                   >
-                    {m.content}
+                    {cleanContent(m.content)}
                   </ReactMarkdown>
                 </div>
               ) : (
@@ -119,7 +123,7 @@ export default function ChatInterface({ initialMessages = [] }: { initialMessage
                     ? "text-stone-600 font-sans" 
                     : "text-stone-800 font-serif"
                 )}>
-                  {m.content}
+                  {cleanContent(m.content)}
                 </div>
               )}
             </div>

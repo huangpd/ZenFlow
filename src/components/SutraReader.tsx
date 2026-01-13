@@ -52,7 +52,8 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
     setAiLoading(true);
     const result = await getGuidance(sutraContent.content);
     if (result.success && result.insight) {
-      setAiResponse(result.insight);
+      const cleaned = result.insight.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+      setAiResponse(cleaned);
     }
     setAiLoading(false);
   };

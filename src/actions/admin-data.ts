@@ -4,11 +4,13 @@ import { db } from '@/lib/db';
 import { isAdmin } from '@/lib/auth-utils';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export async function fetchModelData(modelName: string, page: number = 1, limit: number = 10) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
-    throw new Error("Unauthorized");
+    console.log(`Access denied. User: ${session?.user?.email}, Admins: ${process.env.ADMIN_EMAILS}`);
+    redirect('/');
   }
 
   const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
@@ -36,7 +38,8 @@ export async function fetchModelData(modelName: string, page: number = 1, limit:
 export async function deleteRecord(modelName: string, id: string) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
-    throw new Error("Unauthorized");
+    console.log(`Access denied. User: ${session?.user?.email}, Admins: ${process.env.ADMIN_EMAILS}`);
+    redirect('/');
   }
 
   const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
@@ -58,7 +61,8 @@ export async function deleteRecord(modelName: string, id: string) {
 export async function fetchRelatedList(modelName: string) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
-    throw new Error("Unauthorized");
+    console.log(`Access denied. User: ${session?.user?.email}, Admins: ${process.env.ADMIN_EMAILS}`);
+    redirect('/');
   }
 
   const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
@@ -82,7 +86,8 @@ export async function fetchRelatedList(modelName: string) {
 export async function createRecord(modelName: string, data: any) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
-    throw new Error("Unauthorized");
+    console.log(`Access denied. User: ${session?.user?.email}, Admins: ${process.env.ADMIN_EMAILS}`);
+    redirect('/');
   }
 
   const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
@@ -100,7 +105,8 @@ export async function createRecord(modelName: string, data: any) {
 export async function updateRecord(modelName: string, id: string, data: any) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
-    throw new Error("Unauthorized");
+    console.log(`Access denied. User: ${session?.user?.email}, Admins: ${process.env.ADMIN_EMAILS}`);
+    redirect('/');
   }
 
   const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
@@ -124,7 +130,8 @@ export async function updateRecord(modelName: string, id: string, data: any) {
 export async function fetchRecord(modelName: string, id: string) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
-    throw new Error("Unauthorized");
+    console.log(`Access denied. User: ${session?.user?.email}, Admins: ${process.env.ADMIN_EMAILS}`);
+    redirect('/');
   }
 
   const prismaModelName = modelName.charAt(0).toLowerCase() + modelName.slice(1);

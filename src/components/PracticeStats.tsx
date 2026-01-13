@@ -58,7 +58,8 @@ export default function PracticeStats({ userName }: { userName: string }) {
       journalCount,
       journalCategories
     );
-    setAiInsight(result);
+    const cleaned = result.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    setAiInsight(cleaned);
     setLoading(false);
   };
 
