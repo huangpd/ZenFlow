@@ -20,13 +20,26 @@ export async function getPracticeStats() {
   const [meditations, taskLogs, logs] = await Promise.all([
     db.meditationSession.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
+      select: { duration: true, createdAt: true },
     }),
     db.taskLog.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
-      include: { task: true },
+      select: { 
+        id: true,
+        count: true, 
+        createdAt: true,
+        task: {
+          select: { text: true }
+        }
+      },
     }),
     db.journalEntry.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
+      select: { 
+        id: true,
+        content: true, 
+        createdAt: true 
+      },
     }),
   ]);
 
@@ -79,57 +92,50 @@ export async function getDetailedTaskStats() {
   today.setHours(0, 0, 0, 0);
 
   // 1. 获取历史总计统计数据（来自 TaskLog - 实际完成情况）
-  const allLogs = await db.taskLog.findMany({
+  const allTimeStatsRaw = await db.taskLog.groupBy({
+    by: ['taskId'],
     where: { userId },
-    include: { task: true }
+    _sum: { count: true },
   });
 
-  // 按任务聚合历史日志
-  const allTimeMap = new Map<string, { id: string; text: string; count: number; type: string }>();
+  // 获取任务详情以填充名称
+  const taskIds = allTimeStatsRaw.map(s => s.taskId);
+  const tasks = await db.spiritualTask.findMany({
+    where: { id: { in: taskIds } },
+    select: { id: true, text: true, type: true }
+  });
   
-  allLogs.forEach(log => {
-    const existing = allTimeMap.get(log.taskId);
-    if (existing) {
-      existing.count += log.count;
-    } else {
-      allTimeMap.set(log.taskId, {
-        id: log.taskId,
-        text: log.task.text,
-        count: log.count,
-        type: log.task.type
-      });
-    }
-  });
+  const tasksMap = new Map(tasks.map(t => [t.id, t]));
 
-  const allTimeStats = Array.from(allTimeMap.values()).sort((a, b) => b.count - a.count);
+  const allTimeStats: { id: string; text: string; count: number; type: string }[] = allTimeStatsRaw.map(s => {
+    const task = tasksMap.get(s.taskId);
+    return {
+      id: s.taskId,
+      text: task?.text || '未知任务',
+      count: s._sum.count || 0,
+      type: task?.type || 'normal'
+    };
+  }).sort((a, b) => b.count - a.count);
 
   // 2. 获取今日统计数据（来自 TaskLog）
-  const todayLogs = await db.taskLog.findMany({
+  const todayStatsRaw = await db.taskLog.groupBy({
+    by: ['taskId'],
     where: { 
       userId,
       createdAt: { gte: today }
     },
-    include: { task: true }
+    _sum: { count: true },
   });
 
-  // 按任务聚合今日日志
-  const todayMap = new Map<string, { id: string; text: string; count: number; type: string }>();
-  
-  todayLogs.forEach(log => {
-    const existing = todayMap.get(log.taskId);
-    if (existing) {
-      existing.count += log.count;
-    } else {
-      todayMap.set(log.taskId, {
-        id: log.taskId,
-        text: log.task.text,
-        count: log.count,
-        type: log.task.type
-      });
-    }
-  });
-
-  const todayStats = Array.from(todayMap.values()).sort((a, b) => b.count - a.count);
+  const todayStats: { id: string; text: string; count: number; type: string }[] = todayStatsRaw.map(s => {
+    const task = tasksMap.get(s.taskId);
+    return {
+      id: s.taskId,
+      text: task?.text || '未知任务',
+      count: s._sum.count || 0,
+      type: task?.type || 'normal'
+    };
+  }).sort((a, b) => b.count - a.count);
 
   // 3. 合并冥想统计数据
   const [allMeditation, todayMeditation] = await Promise.all([

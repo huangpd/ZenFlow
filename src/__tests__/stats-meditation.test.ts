@@ -5,6 +5,9 @@ import { auth } from '@/auth';
 jest.mock('@/lib/db', () => ({
   db: {
     taskLog: {
+      groupBy: jest.fn(),
+    },
+    spiritualTask: {
       findMany: jest.fn(),
     },
     meditationSession: {
@@ -21,8 +24,11 @@ describe('getDetailedTaskStats', () => {
   it('merges meditation sessions into task stats', async () => {
     (auth as jest.Mock).mockResolvedValue({ user: { id: 'user1' } });
     
-    // Mock TaskLogs
-    (db.taskLog.findMany as jest.Mock).mockResolvedValue([]);
+    // Mock TaskLogs groupBy
+    (db.taskLog.groupBy as jest.Mock).mockResolvedValue([]);
+    
+    // Mock SpiritualTask findMany (empty list of tasks for empty logs)
+    (db.spiritualTask.findMany as jest.Mock).mockResolvedValue([]);
     
     // Mock Meditation Aggregates
     // First call is for All Time, Second is for Today

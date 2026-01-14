@@ -78,6 +78,8 @@ model JournalEntry {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model ChatMessage {
@@ -107,6 +109,8 @@ model SpiritualTask {
   updatedAt   DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isDaily, updatedAt])
 }
 
 model TaskLog {
@@ -118,6 +122,8 @@ model TaskLog {
 
   task SpiritualTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model MeditationSession {
@@ -127,6 +133,8 @@ model MeditationSession {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model UserPreference {

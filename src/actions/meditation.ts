@@ -31,11 +31,17 @@ export async function getMeditationStats() {
   const session = await auth();
   if (!session?.user?.id) return { totalMins: 0, sessions: [] };
 
-  const sessions = await db.meditationSession.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: 'desc' },
-  });
+  const [aggregate, sessions] = await Promise.all([
+    db.meditationSession.aggregate({
+      where: { userId: session.user.id },
+      _sum: { duration: true },
+    }),
+    db.meditationSession.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
 
-  const totalMins = sessions.reduce((acc, s) => acc + s.duration, 0);
+  const totalMins = aggregate._sum.duration || 0;
   return { totalMins, sessions };
 }
