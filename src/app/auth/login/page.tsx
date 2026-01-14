@@ -7,6 +7,10 @@ const initialState = {
   error: '',
 };
 
+/**
+ * 用户登录页面
+ * 处理用户登录逻辑，收集邮箱和密码，通过 Server Action 进行验证
+ */
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, initialState);
 

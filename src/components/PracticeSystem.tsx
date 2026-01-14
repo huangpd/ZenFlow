@@ -29,6 +29,10 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
     setTasks(prevTasks => prevTasks.map(t => 
       t.id === updatedTask.id ? { ...t, ...updatedTask } : t
     ));
+    // Synchronize editingTask if it's currently being edited
+    if (editingTask && editingTask.id === updatedTask.id) {
+      setEditingTask((prev: any) => ({ ...prev, ...updatedTask }));
+    }
   };
 
   if (readingTask) {

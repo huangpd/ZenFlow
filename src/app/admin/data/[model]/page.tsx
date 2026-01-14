@@ -5,6 +5,10 @@ import { getSchemaMetadata } from '@/lib/schema-metadata';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
+/**
+ * 通用模型数据列表页面
+ * 动态展示指定模型(model)的数据列表，包含分页和创建入口
+ */
 export default async function ModelPage({ 
   params, 
   searchParams 

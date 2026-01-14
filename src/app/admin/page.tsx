@@ -2,6 +2,10 @@ import { getSchemaMetadata } from '@/lib/schema-metadata';
 import Link from 'next/link';
 import { BookOpen } from 'lucide-react';
 
+/**
+ * 管理后台首页
+ * 提供系统管理功能的概览和快捷入口，包括专用工具和底层数据库管理
+ */
 export default async function AdminPage() {
   const metadata = await getSchemaMetadata();
 

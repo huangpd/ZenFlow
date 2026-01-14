@@ -8,6 +8,10 @@ const initialState = {
   success: '',
 };
 
+/**
+ * 用户注册页面
+ * 处理新用户注册逻辑，收集姓名、邮箱和密码创建新账号
+ */
 export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(register, initialState);
 

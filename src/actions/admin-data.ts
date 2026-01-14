@@ -6,6 +6,12 @@ import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+/**
+ * 分页获取指定模型的数据列表
+ * @param modelName 模型名称
+ * @param page 当前页码
+ * @param limit 每页条数
+ */
 export async function fetchModelData(modelName: string, page: number = 1, limit: number = 10) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
@@ -35,6 +41,11 @@ export async function fetchModelData(modelName: string, page: number = 1, limit:
   return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
 }
 
+/**
+ * 删除指定模型的单条记录
+ * @param modelName 模型名称
+ * @param id 记录ID
+ */
 export async function deleteRecord(modelName: string, id: string) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
@@ -58,6 +69,10 @@ export async function deleteRecord(modelName: string, id: string) {
   revalidatePath('/dashboard');
 }
 
+/**
+ * 获取用于关联选择的简单列表
+ * @param modelName 模型名称
+ */
 export async function fetchRelatedList(modelName: string) {
   const session = await auth();
   if (!session?.user?.email || !isAdmin(session.user.email)) {
@@ -82,6 +97,11 @@ export async function fetchRelatedList(modelName: string) {
   }));
 }
 
+/**
+ * 创建新记录
+ * @param modelName 模型名称
+ * @param data 记录数据
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createRecord(modelName: string, data: any) {
   const session = await auth();
@@ -101,6 +121,12 @@ export async function createRecord(modelName: string, data: any) {
   revalidatePath('/dashboard');
 }
 
+/**
+ * 更新现有记录
+ * @param modelName 模型名称
+ * @param id 记录ID
+ * @param data 更新的数据
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateRecord(modelName: string, id: string, data: any) {
   const session = await auth();
@@ -126,6 +152,11 @@ export async function updateRecord(modelName: string, id: string, data: any) {
   revalidatePath('/dashboard');
 }
 
+/**
+ * 获取单条记录详情
+ * @param modelName 模型名称
+ * @param id 记录ID
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchRecord(modelName: string, id: string) {
   const session = await auth();

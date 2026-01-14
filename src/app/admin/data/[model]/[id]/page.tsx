@@ -3,6 +3,10 @@ import { getSchemaMetadata } from '@/lib/schema-metadata';
 import { updateRecord, fetchRecord } from '@/actions/admin-data';
 import { notFound, redirect } from 'next/navigation';
 
+/**
+ * 编辑记录页面
+ * 根据模型名称(model)和记录ID(id)加载数据，并提供表单进行编辑更新
+ */
 export default async function EditRecordPage({ params }: { params: Promise<{ model: string; id: string }> }) {
   const { model, id } = await params;
   const metadata = await getSchemaMetadata();

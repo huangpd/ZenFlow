@@ -4,6 +4,11 @@ import DashboardContent from '@/components/DashboardContent';
 import { db } from '@/lib/db';
 import { getTasks } from '@/actions/tasks';
 
+/**
+ * 用户仪表盘页面
+ * 应用程序的核心界面，聚合了聊天记录、日记和每日任务等主要功能
+ * 需要用户登录后才能访问
+ */
 export default async function DashboardPage() {
   const session = await auth();
 

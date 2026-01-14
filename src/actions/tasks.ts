@@ -4,28 +4,34 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
+/**
+ * 获取当前用户的所有功课任务
+ * 包含自动重置逻辑：
+ * 1. 删除已完成的非每日任务
+ * 2. 重置每日任务的进度
+ */
 export async function getTasks() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
   const userId = session.user.id;
   
-  // Use local system time for reset threshold (e.g., Today's 00:00)
+  // 使用本地系统时间作为重置阈值（例如：今天的 00:00）
   const now = new Date();
   const resetThreshold = new Date(now);
   resetThreshold.setHours(0, 0, 0, 0); 
 
-  // If you want to use a specific DAILY_RESET_TIME from env:
+  // 如果你想使用环境变量中指定的每日重置时间：
   const resetTime = process.env.DAILY_RESET_TIME || '00:00';
   const [resetHour, resetMinute] = resetTime.split(':').map(n => parseInt(n) || 0);
   resetThreshold.setHours(resetHour, resetMinute, 0, 0);
 
-  // If current time is before the reset time, the actual threshold was yesterday
+  // 如果当前时间早于重置时间，则实际阈值为昨天
   if (now < resetThreshold) {
     resetThreshold.setDate(resetThreshold.getDate() - 1);
   }
 
-  // A. Delete completed non-daily tasks older than threshold
+  // A. 删除早于阈值且已完成的非每日任务
   const deleted = await db.spiritualTask.deleteMany({
     where: { 
       userId, 
@@ -35,8 +41,8 @@ export async function getTasks() {
     }
   });
 
-  // B. Reset old daily tasks
-  // NOTE: Explicitly setting updatedAt is required because Prisma's updateMany doesn't auto-update it.
+  // B. 重置旧的每日任务
+  // 注意：显式设置 updatedAt 是必需的，因为 Prisma 的 updateMany 不会自动更新它。
   const updated = await db.spiritualTask.updateMany({
     where: { 
       userId, 
@@ -50,9 +56,9 @@ export async function getTasks() {
     }
   });
 
-  // If any changes were made, invalidate the dashboard path to show fresh data
-  // Note: revalidatePath removed to avoid "during render" error. 
-  // Since we fetch fresh data immediately below, the current render will be correct.
+  // 如果有任何更改，使仪表盘路径失效以显示新鲜数据
+  // 注意：移除 revalidatePath 以避免“在渲染期间”出错。 
+  // 既然我们立即在下方获取新鲜数据，当前渲染将是正确的。
   // if (deleted.count > 0 || updated.count > 0) {
   //   revalidatePath('/dashboard');
   // }
@@ -63,6 +69,10 @@ export async function getTasks() {
   });
 }
 
+/**
+ * 创建新功课任务
+ * 如果已存在相同名称或佛经关联的任务，则更新并重新激活它
+ */
 export async function createTask(data: {
   text: string;
   type: string;
@@ -75,7 +85,7 @@ export async function createTask(data: {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
-  // Check for duplicates based on sutraId (preferred) or text
+  // 根据佛经 ID（首选）或文本检查重复项
   const existingTask = await db.spiritualTask.findFirst({
     where: {
       userId: session.user.id,
@@ -87,7 +97,7 @@ export async function createTask(data: {
   });
 
   if (existingTask) {
-    // If exists, update its configuration (target/step/text/isDaily) and reactivate if completed
+    // 如果存在，更新其配置（目标/步长/文本/是否每日），如果已完成则重新激活
     const updated = await db.spiritualTask.update({
       where: { id: existingTask.id },
       data: { 
@@ -96,7 +106,7 @@ export async function createTask(data: {
         target: data.target,
         step: data.step,
         sutraId: data.sutraId,
-        // Update isDaily if explicitly provided, otherwise preserve existing
+        // 使用提供的 isDaily 或保留现有的
         isDaily: data.isDaily !== undefined ? data.isDaily : existingTask.isDaily,
         current: existingTask.completed ? 0 : existingTask.current
       },
@@ -109,7 +119,7 @@ export async function createTask(data: {
     const task = await db.spiritualTask.create({
       data: {
         userId: session.user.id,
-        isDaily: false, // Default to false as per user request
+        isDaily: false, // 根据用户要求，默认为 false
         ...data,
       },
     });
@@ -122,12 +132,60 @@ export async function createTask(data: {
   }
 }
 
+/**
+ * 获取可供选择的佛经列表
+ * 包含用户当前的设置状态（如果已存在对应功课），如是否为每日功课、当前目标等
+ */
 export async function getAvailableSutras() {
-  return db.sutra.findMany({
-    select: { id: true, title: true, description: true, type: true, iconId: true, defaultStep: true }
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const sutras = await db.sutra.findMany({
+    select: { 
+      id: true, 
+      title: true, 
+      description: true, 
+      type: true, 
+      iconId: true, 
+      defaultStep: true,
+      defaultTarget: true 
+    }
+  });
+
+  if (!userId) {
+    return sutras.map(s => ({
+      ...s,
+      isDaily: false,
+      currentTarget: s.defaultTarget || 1,
+      existingTaskId: null
+    }));
+  }
+
+  // 获取用户所有任务以匹配状态
+  const userTasks = await db.spiritualTask.findMany({
+    where: { userId },
+    select: { id: true, sutraId: true, isDaily: true, target: true, text: true }
+  });
+
+  return sutras.map(s => {
+    // 优先通过 sutraId 匹配，其次尝试通过文本匹配（兼容旧数据）
+    const taskText = s.type === 'sutra' ? `读诵《${s.title}》` : s.title;
+    const existingTask = userTasks.find(t => 
+      t.sutraId === s.id || t.text === taskText
+    );
+
+    return {
+      ...s,
+      isDaily: existingTask ? existingTask.isDaily : false,
+      currentTarget: existingTask?.target || s.defaultTarget || 1,
+      existingTaskId: existingTask?.id || null
+    };
   });
 }
 
+/**
+ * 获取指定佛经的正文内容
+ */
 export async function getSutraContent(id: string) {
   return db.sutra.findUnique({
     where: { id },
@@ -135,6 +193,10 @@ export async function getSutraContent(id: string) {
   });
 }
 
+/**
+ * 更新功课进度
+ * 记录 TaskLog 并更新 SpiritualTask 的当前值 and 完成状态
+ */
 export async function updateTaskProgress(id: string, increment?: number, manualValue?: number) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -153,7 +215,7 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
 
   const isFinished = task.target ? nextCurrent >= task.target : true;
 
-  // Create log entry
+  // 创建日志条目
   await db.taskLog.create({
     data: {
       taskId: id,
@@ -162,7 +224,7 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
     },
   });
 
-  // Update task
+  // 更新任务
   const updatedTask = await db.spiritualTask.update({
     where: { id },
     data: {
@@ -175,6 +237,9 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
   return { success: true, completed: isFinished && !task.completed };
 }
 
+/**
+ * 删除功课任务
+ */
 export async function deleteTask(id: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -187,6 +252,10 @@ export async function deleteTask(id: string) {
   return { success: true };
 }
 
+/**
+ * 更新功课任务配置或进度
+ * 灵活支持更新是否每日、当前值、目标值等
+ */
 export async function updateTask(id: string, data: { isDaily?: boolean; current?: number; target?: number; completed?: boolean }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -208,7 +277,7 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
   if (isProgressChanged || data.completed !== undefined) {
     const isFinished = task.target && data.current !== undefined ? data.current >= task.target : true;
     
-    // Explicit completion overrides calculation if provided, otherwise use calculation or existing state
+    // 如果提供了显式完成状态，则覆盖计算结果，否则使用计算结果或现有状态
     if (data.completed !== undefined) {
       updates.completed = data.completed;
     } else if (isProgressChanged) {
@@ -240,6 +309,9 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
   return { success: true, task: updated };
 }
 
+/**
+ * 检查是否存在对应佛经或文本的功课任务
+ */
 export async function checkExistingTask(sutraId?: string, text?: string) {
   const session = await auth();
   if (!session?.user?.id) return null;

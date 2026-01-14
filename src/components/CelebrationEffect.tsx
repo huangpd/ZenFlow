@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * 妙法莲华特效 - 花开见佛
- * 庄严的莲花对称绽放动画
+ * 庄严的莲花对称绽放动画，用于庆祝功课圆满
  */
 
 // 精细化莲花瓣组件
@@ -131,6 +131,7 @@ export default function CelebrationEffect() {
   }, []);
 
   return (
+    // ... JSX ...
     <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden animate-in fade-in duration-300">
       {/* 粒子渲染层 */}
       {particles.map(p => (

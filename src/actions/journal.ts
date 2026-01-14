@@ -4,6 +4,11 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
+/**
+ * 创建日记条目
+ * @param prevState 初始状态（用于 useActionState）
+ * @param formData 表单数据
+ */
 export async function createJournalEntry(prevState: any, formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -36,6 +41,10 @@ export async function createJournalEntry(prevState: any, formData: FormData) {
   }
 }
 
+/**
+ * 删除指定日记条目
+ * @param id 日记ID
+ */
 export async function deleteJournalEntry(id: string) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -46,7 +55,7 @@ export async function deleteJournalEntry(id: string) {
     await db.journalEntry.delete({
       where: {
         id,
-        userId: session.user.id, // Ensure user owns the entry
+        userId: session.user.id, // 确保用户拥有该条目
       },
     });
     revalidatePath('/dashboard');
@@ -57,6 +66,9 @@ export async function deleteJournalEntry(id: string) {
   }
 }
 
+/**
+ * 获取用户今日的所有日记
+ */
 export async function getTodayJournals() {
   const session = await auth();
   if (!session?.user?.id) {

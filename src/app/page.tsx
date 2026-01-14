@@ -4,6 +4,12 @@ import { db } from '@/lib/db';
 import Link from 'next/link';
 import { getTasks } from '@/actions/tasks';
 
+/**
+ * 应用首页
+ * 根据用户登录状态展示不同内容：
+ * 1. 未登录：展示产品介绍页 (Landing Page) 和登录/注册入口
+ * 2. 已登录：加载用户数据并展示仪表盘 (Dashboard) 内容
+ */
 export default async function Home() {
   const session = await auth();
 

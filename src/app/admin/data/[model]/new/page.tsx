@@ -3,6 +3,10 @@ import { getSchemaMetadata } from '@/lib/schema-metadata';
 import { createRecord } from '@/actions/admin-data';
 import { notFound, redirect } from 'next/navigation';
 
+/**
+ * 新建记录页面
+ * 根据模型名称(model)动态生成表单，用于创建新的数据记录
+ */
 export default async function NewRecordPage({ params }: { params: Promise<{ model: string }> }) {
   const { model } = await params;
   const metadata = await getSchemaMetadata();

@@ -3,6 +3,11 @@
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 
+/**
+ * 处理用户登录请求
+ * @param prevState 初始状态
+ * @param formData 登录表单数据 (email, password)
+ */
 export async function login(prevState: any, formData: FormData) {
   try {
     await signIn('credentials', {

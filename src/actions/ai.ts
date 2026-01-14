@@ -4,6 +4,10 @@ import { auth } from '@/auth';
 import { generateChatResponse, getSutraInsight, getDailyGuidance as getGeminiGuidance } from '@/lib/ai/gemini';
 import { db } from '@/lib/db';
 
+/**
+ * 获取佛经内容的 AI 解析
+ * @param sutraContent 佛经文本
+ */
 export async function getGuidance(sutraContent: string) {
   const session = await auth();
   if (!session) throw new Error('Unauthorized');
@@ -17,6 +21,9 @@ export async function getGuidance(sutraContent: string) {
   }
 }
 
+/**
+ * 获取基于今日修行数据的每日寄语
+ */
 export async function getDailyGuidance(
   meditationMins: number, 
   tasksCount: number,
@@ -41,6 +48,10 @@ export async function getDailyGuidance(
   }
 }
 
+/**
+ * 与 AI 进行灵性对话
+ * @param content 用户输入内容
+ */
 export async function chat(content: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -79,6 +90,9 @@ export async function chat(content: string) {
   }
 }
 
+/**
+ * 清除当前用户的聊天历史记录
+ */
 export async function clearChatHistory() {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');

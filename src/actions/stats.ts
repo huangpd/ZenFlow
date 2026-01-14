@@ -3,13 +3,17 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 
+/**
+ * 获取过去 84 天的练习统计数据（用于热力图/贡献图）
+ * 聚合冥想时长、功课完成情况和日记记录
+ */
 export async function getPracticeStats() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
   const userId = session.user.id;
 
-  // Fetch all relevant data for the last 84 days
+  // 获取过去 84 天的所有相关数据
   const eightyFourDaysAgo = new Date();
   eightyFourDaysAgo.setDate(eightyFourDaysAgo.getDate() - 83);
 
@@ -26,7 +30,7 @@ export async function getPracticeStats() {
     }),
   ]);
 
-  // Aggregate by date
+  // 按日期进行聚合
   const stats: Record<string, any> = {};
 
   for (let i = 0; i < 84; i++) {
@@ -54,7 +58,7 @@ export async function getPracticeStats() {
       fullDate: date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
       value,
       meditationMins: dayMins,
-      dailyTasks: dayTaskLogs, // Note: This is now logs, not task definitions
+      dailyTasks: dayTaskLogs, // 注意：这里现在是日志记录，而不是任务定义
       dailyLogs: dayLogs
     };
   }
@@ -62,6 +66,10 @@ export async function getPracticeStats() {
   return Object.values(stats);
 }
 
+/**
+ * 获取详细的功课完成统计
+ * 分为今日统计和历史总计
+ */
 export async function getDetailedTaskStats() {
   const session = await auth();
   if (!session?.user?.id) return { today: [], allTime: [] };
@@ -70,13 +78,13 @@ export async function getDetailedTaskStats() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // 1. Get All Time Stats (from TaskLog - actual completions)
+  // 1. 获取历史总计统计数据（来自 TaskLog - 实际完成情况）
   const allLogs = await db.taskLog.findMany({
     where: { userId },
     include: { task: true }
   });
 
-  // Aggregate all-time logs by task
+  // 按任务聚合历史日志
   const allTimeMap = new Map<string, { id: string; text: string; count: number; type: string }>();
   
   allLogs.forEach(log => {
@@ -95,7 +103,7 @@ export async function getDetailedTaskStats() {
 
   const allTimeStats = Array.from(allTimeMap.values()).sort((a, b) => b.count - a.count);
 
-  // 2. Get Today's Stats (from TaskLog)
+  // 2. 获取今日统计数据（来自 TaskLog）
   const todayLogs = await db.taskLog.findMany({
     where: { 
       userId,
@@ -104,7 +112,7 @@ export async function getDetailedTaskStats() {
     include: { task: true }
   });
 
-  // Aggregate today's logs by task
+  // 按任务聚合今日日志
   const todayMap = new Map<string, { id: string; text: string; count: number; type: string }>();
   
   todayLogs.forEach(log => {
@@ -123,7 +131,7 @@ export async function getDetailedTaskStats() {
 
   const todayStats = Array.from(todayMap.values()).sort((a, b) => b.count - a.count);
 
-  // 3. Merge Meditation Stats
+  // 3. 合并冥想统计数据
   const [allMeditation, todayMeditation] = await Promise.all([
     db.meditationSession.aggregate({
       where: { userId },

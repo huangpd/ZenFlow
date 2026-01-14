@@ -12,6 +12,7 @@ export interface Task {
   sutraId?: string;
   iconId?: string; // Stored as string ID for database compatibility
   dateCreated?: string;
+  isDaily?: boolean;
 }
 
 export interface DiaryEntry {

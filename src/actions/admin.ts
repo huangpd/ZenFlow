@@ -4,13 +4,18 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-// Helper to ensure admin (or just logged in for now)
+/**
+ * 确保用户已登录且具有管理员权限的助手函数
+ */
 async function ensureAuth() {
   const session = await auth();
   if (!session?.user) throw new Error('Unauthorized');
-  // Add role check here if needed in future
+  // 如果将来需要，在此处添加角色检查
 }
 
+/**
+ * 获取所有佛经列表
+ */
 export async function getSutras() {
   await ensureAuth();
   return db.sutra.findMany({
@@ -18,6 +23,10 @@ export async function getSutras() {
   });
 }
 
+/**
+ * 创建新佛经
+ * @param data 佛经数据
+ */
 export async function createSutra(data: { 
   title: string; 
   description?: string; 
@@ -40,7 +49,7 @@ export async function createSutra(data: {
       data: formattedData,
     });
     revalidatePath('/admin/sutras');
-    revalidatePath('/dashboard'); // Update the user selection list too
+    revalidatePath('/dashboard'); // 同时更新用户选择列表
     return { success: true };
   } catch (error: any) {
     if (error.code === 'P2002') {
@@ -51,6 +60,11 @@ export async function createSutra(data: {
   }
 }
 
+/**
+ * 更新佛经信息
+ * @param id 佛经ID
+ * @param data 更新的数据
+ */
 export async function updateSutra(id: string, data: { 
   title: string; 
   description?: string; 
@@ -85,6 +99,10 @@ export async function updateSutra(id: string, data: {
   }
 }
 
+/**
+ * 删除佛经
+ * @param id 佛经ID
+ */
 export async function deleteSutra(id: string) {
   await ensureAuth();
 

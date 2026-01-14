@@ -144,7 +144,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
                   <div key={t.id} className="flex justify-between items-center p-3 bg-white rounded-xl border border-stone-100 shadow-sm">
                     <span className="text-xs font-bold text-stone-700">{t.text}</span>
                     <span className="text-xs font-mono text-amber-600 font-bold">
-                      {t.count} <span className="text-[9px] text-stone-400 font-normal">{t.type === 'meditation' ? '分钟' : '次'}</span>
+                      {t.count} <span className="text-[9px] text-stone-400 font-normal">{t.type === 'meditation' ? '分钟' : '遍'}</span>
                     </span>
                   </div>
                 ))}

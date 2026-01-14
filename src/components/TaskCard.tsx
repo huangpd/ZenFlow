@@ -152,7 +152,7 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
         <div className="flex items-center gap-2">
            {!task.completed && (
              <div className="flex items-center gap-1">
-               {task.isDaily && (
+               {(task.isDaily === true || (task.isDaily as unknown as string) === 'true') && (
                  <div className="p-2 text-amber-400" title="每日功课">
                    <Star size={24} className="fill-amber-400" />
                  </div>

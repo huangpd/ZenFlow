@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ArrowLeft, Settings2, BookOpen, Save, Loader2 } from 'lucide-react';
+import { Plus, ArrowLeft, Settings2, BookOpen, Loader2 } from 'lucide-react';
 import { ICON_MAP } from '@/constants';
-import { createTask, getAvailableSutras, updateTask, checkExistingTask } from '@/actions/tasks';
+import { createTask, getAvailableSutras, updateTask } from '@/actions/tasks';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -9,6 +9,10 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * 添加/编辑功课弹窗组件
+ * 用于用户请领新的功课或修改现有功课的配置（如每日目标、是否为每日功课等）
+ */
 export default function AddTaskModal({ 
   isOpen, 
   onClose, 
@@ -23,17 +27,20 @@ export default function AddTaskModal({
   taskToEdit?: any;
 }) {
   const [configuringTask, setConfiguringTask] = useState<any | null>(null);
+  const [selectedSutra, setSelectedSutra] = useState<any | null>(null);
   const [configTarget, setConfigTarget] = useState<number | string>(1);
+  const [configStep, setConfigStep] = useState<number>(1);
   const [isDaily, setIsDaily] = useState(false);
   const [dbSutras, setDbSutras] = useState<any[]>([]);
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
+      // 打开时加载所有可用的经文/功课列表
       getAvailableSutras().then(setDbSutras);
       
       if (taskToEdit) {
-        // Initialize state for editing
+        // 如果是编辑模式，初始化表单状态
         const text = taskToEdit.text.startsWith("读诵《") && taskToEdit.text.endsWith("》") 
           ? taskToEdit.text.slice(3, -1) 
           : taskToEdit.text;
@@ -43,10 +50,16 @@ export default function AddTaskModal({
           text
         });
         setConfigTarget(taskToEdit.target || 1);
-        setIsDaily(taskToEdit.isDaily || false);
+        setConfigStep(taskToEdit.step || 1);
+        // 鲁棒地检查每日状态
+        const dailyStatus = !!(taskToEdit.isDaily === true || taskToEdit.isDaily === "true" || taskToEdit.isDaily === 1);
+        setIsDaily(dailyStatus);
       } else {
+        // 重置为新建模式
         setConfiguringTask(null);
+        setSelectedSutra(null);
         setConfigTarget(1);
+        setConfigStep(1);
         setIsDaily(false);
       }
     }
@@ -54,79 +67,128 @@ export default function AddTaskModal({
 
   if (!isOpen) return null;
 
-  const handleSelectPreset = async (item: any) => {
-    const text = item.type === 'sutra' ? `读诵《${item.text}》` : item.text;
+  /**
+   * 处理选择预设功课
+   * 只是选中，不会立即触发创建
+   */
+  const handleSelectPreset = (item: any) => {
+    setSelectedSutra(item);
+    setConfigTarget(item.currentTarget || item.defaultTarget || 1);
+    setConfigStep(item.defaultStep || 1);
     
-    // Check if task already exists to preserve settings
-    const existing = await checkExistingTask(item.sutraId, text);
-    
-    // Create draft task object
-    // If existing found, use its values and ID
-    const draftTask = {
-      id: existing?.id,
-      text,
-      type: item.type,
-      iconId: item.iconId,
-      sutraId: item.sutraId,
-      step: existing?.step || item.step || 1,
-      target: existing?.target || 1,
-      isDaily: existing ? existing.isDaily : false
-    };
-    
-    // Switch to configuration mode with draft
-    setConfiguringTask(draftTask);
-    setConfigTarget(draftTask.target);
-    setIsDaily(draftTask.isDaily);
-  };
+    // 确保布尔值转换的鲁棒性
+    const dailyStatus = !!(item.isDaily === true || item.isDaily === "true" || item.isDaily === 1);
+    setIsDaily(dailyStatus);
 
-  const updateDailyStatus = async (val: boolean) => {
-    setIsDaily(val);
-    const targetTask = taskToEdit || configuringTask;
-    if (targetTask?.id) {
-      const result = await updateTask(targetTask.id, { isDaily: val });
-      if (result.success && onTaskUpdated) {
-        onTaskUpdated(result.task);
-        // Sync UI with actual DB state
-        setIsDaily(result.task.isDaily);
-      }
+    // 如果该功课已存在，则同步设置 configuringTask 以便触发“切换即保存”逻辑
+    if (item.existingTaskId) {
+      setConfiguringTask({
+        id: item.existingTaskId,
+        text: item.type === 'sutra' ? `读诵《${item.text}》` : item.text,
+        iconId: item.iconId,
+        isDaily: dailyStatus,
+        target: item.currentTarget || item.defaultTarget || 1
+      });
     }
   };
 
-  const handleManualSave = async () => {
-    setIsSavingSettings(true);
+  /**
+   * 确认请领功课
+   */
+  const handleClaim = async () => {
+    if (!selectedSutra || loading) return;
+    setLoading(true);
+    try {
+      const text = selectedSutra.type === 'sutra' ? `读诵《${selectedSutra.text}》` : selectedSutra.text;
+      const newTask = await createTask({
+        text,
+        type: selectedSutra.type,
+        iconId: selectedSutra.iconId,
+        sutraId: selectedSutra.sutraId,
+        target: typeof configTarget === 'string' ? parseInt(configTarget) : configTarget,
+        step: configStep,
+        isDaily: isDaily,
+      });
+      
+      if (onTaskCreated) {
+        onTaskCreated(newTask);
+      }
+      onClose();
+    } catch (error) {
+      console.error("Claim Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * 更新“每日功课”状态
+   * 如果是已存在的功课，会立即保存到数据库
+   */
+  const updateDailyStatus = async (val: boolean) => {
+    if (loading) return;
+
     const targetTask = taskToEdit || configuringTask;
     if (targetTask?.id) {
+      setLoading(true);
+      // 先更新本地 UI 状态，提供即时反馈
+      setIsDaily(val);
       try {
-        const result = await updateTask(targetTask.id, { isDaily: isDaily });
-        if (result.success && onTaskUpdated) {
-          onTaskUpdated(result.task);
-          setIsDaily(result.task.isDaily);
+        const result = await updateTask(targetTask.id, { isDaily: val });
+        if (result.success) {
+          // 同步父组件的状态
+          if (onTaskUpdated) onTaskUpdated(result.task);
+          
+          // 再次确认状态（以数据库返回为准）
+          const finalDaily = !!(result.task.isDaily === true || (result.task.isDaily as unknown as string) === "true" || (result.task.isDaily as unknown as number) === 1);
+          setIsDaily(finalDaily);
+          
+          // 更新当前配置中的对象，确保后续操作基于最新数据
+          setConfiguringTask((prev: any) => ({ ...prev, ...result.task }));
+        } else {
+          // 失败则回滚
+          setIsDaily(!val);
         }
       } catch (error) {
-        console.error("Manual save error:", error);
+        console.error("Failed to update daily status:", error);
+        setIsDaily(!val);
       } finally {
-        setIsSavingSettings(false);
+        setLoading(false);
       }
+    } else {
+      // 尚未创建的任务，仅更改本地状态，在 handleClaim 时一并保存
+      setIsDaily(val);
     }
   };
 
+  /**
+   * 更新目标值
+   * 如果是有效数字，会实时保存到后端
+   */
   const updateTargetValue = async (val: string | number) => {
     setConfigTarget(val);
     
     const numVal = typeof val === 'string' ? parseInt(val) : val;
     
-    // Only update backend if valid number >= 1
+    // 仅当是 >= 1 的有效数字时才更新后端
     if (!isNaN(numVal) && numVal >= 1) {
       const targetTask = taskToEdit || configuringTask;
       if (targetTask?.id) {
+        setLoading(true);
         const result = await updateTask(targetTask.id, { target: numVal });
-        if (result.success && onTaskUpdated) {
-          onTaskUpdated(result.task);
+        if (result.success) {
+          if (onTaskUpdated) onTaskUpdated(result.task);
+          setConfiguringTask(result.task);
         }
+        setLoading(false);
       }
     }
   };
 
+  /**
+   * 处理目标值输入框失去焦点
+   * 确保值合法，并进行最终保存
+   */
   const handleTargetBlur = async () => {
     let finalVal = 1;
     if (typeof configTarget === 'number') {
@@ -148,29 +210,7 @@ export default function AddTaskModal({
     }
   };
 
-  const handleConfirm = async () => {
-    if (configuringTask && !configuringTask.id) {
-      // It is a new draft task, create it now
-      try {
-        const newTask = await createTask({
-          text: configuringTask.text,
-          type: configuringTask.type,
-          iconId: configuringTask.iconId,
-          sutraId: configuringTask.sutraId,
-          target: typeof configTarget === 'string' ? parseInt(configTarget) : configTarget,
-          step: configuringTask.step || 1,
-          isDaily: isDaily,
-        });
-        
-        if (onTaskCreated) {
-          onTaskCreated(newTask);
-        }
-      } catch (error) {
-        console.error("Create Task Error:", error);
-        return;
-      }
-    }
-
+  const handleConfirm = () => {
     setConfiguringTask(null);
     onClose();
   };
@@ -181,13 +221,17 @@ export default function AddTaskModal({
     type: s.type,
     iconId: s.iconId,
     sutraId: s.id,
-    step: s.defaultStep || 1
+    step: s.defaultStep || 1,
+    isDaily: s.isDaily,
+    currentTarget: s.currentTarget,
+    existingTaskId: s.existingTaskId,
+    defaultTarget: s.defaultTarget
   }));
 
   return (
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-[120] flex items-end justify-center">
       <div className="bg-white w-full max-w-md rounded-t-[3rem] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[95dvh] overflow-y-auto">
-        {!configuringTask ? (
+        {!configuringTask && !selectedSutra ? (
           <>
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-2xl font-serif text-stone-800 tracking-wide">请领功课</h3>
@@ -212,49 +256,65 @@ export default function AddTaskModal({
           </>
         ) : (
           <div className="animate-in slide-in-from-right duration-300">
-            <div className="flex items-center mb-8">
-              <button onClick={() => setConfiguringTask(null)} className="w-10 h-10 bg-stone-50 rounded-full flex items-center justify-center mr-3">
-                <ArrowLeft size={20} />
-              </button>
-              <h3 className="text-2xl font-serif text-stone-800 tracking-wide">{taskToEdit ? "修改设定" : "修持设定"}</h3>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center">
+                <button onClick={() => { setConfiguringTask(null); setSelectedSutra(null); }} className="w-10 h-10 bg-stone-50 rounded-full flex items-center justify-center mr-3">
+                  <ArrowLeft size={20} />
+                </button>
+                <h3 className="text-2xl font-serif text-stone-800 tracking-wide">
+                  {taskToEdit ? "修改设定" : selectedSutra ? "请领确认" : "修持设定"}
+                </h3>
+              </div>
+              {taskToEdit && loading && (
+                <div className="flex items-center text-[10px] text-emerald-600 animate-pulse font-medium tracking-widest uppercase">
+                  同步中...
+                </div>
+              )}
+              {taskToEdit && !loading && (
+                <button onClick={onClose} className="w-10 h-10 bg-stone-50 rounded-full flex items-center justify-center text-stone-400">
+                   <Plus size={24} className="rotate-45" />
+                </button>
+              )}
             </div>
             <div className="space-y-8 mb-10">
-               <div className="text-center py-6 bg-stone-50 rounded-[2rem] border border-stone-100 mb-4">
-                  <div className="scale-150 flex justify-center mb-2">{ICON_MAP[configuringTask.iconId || ''] || <BookOpen className="text-blue-600" size={18}/>}</div>
-                  <p className="text-lg text-stone-800">{configuringTask.text}</p>
+               <div className="text-center py-6 bg-stone-50 rounded-[2rem] border border-stone-100 mb-4 px-4">
+                  <div className="scale-150 flex justify-center mb-2">{ICON_MAP[(configuringTask || selectedSutra).iconId || ''] || <BookOpen className="text-blue-600" size={18}/>}</div>
+                  <p className="text-lg text-stone-800 font-serif">{(configuringTask || selectedSutra).text}</p>
+                  {selectedSutra?.description && (
+                    <p className="text-xs text-stone-400 mt-2 px-4 leading-relaxed line-clamp-2 italic">
+                      {selectedSutra.description}
+                    </p>
+                  )}
+                  {taskToEdit && (
+                    <p className="text-[10px] text-stone-300 mt-2 uppercase tracking-[0.2em]">所有改动将实时保存</p>
+                  )}
                </div>
 
-               <div className="flex items-center justify-between px-6 py-4 bg-stone-50 rounded-3xl border border-stone-100 transition-colors">
-                  <div 
-                    className="flex flex-col flex-1 cursor-pointer"
-                    onClick={() => updateDailyStatus(!isDaily)}
-                  >
+               <div 
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   updateDailyStatus(!isDaily);
+                 }}
+                 className="flex items-center justify-between px-6 py-4 bg-stone-50 rounded-3xl border border-stone-100 cursor-pointer hover:bg-stone-100/50 transition-colors"
+               >
+                  <div className="flex flex-col">
                     <span className="text-sm text-stone-800">设为每日功课</span>
                     <span className="text-[10px] text-stone-400">每天凌晨自动重置进度</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {configuringTask.id && (
-                      <button 
-                        onClick={handleManualSave}
-                        disabled={isSavingSettings}
-                        className="p-2 bg-stone-100 text-stone-500 rounded-full hover:bg-stone-200 active:scale-90 transition-all"
-                        title="保存设置"
-                      >
-                        {isSavingSettings ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                      </button>
+                  <div 
+                    className={cn(
+                      "w-12 h-6 rounded-full transition-colors relative flex items-center px-1",
+                      isDaily ? "bg-emerald-500" : "bg-stone-300",
+                      loading && "opacity-50 cursor-not-allowed"
                     )}
-                    <div 
-                      onClick={() => updateDailyStatus(!isDaily)}
-                      className={cn(
-                        "w-12 h-6 rounded-full transition-colors relative cursor-pointer",
-                        isDaily ? "bg-emerald-500" : "bg-stone-300"
-                      )}
-                    >
-                      <div className={cn(
-                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm",
-                        isDaily ? "right-1" : "left-1"
-                      )} />
-                    </div>
+                  >
+                    {loading && taskToEdit && (
+                      <Loader2 size={10} className="text-white animate-spin absolute left-1/2 -translate-x-1/2 z-10" />
+                    )}
+                    <div className={cn(
+                      "w-4 h-4 bg-white rounded-full transition-all shadow-sm",
+                      isDaily ? "ml-auto" : "ml-0"
+                    )} />
                   </div>
                </div>
 
@@ -271,9 +331,20 @@ export default function AddTaskModal({
                   />
                </div>
             </div>
-            <button onClick={handleConfirm} className="w-full h-14 bg-emerald-100 text-emerald-700 rounded-[1.5rem] text-base shadow-sm active:scale-95 transition-all hover:bg-emerald-200">
-              {configuringTask?.id ? "完成" : "确认请领"}
-            </button>
+            
+            {selectedSutra && (
+              <button 
+                onClick={handleClaim} 
+                disabled={loading}
+                className="w-full h-14 bg-stone-800 text-white rounded-[1.5rem] text-base shadow-lg active:scale-95 transition-all hover:bg-stone-900 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 size={20} className="animate-spin" /> : <BookOpen size={20} />}
+                确认请领功课
+              </button>
+            )}
+            {taskToEdit && (
+              <p className="text-center text-xs text-stone-300 italic tracking-wider">设置已实时生效，点击上方返回或关闭即可</p>
+            )}
           </div>
         )}
       </div>

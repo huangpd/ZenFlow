@@ -3,6 +3,11 @@
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
+/**
+ * 处理新用户注册
+ * @param prevState 初始状态
+ * @param formData 注册表单数据 (email, password, name)
+ */
 export async function register(prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;

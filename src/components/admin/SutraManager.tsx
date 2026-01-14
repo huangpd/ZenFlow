@@ -5,6 +5,10 @@ import { Plus, Edit3, Trash2, ChevronLeft, Save, X, Loader2 } from 'lucide-react
 import { createSutra, updateSutra, deleteSutra } from '@/actions/admin';
 import Link from 'next/link';
 
+/**
+ * 佛经管理组件
+ * 用于管理员管理系统中的佛经模板（增删改查）
+ */
 export default function SutraManager({ initialSutras }: { initialSutras: any[] }) {
   const [sutras, setSutras] = useState(initialSutras);
   const [editingSutra, setEditingSutra] = useState<any | null>(null);

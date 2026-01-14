@@ -5,6 +5,10 @@ import React from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { getSchemaMetadata } from '@/lib/schema-metadata';
 
+/**
+ * 管理后台布局组件
+ * 负责后台页面的整体结构，包含权限验证(仅管理员可访问)和左侧导航栏
+ */
 export default async function AdminLayout({
   children,
 }: {
