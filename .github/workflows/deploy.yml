@@ -37,6 +37,11 @@ jobs:
             echo "==> Build project"
             npm run build
 
+            pm2 stop all
+
+            pm2 delete all
+
             echo "==> Restart service"
-            pm2 restart zenflow || pm2 start npm --name "zenflow" -- run start
+            pm2 start npm --name zenflow --start || true
+            pm2 save
           EOF
