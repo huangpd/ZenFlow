@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #ffffff;
@@ -22,9 +23,11 @@ body {
 .ql-align-center {
   text-align: center;
 }
+
 .ql-align-right {
   text-align: right;
 }
+
 .ql-align-justify {
   text-align: justify;
 }
