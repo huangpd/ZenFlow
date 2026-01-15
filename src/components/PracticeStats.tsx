@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, ScrollText, HandHelping, ListTodo, Trophy } from 'lucide-react';
+import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, ScrollText, HandHelping, ListTodo, Trophy, LogOut } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 import { getPracticeStats, getDetailedTaskStats } from '@/actions/stats';
 import { calculateProgressIndex } from '@/lib/progressIndex';
 import { getDailyGuidance } from '@/actions/ai';
@@ -69,11 +70,20 @@ export default function PracticeStats({ userName }: { userName: string }) {
 
   return (
     <div className="space-y-8 pb-12 h-full animate-in fade-in duration-500">
-      <div className="flex flex-col items-start space-y-1 pt-4 px-2">
-        <h2 className="text-2xl font-serif text-stone-800 tracking-wide">精进点滴</h2>
-        <p className="text-sm text-stone-400 tracking-wide">
-          {userName} · <span className="text-emerald-600">持续修持中</span>
-        </p>
+      <div className="flex justify-between items-start pt-4 px-2">
+        <div className="flex flex-col items-start space-y-1">
+          <h2 className="text-2xl font-serif text-stone-800 tracking-wide">精进点滴</h2>
+          <p className="text-sm text-stone-400 tracking-wide">
+            {userName} · <span className="text-emerald-600">持续修持中</span>
+          </p>
+        </div>
+        <button
+          onClick={() => signOut({ callbackUrl: '/auth/login' })}
+          className="p-2 text-stone-400 hover:text-red-500 transition-colors"
+          title="退出登录"
+        >
+          <LogOut size={20} />
+        </button>
       </div>
       
       <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 p-7 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
