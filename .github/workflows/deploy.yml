@@ -23,7 +23,7 @@ jobs:
           script: |
             set -e
 
-            cd /srv/ZenFlow
+            cd /code/ZenFlow
 
             git fetch origin main
             git reset --hard origin/main
