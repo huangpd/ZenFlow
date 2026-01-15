@@ -49,10 +49,16 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
       return;
     }
 
+    // Validation: current progress cannot be less than current stored value (monotonic increase)
+    if (val < (task.current || 0)) {
+      alert(`进度不能小于当前进度 ${task.current || 0}`);
+      return;
+    }
+
     setIsEditingProgress(false);
     if (val !== task.current) {
-      const result = await updateTask(task.id, { 
-        current: val, 
+      const result = await updateTask(task.id, {
+        current: val,
       });
       if (result.success) {
         const isFinished = task.target ? val >= task.target : true;
@@ -77,7 +83,7 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
 
     const countToLog = (task.target && task.target > task.current) ? (task.target - task.current) : 1;
     const nextCurrent = task.target || (task.current + 1);
-    
+
     const result = await updateTaskProgress(task.id, countToLog);
     if (result.success) {
       onProgress(task.id, nextCurrent, true);
@@ -102,11 +108,11 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
 
     try {
       // Force completion since user explicitly confirmed "Submit"
-      const result = await updateTask(task.id, { 
+      const result = await updateTask(task.id, {
         current: val,
-        completed: true 
+        completed: true
       });
-      
+
       if (result.success) {
         onProgress(task.id, val, true); // Force UI to show as completed
         onComplete?.();
@@ -139,7 +145,7 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-600 shadow-inner">
-            {ICON_MAP[task.iconId || ''] || <Circle size={20}/>}
+            {ICON_MAP[task.iconId || ''] || <Circle size={20} />}
           </div>
           <span className={cn(
             "text-lg font-serif tracking-wide",
@@ -148,28 +154,28 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
             {task.text}
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2">
-           {!task.completed && (
-             <div className="flex items-center gap-1">
-               {(task.isDaily === true || (task.isDaily as unknown as string) === 'true') && (
-                 <div className="p-2 text-amber-400" title="每日功课">
-                   <Star size={24} className="fill-amber-400" />
-                 </div>
-               )}
-               <button 
-                 onClick={() => onEdit(task)}
-                 className="p-2 text-stone-300 hover:text-emerald-500 transition-all hover:bg-stone-50 rounded-xl active:scale-95"
-                 title="修持设定"
-               >
-                 <Settings2 size={24} />
-               </button>
-             </div>
-           )}
-           {task.completed && <CheckCircle2 className="text-emerald-500 animate-in zoom-in duration-300" size={28}/>}
+          {!task.completed && (
+            <div className="flex items-center gap-1">
+              {(task.isDaily === true || (task.isDaily as unknown as string) === 'true') && (
+                <div className="p-2 text-amber-400" title="每日功课">
+                  <Star size={24} className="fill-amber-400" />
+                </div>
+              )}
+              <button
+                onClick={() => onEdit(task)}
+                className="p-2 text-stone-300 hover:text-emerald-500 transition-all hover:bg-stone-50 rounded-xl active:scale-95"
+                title="修持设定"
+              >
+                <Settings2 size={24} />
+              </button>
+            </div>
+          )}
+          {task.completed && <CheckCircle2 className="text-emerald-500 animate-in zoom-in duration-300" size={28} />}
         </div>
       </div>
-      
+
       {!task.completed && (
         <div className="space-y-6">
           {/* 进度数值与修改按钮 (严谨实现 0/100) */}
@@ -189,24 +195,24 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
                     className="text-4xl font-serif text-stone-800 bg-white border border-stone-200 rounded-xl px-2 w-40 focus:outline-none focus:ring-2 focus:ring-stone-300"
                   />
                 ) : (
-                  <span 
+                  <span
                     onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditingProgress(true); }}
                     className="text-4xl font-serif text-stone-800 tabular-nums cursor-pointer hover:text-stone-500 transition-colors"
                   >
                     {task.current || 0}
                   </span>
                 )}
-                
+
                 <span className="text-2xl font-medium text-stone-300 mx-1">/</span>
                 <span className="text-xl font-serif text-stone-300">
                   {task.target || 0}
                 </span>
                 <span className="ml-2 text-[10px] text-stone-300 uppercase tracking-[0.3em]">次</span>
               </div>
-              
+
               <div className="flex gap-2">
                 {isEditingProgress ? (
-                  <button 
+                  <button
                     onClick={handleProgressEditSubmit}
                     className="flex items-center gap-1.5 px-5 py-2 bg-emerald-100 text-emerald-700 rounded-full text-xs hover:bg-emerald-200 transition-all shadow-sm active:scale-95"
                   >
@@ -214,7 +220,7 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
                     保存
                   </button>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => { setEditValue(task.current?.toString() || '0'); setIsEditingProgress(true); }}
                     className="flex items-center gap-1.5 px-4 py-2 bg-stone-50 rounded-full text-xs text-stone-600 hover:text-stone-800 border border-stone-100 transition-all shadow-sm whitespace-nowrap"
                   >
@@ -227,30 +233,30 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
 
             {/* 进度条 (严谨实现) */}
             <div className="w-full h-4 bg-stone-200/50 rounded-full overflow-hidden shadow-inner">
-              <div 
+              <div
                 className={cn(
                   "h-full transition-all duration-1000 ease-out shadow-sm",
                   task.type === 'sutra' ? 'bg-emerald-500' : 'bg-amber-500'
-                )} 
+                )}
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
-          
+
           {/* 操作按钮区 */}
           {!isEditingProgress && (
             <div className="flex gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
               {task.type === 'counter' ? (
                 <>
-                  <button 
-                    onClick={handleStep} 
+                  <button
+                    onClick={handleStep}
                     className="flex-[2] h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl text-base font-serif shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50"
                   >
                     <span className="text-stone-300 mr-2 text-xs font-sans italic tracking-widest uppercase">步进</span>
                     +{task.step || 1}
                   </button>
-                  <button 
-                    onClick={handleFinish} 
+                  <button
+                    onClick={handleFinish}
                     className="flex-1 h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50 gap-2 tracking-widest"
                   >
                     <BellRing size={18} className="opacity-70" />
@@ -258,16 +264,16 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
                   </button>
                 </>
               ) : task.type === 'sutra' ? (
-                <button 
-                  onClick={() => onRead(task)} 
+                <button
+                  onClick={() => onRead(task)}
                   className="w-full h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl text-base tracking-[0.3em] shadow-sm active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-stone-50"
                 >
                   <BookOpen size={20} className="opacity-70" />
                   <span>开始阅经</span>
                 </button>
               ) : (
-                <button 
-                  onClick={handleFinish} 
+                <button
+                  onClick={handleFinish}
                   className="w-full h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl text-base shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50"
                 >
                   标记完成

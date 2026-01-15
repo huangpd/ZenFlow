@@ -4,6 +4,10 @@ import React, { useState } from 'react';
 import { Plus, Edit3, Trash2, ChevronLeft, Save, X, Loader2 } from 'lucide-react';
 import { createSutra, updateSutra, deleteSutra } from '@/actions/admin';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import 'react-quill-new/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 /**
  * 佛经管理组件
@@ -13,9 +17,9 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
   const [sutras, setSutras] = useState(initialSutras);
   const [editingSutra, setEditingSutra] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ 
-    title: '', 
-    description: '', 
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
     content: '',
     type: 'sutra',
     iconId: 'book',
@@ -25,22 +29,22 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
 
   const openAdd = () => {
     setEditingSutra(null);
-    setFormData({ 
-      title: '', 
-      description: '', 
-      content: '', 
-      type: 'sutra', 
-      iconId: 'book', 
-      defaultStep: 1 
+    setFormData({
+      title: '',
+      description: '',
+      content: '',
+      type: 'sutra',
+      iconId: 'book',
+      defaultStep: 1
     });
     setIsModalOpen(true);
   };
 
   const openEdit = (sutra: any) => {
     setEditingSutra(sutra);
-    setFormData({ 
-      title: sutra.title, 
-      description: sutra.description || '', 
+    setFormData({
+      title: sutra.title,
+      description: sutra.description || '',
       content: sutra.content || '',
       type: sutra.type || 'sutra',
       iconId: sutra.iconId || 'book',
@@ -52,7 +56,7 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     let result;
     if (editingSutra) {
       result = await updateSutra(editingSutra.id, formData);
@@ -64,7 +68,7 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
 
     if (result.success) {
       setIsModalOpen(false);
-      window.location.reload(); 
+      window.location.reload();
     } else {
       alert(result.error);
     }
@@ -122,24 +126,24 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
               <h3 className="text-lg text-stone-800">{editingSutra ? '编辑模板' : '新增模板'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-stone-100 rounded-full transition-colors"><X size={24} /></button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">功课名称</label>
-                  <input 
-                    required 
-                    value={formData.title} 
-                    onChange={e => setFormData({...formData, title: e.target.value})}
+                  <input
+                    required
+                    value={formData.title}
+                    onChange={e => setFormData({ ...formData, title: e.target.value })}
                     className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-800"
                     placeholder="如：金刚经 或 大悲咒"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">任务类型</label>
-                  <select 
+                  <select
                     value={formData.type}
-                    onChange={e => setFormData({...formData, type: e.target.value})}
+                    onChange={e => setFormData({ ...formData, type: e.target.value })}
                     className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-800"
                   >
                     <option value="sutra">诵经 (Sutra)</option>
@@ -152,9 +156,9 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">图标 ID</label>
-                  <select 
+                  <select
                     value={formData.iconId}
-                    onChange={e => setFormData({...formData, iconId: e.target.value})}
+                    onChange={e => setFormData({ ...formData, iconId: e.target.value })}
                     className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-800"
                   >
                     <option value="book">Book (经文)</option>
@@ -164,20 +168,20 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">默认步长</label>
-                  <input 
+                  <input
                     type="number"
-                    value={formData.defaultStep} 
-                    onChange={e => setFormData({...formData, defaultStep: parseInt(e.target.value) || 1})}
+                    value={formData.defaultStep}
+                    onChange={e => setFormData({ ...formData, defaultStep: parseInt(e.target.value) || 1 })}
                     className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-800"
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">简介</label>
-                <input 
-                  value={formData.description} 
-                  onChange={e => setFormData({...formData, description: e.target.value})}
+                <input
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
                   className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-stone-600"
                   placeholder="简要描述..."
                 />
@@ -185,20 +189,32 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
 
               {formData.type === 'sutra' && (
                 <div className="space-y-2 h-full flex-1">
-                  <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">经文全文</label>
-                  <textarea 
-                    required 
-                    value={formData.content} 
-                    onChange={e => setFormData({...formData, content: e.target.value})}
-                    className="w-full h-64 p-5 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-stone-300 transition-all text-lg leading-relaxed font-serif resize-none"
-                    placeholder="请输入经文内容..."
-                  />
+                  <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">经文全文 (支持富文本与图片)</label>
+                  <div className="h-64 mb-12">
+                    <ReactQuill
+                      theme="snow"
+                      value={formData.content}
+                      onChange={(value) => setFormData({ ...formData, content: value })}
+                      className="h-full bg-white rounded-2xl overflow-hidden"
+                      modules={{
+                        toolbar: [
+                          [{ 'header': [1, 2, false] }],
+                          ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                          [{ 'color': [] }, { 'background': [] }],
+                          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                          [{ 'align': [] }],
+                          ['link', 'image'],
+                          ['clean']
+                        ],
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 
               <div className="flex justify-end pt-4">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={loading}
                   className="px-8 py-4 bg-emerald-100 text-emerald-700 rounded-2xl shadow-sm hover:bg-emerald-200 active:scale-95 transition-all flex items-center gap-2"
                 >

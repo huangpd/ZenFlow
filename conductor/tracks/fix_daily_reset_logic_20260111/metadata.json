@@ -1,8 +1,0 @@
-{
-  "track_id": "fix_daily_reset_logic_20260111",
-  "type": "bug",
-  "status": "new",
-  "created_at": "2026-01-11T16:00:00Z",
-  "updated_at": "2026-01-11T16:00:00Z",
-  "description": "Fix critical bug in daily task reset logic where today's tasks could be deleted or reset"
-}

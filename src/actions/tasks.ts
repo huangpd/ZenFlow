@@ -15,11 +15,11 @@ export async function getTasks() {
   if (!session?.user?.id) return [];
 
   const userId = session.user.id;
-  
+
   // 使用本地系统时间作为重置阈值（例如：今天的 00:00）
   const now = new Date();
   const resetThreshold = new Date(now);
-  resetThreshold.setHours(0, 0, 0, 0); 
+  resetThreshold.setHours(0, 0, 0, 0);
 
   // 如果你想使用环境变量中指定的每日重置时间：
   const resetTime = process.env.DAILY_RESET_TIME || '00:00';
@@ -33,8 +33,8 @@ export async function getTasks() {
 
   // A. 删除早于阈值且已完成的非每日任务
   const deleted = await db.spiritualTask.deleteMany({
-    where: { 
-      userId, 
+    where: {
+      userId,
       isDaily: false,
       completed: true,
       updatedAt: { lt: resetThreshold }
@@ -44,15 +44,15 @@ export async function getTasks() {
   // B. 重置旧的每日任务
   // 注意：显式设置 updatedAt 是必需的，因为 Prisma 的 updateMany 不会自动更新它。
   const updated = await db.spiritualTask.updateMany({
-    where: { 
-      userId, 
-      isDaily: true, 
+    where: {
+      userId,
+      isDaily: true,
       updatedAt: { lt: resetThreshold }
     },
     data: {
       current: 0,
       completed: false,
-      updatedAt: new Date() 
+      updatedAt: new Date()
     }
   });
 
@@ -100,8 +100,8 @@ export async function createTask(data: {
     // 如果存在，更新其配置（目标/步长/文本/是否每日），如果已完成则重新激活
     const updated = await db.spiritualTask.update({
       where: { id: existingTask.id },
-      data: { 
-        completed: false, 
+      data: {
+        completed: false,
         text: data.text,
         target: data.target,
         step: data.step,
@@ -141,14 +141,14 @@ export async function getAvailableSutras() {
   const userId = session?.user?.id;
 
   const sutras = await db.sutra.findMany({
-    select: { 
-      id: true, 
-      title: true, 
-      description: true, 
-      type: true, 
-      iconId: true, 
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      type: true,
+      iconId: true,
       defaultStep: true,
-      defaultTarget: true 
+      defaultTarget: true
     }
   });
 
@@ -170,7 +170,7 @@ export async function getAvailableSutras() {
   return sutras.map(s => {
     // 优先通过 sutraId 匹配，其次尝试通过文本匹配（兼容旧数据）
     const taskText = s.type === 'sutra' ? `读诵《${s.title}》` : s.title;
-    const existingTask = userTasks.find(t => 
+    const existingTask = userTasks.find(t =>
       t.sutraId === s.id || t.text === taskText
     );
 
@@ -215,14 +215,38 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
 
   const isFinished = task.target ? nextCurrent >= task.target : true;
 
-  // 创建日志条目
-  await db.taskLog.create({
-    data: {
+  // 查找今日是否已有日志记录
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const existingLog = await db.taskLog.findFirst({
+    where: {
       taskId: id,
       userId: userId,
-      count: nextCurrent - task.current,
+      createdAt: {
+        gte: today,
+      },
     },
   });
+
+  if (existingLog) {
+    // 如果今日已有记录，直接更新该记录的 count
+    await db.taskLog.update({
+      where: { id: existingLog.id },
+      data: {
+        count: { increment: nextCurrent - task.current },
+      },
+    });
+  } else {
+    // 如果今日没有记录，创建新记录
+    await db.taskLog.create({
+      data: {
+        taskId: id,
+        userId: userId,
+        count: nextCurrent - task.current,
+      },
+    });
+  }
 
   // 更新任务
   const updatedTask = await db.spiritualTask.update({
@@ -276,7 +300,7 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
   let updated;
   if (isProgressChanged || data.completed !== undefined) {
     const isFinished = task.target && data.current !== undefined ? data.current >= task.target : true;
-    
+
     // 如果提供了显式完成状态，则覆盖计算结果，否则使用计算结果或现有状态
     if (data.completed !== undefined) {
       updates.completed = data.completed;
@@ -285,13 +309,37 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
     }
 
     if (isProgressChanged) {
-      await db.taskLog.create({
-        data: {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const existingLog = await db.taskLog.findFirst({
+        where: {
           taskId: id,
           userId: userId,
-          count: data.current! - task.current,
+          createdAt: {
+            gte: today,
+          },
         },
       });
+
+      const incrementValue = data.current! - task.current;
+
+      if (existingLog) {
+        await db.taskLog.update({
+          where: { id: existingLog.id },
+          data: {
+            count: { increment: incrementValue },
+          },
+        });
+      } else {
+        await db.taskLog.create({
+          data: {
+            taskId: id,
+            userId: userId,
+            count: incrementValue,
+          },
+        });
+      }
     }
 
     updated = await db.spiritualTask.update({
