@@ -32,16 +32,16 @@ jobs:
             git pull origin main
 
             echo "==> Install dependencies"
-            npm install
+            sudo npm install
 
             echo "==> Build project"
-            npm run build
+            sudo npm run build
 
-            pm2 stop all
+            sudo pm2 stop all
 
-            pm2 delete all
+            sudo pm2 delete all
 
             echo "==> Restart service"
-            pm2 start npm --name zenflow -- start || true
-            pm2 save
+            sudo pm2 start npm --name zenflow -- start || true
+            sudo pm2 save
           EOF
