@@ -252,7 +252,7 @@ export default function TaskCard({ task, onRead, onComplete, onEdit, onProgress 
                     onClick={handleStep}
                     className="flex-[2] h-14 bg-white border border-stone-100 text-stone-700 rounded-2xl text-base font-serif shadow-sm active:scale-95 transition-all flex items-center justify-center hover:bg-stone-50"
                   >
-                    <span className="text-stone-300 mr-2 text-xs font-sans italic tracking-widest uppercase">步进</span>
+                    <span className="text-stone-300 mr-2 text-xs font-sans italic tracking-widest uppercase">进步</span>
                     +{task.step || 1}
                   </button>
                   <button
