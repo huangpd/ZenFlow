@@ -2,6 +2,8 @@
 
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { generateVerificationToken } from '@/lib/tokens';
+import { sendVerificationEmail } from '@/lib/mail';
 
 /**
  * 处理新用户注册
@@ -35,5 +37,8 @@ export async function register(prevState: any, formData: FormData) {
     },
   });
 
-  return { success: 'User created successfully', error: '' };
+  const verificationToken = await generateVerificationToken(email);
+  await sendVerificationEmail(verificationToken.identifier, verificationToken.token);
+
+  return { success: 'Verification email sent!', error: '' };
 }

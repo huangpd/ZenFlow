@@ -57,6 +57,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        if (!user.emailVerified) {
+          console.log('Email not verified');
+          // We can just return null here, causing a generic "CredentialsSignin" error on the client.
+          // Or we could throw an error if we wanted to handle it specifically in the UI, 
+          // but for now let's just block access.
+          return null;
+        }
+
         console.log('User authenticated:', user.email);
         return {
           id: user.id,
