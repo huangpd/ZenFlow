@@ -5,8 +5,9 @@ const config: CapacitorConfig = {
   appName: 'ZenFlow',
   webDir: 'public',
   server: {
-    url: 'http://124.222.233.34/',
-    cleartext: true
+    url: 'http://124.222.233.34',
+    cleartext: true,
+    allowNavigation: ['124.222.233.34']
   }
 };
 
