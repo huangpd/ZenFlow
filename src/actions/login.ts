@@ -18,7 +18,7 @@ export async function login(prevState: any, formData: FormData) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
-          return { error: 'Invalid credentials.' };
+          return { error: '无效的用户名或者密码' };
         default:
           return { error: 'Something went wrong.' };
       }

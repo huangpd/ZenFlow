@@ -143,3 +143,91 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     throw new Error('Could not send verification email');
   }
 };
+
+export const sendPasswordResetEmail = async (email: string, token: string) => {
+  const resetLink = `${domain}/auth/new-password?token=${token}`;
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.SMTP_FROM_EMAIL || '"ZenFlow" <noreply@zenflow.com>',
+    to: email,
+    subject: '重置您的密码 · 个人 AI 灵性伴侣',
+    html: `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>重置您的密码 · 个人 AI 灵性伴侣</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f5f7f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; color:#333;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f7f6; padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.05); overflow:hidden;">
+          <tr>
+            <td style="padding:32px 40px; background:linear-gradient(135deg,#e8f0ec,#f7faf8);">
+              <h1 style="margin:0; font-size:22px; font-weight:600; color:#2f4f4f;">
+                您的个人 AI 灵性伴侣
+              </h1>
+              <p style="margin:8px 0 0; font-size:14px; color:#5f7a73;">
+                助力正念与成长
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:36px 40px; line-height:1.7;">
+              <p style="margin:0 0 16px; font-size:16px;">
+                你好，
+              </p>
+              <p style="margin:0 0 20px;">
+                我们收到了重置您 ZenFlow 账号密码的请求。
+                如果这不是您本人操作，请忽略此邮件。
+              </p>
+              <p style="margin:32px 0 12px; font-size:14px; color:#777;">
+                请点击下方按钮重置密码（1小时内有效）：
+              </p>
+              <div style="text-align:center; margin:20px 0 32px;">
+                <a href="${resetLink}" target="_blank"
+                   style="display:inline-block; padding:14px 32px; background-color:#4f766f; color:#ffffff; text-decoration:none; border-radius:24px; font-size:15px;">
+                  重置密码
+                </a>
+              </div>
+              <hr style="border:none; border-top:1px solid #eee; margin:32px 0;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px; background-color:#fafafa; font-size:12px; color:#999;">
+              <p style="margin:0;">
+                愿你安住当下，清明前行。
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+  };
+
+  try {
+    console.log('----------------------------------------------');
+    console.log('Reset Link:', resetLink);
+    console.log('----------------------------------------------');
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    throw new Error('Could not send password reset email');
+  }
+};

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, ScrollText, HandHelping, ListTodo, Trophy, LogOut } from 'lucide-react';
+import { Calendar, History, Sparkles, Brain, Timer as TimerIcon, CheckCircle2, ScrollText, HandHelping, ListTodo, Trophy, LogOut, CircleAlert } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { getPracticeStats, getDetailedTaskStats } from '@/actions/stats';
 import { calculateProgressIndex } from '@/lib/progressIndex';
@@ -51,7 +51,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
     const todayTasksCompleted = taskStats.today.filter(t => t.completed).length;
     const journalCount = todayJournals.length;
     const journalCategories = [...new Set(todayJournals.map(j => j.category))];
-    
+
     const result = await getDailyGuidance(
       todayMeditationMins,
       todayTasksCount,
@@ -85,7 +85,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
           <LogOut size={20} />
         </button>
       </div>
-      
+
       <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 p-7 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform"><Sparkles size={120} /></div>
         <div className="relative z-10 space-y-4">
@@ -114,9 +114,24 @@ export default function PracticeStats({ userName }: { userName: string }) {
             )}
           </div>
         </div>
-        <div className="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100 text-center">
-          <div className="text-[10px] text-emerald-600 tracking-[0.2em] mb-1 uppercase">精进指数</div>
+        <div className="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100 text-center relative group">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <div className="text-[10px] text-emerald-600 tracking-[0.2em] uppercase">精进指数</div>
+            <CircleAlert size={12} className="text-emerald-400 cursor-help" />
+          </div>
           <div className="text-4xl font-light text-stone-800 font-serif">{progressIndex}<span className="text-sm ml-1">%</span></div>
+
+          {/* Tooltip */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-[200px] bg-stone-800 text-white text-[10px] p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
+            精进指数 = 活跃度(30%) + 坚持度(30%) + 强度(40%)
+            <br />
+            活跃度 = 有活动的天数 / 84
+            <br />
+            坚持度 = 最大连续打卡天数 / 84
+            <br />
+            强度 = 坐禅占20% + 任务占80%
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-stone-800 rotate-45"></div>
+          </div>
         </div>
       </div>
 
@@ -125,7 +140,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
           {/* Today's Stats */}
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-stone-400 flex items-center tracking-widest px-1 uppercase">
-              <ListTodo size={14} className="mr-2"/> 今日修持
+              <ListTodo size={14} className="mr-2" /> 今日修持
             </h3>
             {taskStats.today.length > 0 ? (
               <div className="space-y-2 max-h-[260px] overflow-y-auto scrollbar-hide pr-1">
@@ -146,7 +161,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
           {/* All Time Stats */}
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-stone-400 flex items-center tracking-widest px-1 uppercase">
-              <Trophy size={14} className="mr-2"/> 累计圆满
+              <Trophy size={14} className="mr-2" /> 累计圆满
             </h3>
             {taskStats.allTime.length > 0 ? (
               <div className="space-y-2 max-h-[260px] overflow-y-auto scrollbar-hide pr-1">
@@ -168,91 +183,91 @@ export default function PracticeStats({ userName }: { userName: string }) {
 
       <div className="space-y-4">
         <h3 className="text-sm font-bold text-stone-400 flex items-center tracking-widest px-1 uppercase">
-          <Calendar size={14} className="mr-2"/> 修行热力图
+          <Calendar size={14} className="mr-2" /> 修行热力图
         </h3>
         <div className="bg-white p-6 rounded-[2.5rem] border border-stone-100 shadow-sm">
           <div className="flex flex-wrap gap-1.5 justify-center">
             {stats.map((d) => (
-              <div 
-                key={d.day} 
-                onClick={() => setSelectedDay(d)} 
+              <div
+                key={d.day}
+                onClick={() => setSelectedDay(d)}
                 className={`w-3.5 h-3.5 rounded-[3px] cursor-pointer transition-all hover:scale-110 ${getHeatmapColor(d.value)} ${selectedDay?.day === d.day ? 'ring-2 ring-stone-400 scale-125 z-10' : ''}`}
               ></div>
             ))}
           </div>
           <div className="mt-5 flex justify-between items-center text-[10px] text-stone-400 px-4 font-medium tracking-tighter uppercase">
             <span>懈怠</span>
-            <div className="flex gap-1">{[0,1,2,3,4].map(v => <div key={v} className={`w-2 h-2 rounded-[1px] ${getHeatmapColor(v)}`}></div>)}</div>
+            <div className="flex gap-1">{[0, 1, 2, 3, 4].map(v => <div key={v} className={`w-2 h-2 rounded-[1px] ${getHeatmapColor(v)}`}></div>)}</div>
             <span>非常精进</span>
           </div>
         </div>
-        
+
         {selectedDay && (
           <div className="bg-white p-7 rounded-[2.5rem] border border-stone-100 shadow-md animate-in slide-in-from-top-4 duration-300 space-y-6">
             <div className="flex justify-between items-center pb-2 border-b border-stone-50">
-              <h4 className="font-bold text-stone-700 flex items-center tracking-tight"><Calendar size={18} className="mr-2 text-emerald-600"/>{selectedDay.fullDate}</h4>
+              <h4 className="font-bold text-stone-700 flex items-center tracking-tight"><Calendar size={18} className="mr-2 text-emerald-600" />{selectedDay.fullDate}</h4>
               <span className={`px-4 py-1 rounded-full text-[10px] font-bold text-white shadow-sm ${selectedDay.value > 2 ? 'bg-emerald-600' : 'bg-stone-400'}`}>{selectedDay.value > 2 ? '法喜充满' : '初心勿忘'}</span>
             </div>
 
             <div className="space-y-4">
-               <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-stone-50 rounded-2xl flex flex-col items-center justify-center">
-                     <TimerIcon size={16} className="text-stone-400 mb-1" />
-                     <span className="text-xs font-bold text-stone-800">{selectedDay.meditationMins} 分钟</span>
-                     <span className="text-[9px] text-stone-400 uppercase font-medium">坐禅修持</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 bg-stone-50 rounded-2xl flex flex-col items-center justify-center">
+                  <TimerIcon size={16} className="text-stone-400 mb-1" />
+                  <span className="text-xs font-bold text-stone-800">{selectedDay.meditationMins} 分钟</span>
+                  <span className="text-[9px] text-stone-400 uppercase font-medium">坐禅修持</span>
+                </div>
+                <div className="p-4 bg-stone-50 rounded-2xl flex flex-col items-center justify-center">
+                  <CheckCircle2 size={16} className="text-emerald-500 mb-1" />
+                  <span className="text-xs font-bold text-stone-800">{selectedDay.dailyTasks.length} 次</span>
+                  <span className="text-[9px] text-stone-400 uppercase font-medium">修持记录</span>
+                </div>
+              </div>
+
+              {selectedDay.dailyTasks.length > 0 && (
+                <div className="space-y-3">
+                  <h5 className="text-[10px] font-bold text-stone-400 tracking-widest uppercase flex items-center">
+                    <CheckCircle2 size={12} className="mr-2" /> 功课修持
+                  </h5>
+                  <div className="space-y-2">
+                    {selectedDay.dailyTasks.map((log: any) => (
+                      <div key={log.id} className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100">
+                        <span className="text-xs font-bold text-stone-700">{log.task.text}</span>
+                        <span className="text-[10px] font-mono text-stone-500 bg-white px-2 py-1 rounded-md border border-stone-100">
+                          +{log.count}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="p-4 bg-stone-50 rounded-2xl flex flex-col items-center justify-center">
-                     <CheckCircle2 size={16} className="text-emerald-500 mb-1" />
-                     <span className="text-xs font-bold text-stone-800">{selectedDay.dailyTasks.length} 次</span>
-                     <span className="text-[9px] text-stone-400 uppercase font-medium">修持记录</span>
+                </div>
+              )}
+
+              {selectedDay.dailyLogs.length > 0 && (
+                <div className="space-y-3">
+                  <h5 className="text-[10px] font-bold text-stone-400 tracking-widest uppercase flex items-center">
+                    <ScrollText size={12} className="mr-2" /> 随喜回顾
+                  </h5>
+                  <div className="space-y-3">
+                    {selectedDay.dailyLogs.map((log: any) => (
+                      <div key={log.id} className="p-4 bg-emerald-50/30 border border-emerald-100 rounded-2xl">
+                        <p className="text-sm text-stone-600 leading-relaxed italic">"{log.content}"</p>
+                      </div>
+                    ))}
                   </div>
-               </div>
+                </div>
+              )}
 
-               {selectedDay.dailyTasks.length > 0 && (
-                 <div className="space-y-3">
-                    <h5 className="text-[10px] font-bold text-stone-400 tracking-widest uppercase flex items-center">
-                       <CheckCircle2 size={12} className="mr-2" /> 功课修持
-                    </h5>
-                    <div className="space-y-2">
-                       {selectedDay.dailyTasks.map((log: any) => (
-                         <div key={log.id} className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100">
-                            <span className="text-xs font-bold text-stone-700">{log.task.text}</span>
-                            <span className="text-[10px] font-mono text-stone-500 bg-white px-2 py-1 rounded-md border border-stone-100">
-                              +{log.count}
-                            </span>
-                         </div>
-                       ))}
-                    </div>
-                 </div>
-               )}
-
-               {selectedDay.dailyLogs.length > 0 && (
-                 <div className="space-y-3">
-                    <h5 className="text-[10px] font-bold text-stone-400 tracking-widest uppercase flex items-center">
-                       <ScrollText size={12} className="mr-2" /> 随喜回顾
-                    </h5>
-                    <div className="space-y-3">
-                       {selectedDay.dailyLogs.map((log: any) => (
-                         <div key={log.id} className="p-4 bg-emerald-50/30 border border-emerald-100 rounded-2xl">
-                            <p className="text-sm text-stone-600 leading-relaxed italic">"{log.content}"</p>
-                         </div>
-                       ))}
-                    </div>
-                 </div>
-               )}
-
-               {selectedDay.meditationMins === 0 && selectedDay.dailyTasks.length === 0 && selectedDay.dailyLogs.length === 0 && (
-                 <div className="text-center py-10 space-y-2 opacity-30">
-                    <HandHelping size={32} className="mx-auto text-stone-300" />
-                    <p className="text-xs italic tracking-widest">此日无迹 · 亦是修行</p>
-                 </div>
-               )}
+              {selectedDay.meditationMins === 0 && selectedDay.dailyTasks.length === 0 && selectedDay.dailyLogs.length === 0 && (
+                <div className="text-center py-10 space-y-2 opacity-30">
+                  <HandHelping size={32} className="mx-auto text-stone-300" />
+                  <p className="text-xs italic tracking-widest">此日无迹 · 亦是修行</p>
+                </div>
+              )}
             </div>
           </div>
         )}
         {!selectedDay && (
           <div className="text-center py-6 text-stone-300 text-[10px] flex items-center justify-center font-medium tracking-widest">
-             <History size={12} className="mr-2" /> 点击上方格子查看修持往事
+            <History size={12} className="mr-2" /> 点击上方格子查看修持往事
           </div>
         )}
       </div>
