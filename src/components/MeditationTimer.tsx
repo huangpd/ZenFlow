@@ -4,20 +4,34 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Play, Pause, RotateCcw, Wind, Settings2 } from 'lucide-react';
 import { saveMeditationSession } from '@/actions/meditation';
 import CelebrationEffect from './CelebrationEffect';
+import { Capacitor } from '@capacitor/core';
+import { KeepAwake } from '@capacitor-community/keep-awake';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { App } from '@capacitor/app';
 
 export default function MeditationTimer() {
   const [timerRunning, setTimerRunning] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState(25);
+  // timeLeft 仅用于 UI 显示，逻辑核心由 endTimeRef 控制
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [showEffect, setShowEffect] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 使用 Ref 存储核心计时状态，避免闭包陷阱和重渲染
+  const endTimeRef = useRef<number | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 初始化权限
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      LocalNotifications.requestPermissions();
+    }
+  }, []);
 
   const playBell = useCallback(() => {
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContext();
       
-      // 苹果闹钟音效：快速重复的高频音调
       const playAlarmTone = () => {
         const pattern = [
           { freq: 1000, duration: 0.1 },
@@ -51,60 +65,101 @@ export default function MeditationTimer() {
         });
       };
       
-      // 播放3次警报声
       playAlarmTone();
-      playAlarmTone();
-      playAlarmTone();
+      setTimeout(playAlarmTone, 1000);
+      setTimeout(playAlarmTone, 2000);
     } catch (e) {
       console.warn('Audio Context error', e);
     }
   }, []);
 
+  const stopTimerLogic = useCallback(async () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    setTimerRunning(false);
+    
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await KeepAwake.allowSleep();
+        await LocalNotifications.cancel({ notifications: [{ id: 1001 }] });
+      } catch (e) {
+        console.error('Failed to clear native resources', e);
+      }
+    }
+  }, []);
+
   const handleComplete = useCallback(async () => {
+    await stopTimerLogic();
+    setTimeLeft(0);
     playBell();
     setShowEffect(true);
     await saveMeditationSession(selectedDuration);
     setTimeout(() => setShowEffect(false), 1800);
-  }, [playBell, selectedDuration]);
+  }, [playBell, selectedDuration, stopTimerLogic]);
 
-  useEffect(() => {
-    // 后台保活：防止浏览器关闭标签页时杀死定时器
-    let keepAliveInterval: NodeJS.Timeout | null = null;
-    
-    if (timerRunning) {
-      if (timeLeft <= 0) {
-        setTimerRunning(false);
-        setTimeLeft(0);
-        handleComplete();
-        return;
+  // 启动计时器
+  const startTimer = async () => {
+    if (timeLeft <= 0) return;
+
+    // 计算结束时间戳
+    const now = Date.now();
+    const durationMs = timeLeft * 1000;
+    const endTime = now + durationMs;
+    endTimeRef.current = endTime;
+
+    setTimerRunning(true);
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await KeepAwake.keepAwake();
+        // 调度本地通知
+        await LocalNotifications.schedule({
+          notifications: [{
+            title: "冥想结束",
+            body: "愿你安住当下，清明前行。",
+            id: 1001,
+            schedule: { at: new Date(endTime) },
+            sound: "default", // 注意：自定义铃声需要原生资源配置，这里暂用默认
+            smallIcon: "ic_stat_icon_config_sample", // Android 默认图标名，可能需要调整
+            actionTypeId: "",
+            extra: null
+          }]
+        });
+      } catch (e) {
+        console.error('Native plugin error', e);
       }
-
-      // 保活机制：每10秒发送一次信号给Service Worker保持活动
-      keepAliveInterval = setInterval(() => {
-        if (navigator.serviceWorker?.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'KEEP_ALIVE',
-            timestamp: Date.now()
-          });
-        }
-      }, 10000);
-
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
     }
-    
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (keepAliveInterval) clearInterval(keepAliveInterval);
-    };
-  }, [timerRunning, timeLeft, handleComplete]);
 
-  const toggleTimer = () => setTimerRunning(!timerRunning);
+    // 启动视觉更新循环
+    timerIntervalRef.current = setInterval(() => {
+      const remainingMs = endTimeRef.current! - Date.now();
+      if (remainingMs <= 0) {
+        handleComplete();
+      } else {
+        setTimeLeft(Math.ceil(remainingMs / 1000));
+      }
+    }, 200); // 提高刷新率以平滑显示，虽然 UI 只显示秒
+  };
 
-  const resetTimer = () => {
-    setTimerRunning(false);
+  const pauseTimer = async () => {
+    await stopTimerLogic();
+    // timeLeft 已经在 state 中，下次 start 会基于它计算新的 endTime
+  };
+
+  const toggleTimer = () => {
+    if (timerRunning) {
+      pauseTimer();
+    } else {
+      startTimer();
+    }
+  };
+
+  const resetTimer = async () => {
+    await stopTimerLogic();
     setTimeLeft(selectedDuration * 60);
+    endTimeRef.current = null;
   };
 
   const handleDurationChange = (mins: number) => {
@@ -112,6 +167,38 @@ export default function MeditationTimer() {
     setSelectedDuration(mins);
     setTimeLeft(mins * 60);
   };
+
+  // 监听 App 状态恢复 (Resume)，校准时间
+  useEffect(() => {
+    let resumeListener: any;
+    
+    if (Capacitor.isNativePlatform()) {
+      resumeListener = App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive && timerRunning && endTimeRef.current) {
+          const remainingMs = endTimeRef.current - Date.now();
+          if (remainingMs <= 0) {
+            handleComplete();
+          } else {
+            setTimeLeft(Math.ceil(remainingMs / 1000));
+          }
+        }
+      });
+    }
+
+    return () => {
+      if (resumeListener) resumeListener.remove();
+    };
+  }, [timerRunning, handleComplete]);
+
+  // 组件卸载清理
+  useEffect(() => {
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (Capacitor.isNativePlatform()) {
+        KeepAwake.allowSleep().catch(() => {});
+      }
+    };
+  }, []);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);

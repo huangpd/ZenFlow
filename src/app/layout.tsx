@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ServiceWorkerProvider } from "@/components/ServiceWorkerProvider";
+import CapacitorProvider from "@/components/CapacitorProvider";
 
 export const metadata: Metadata = {
   title: "ZenFlow - Spiritual Companion",
@@ -19,8 +20,10 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body className="antialiased font-sans text-stone-800 bg-stone-50">
-        <ServiceWorkerProvider />
-        {children}
+        <CapacitorProvider>
+          <ServiceWorkerProvider />
+          {children}
+        </CapacitorProvider>
       </body>
     </html>
   );

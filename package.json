@@ -12,9 +12,13 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@capacitor-community/keep-awake": "^8.0.0",
     "@capacitor/android": "^8.0.1",
+    "@capacitor/app": "^8.0.0",
     "@capacitor/cli": "^8.0.1",
     "@capacitor/core": "^8.0.1",
+    "@capacitor/local-notifications": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "@google/genai": "^1.35.0",
     "@prisma/client": "^6.19.1",
     "bcryptjs": "^3.0.3",
