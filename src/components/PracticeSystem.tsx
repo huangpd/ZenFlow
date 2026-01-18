@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, BookMarked } from 'lucide-react';
+import Link from 'next/link';
 import TaskCard from './TaskCard';
 import SutraReader from './SutraReader';
 import AddTaskModal from './AddTaskModal';
@@ -20,13 +21,13 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
   };
 
   const handleTaskProgress = (taskId: string, newCurrent: number, completed: boolean) => {
-    setTasks(prevTasks => prevTasks.map(t => 
+    setTasks(prevTasks => prevTasks.map(t =>
       t.id === taskId ? { ...t, current: newCurrent, completed } : t
     ));
   };
 
   const handleTaskUpdate = (updatedTask: any) => {
-    setTasks(prevTasks => prevTasks.map(t => 
+    setTasks(prevTasks => prevTasks.map(t =>
       t.id === updatedTask.id ? { ...t, ...updatedTask } : t
     ));
     // Synchronize editingTask if it's currently being edited
@@ -39,9 +40,9 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
     return (
       <div className="h-full">
         {showCelebration && <CelebrationEffect />}
-        <SutraReader 
-          task={readingTask} 
-          onBack={() => setReadingTask(null)} 
+        <SutraReader
+          task={readingTask}
+          onBack={() => setReadingTask(null)}
           onComplete={triggerCelebration}
           onProgress={(id, curr, comp) => handleTaskProgress(id, curr, comp)}
         />
@@ -52,15 +53,24 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
   return (
     <div className="space-y-6 pb-12 h-full">
       {showCelebration && <CelebrationEffect />}
-      
+
       <div className="flex justify-between items-center px-4">
         <h2 className="text-2xl font-serif text-stone-800 tracking-wide">每日功课</h2>
-        <button 
-          onClick={() => setIsAddModalOpen(true)}
-          className="p-3 bg-stone-100 rounded-full active:bg-stone-200 transition-all active:scale-90 shadow-sm"
-        >
-          <Plus size={24} className="text-stone-600" />
-        </button>
+        <div className="flex gap-2">
+          <Link
+            href="/dashboard/my-sutras"
+            className="p-3 bg-stone-100 rounded-full hover:bg-emerald-50 transition-all active:scale-90 shadow-sm group"
+            title="我的佛经库"
+          >
+            <BookMarked size={20} className="text-stone-600 group-hover:text-emerald-600 transition-colors" />
+          </Link>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="p-3 bg-stone-100 rounded-full active:bg-stone-200 transition-all active:scale-90 shadow-sm"
+          >
+            <Plus size={24} className="text-stone-600" />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4 px-4">
@@ -70,10 +80,10 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
           </div>
         ) : (
           tasks.map(task => (
-            <TaskCard 
-              key={task.id} 
-              task={task} 
-              onRead={setReadingTask} 
+            <TaskCard
+              key={task.id}
+              task={task}
+              onRead={setReadingTask}
               onEdit={setEditingTask}
               onComplete={triggerCelebration}
               onProgress={handleTaskProgress}
@@ -82,12 +92,12 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
         )}
       </div>
 
-      <AddTaskModal 
-        isOpen={isAddModalOpen || !!editingTask} 
+      <AddTaskModal
+        isOpen={isAddModalOpen || !!editingTask}
         onClose={() => {
           setIsAddModalOpen(false);
           setEditingTask(null);
-        }} 
+        }}
         onTaskCreated={(newTask) => {
           setTasks(prev => {
             const exists = prev.find(t => t.id === newTask.id);

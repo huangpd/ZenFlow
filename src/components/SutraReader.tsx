@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Brain, Loader2, Sparkles, Check } from 'lucide-react';
 import { getGuidance } from '@/actions/ai';
 import { updateTaskProgress, getSutraContent } from '@/actions/tasks';
+import 'react-quill-new/dist/quill.snow.css'; // 导入 Quill 样式
 
 interface SutraReaderProps {
   task: any;
@@ -39,7 +40,26 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
       setSutraContent({ title: task.text, content: '暂无经文内容，请在管理后台检查经文设置或静心念诵。' });
     }
     loadSutra();
-  }, [task]);
+
+    // Android 返回键支持
+    // 添加一个历史记录条目
+    window.history.pushState({ modal: 'sutra-reader' }, '');
+
+    const handlePopState = (event: PopStateEvent) => {
+      // 当用户按返回键时,触发 onBack
+      onBack();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // 清理历史记录(如果组件正常卸载)
+      if (window.history.state?.modal === 'sutra-reader') {
+        window.history.back();
+      }
+    };
+  }, [task, onBack]);
 
   if (!sutraContent) {
     return (
@@ -86,7 +106,7 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
       </button>
       <h2 className="text-2xl font-serif text-stone-800 tracking-wide text-center mb-8">《{sutraContent.title}》</h2>
       <div
-        className="flex-1 overflow-y-auto p-8 bg-stone-50/30 rounded-[2.5rem] border border-stone-100/50 text-xl leading-loose text-stone-700 font-serif tracking-wide mb-8 prose prose-stone max-w-none prose-p:my-4 prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-sm"
+        className="ql-editor flex-1 overflow-y-auto p-8 bg-stone-50/30 rounded-[2.5rem] border border-stone-100/50 text-xl leading-loose text-stone-700 font-serif tracking-wide mb-8 prose prose-stone max-w-none prose-p:my-4 prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-sm"
         dangerouslySetInnerHTML={{ __html: sutraContent.content }}
       />
 

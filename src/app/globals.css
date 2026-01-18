@@ -17,7 +17,7 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
-  
+
   /* Mobile Safe Area Adaptation */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -36,4 +36,31 @@ body {
 
 .ql-align-justify {
   text-align: justify;
+}
+
+/* ReactQuill Editor Fixes */
+.quill {
+  display: flex;
+  flex-direction: column;
+  height: 350px;
+}
+
+.quill .ql-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+}
+
+.quill .ql-container {
+  flex: 1;
+  overflow-y: auto;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+}
+
+.quill .ql-editor {
+  min-height: 250px;
 }

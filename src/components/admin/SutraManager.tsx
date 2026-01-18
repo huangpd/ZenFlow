@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit3, Trash2, ChevronLeft, Save, X, Loader2 } from 'lucide-react';
 import { createSutra, updateSutra, deleteSutra } from '@/actions/admin';
+import { createUserSutra, updateUserSutra, deleteUserSutra } from '@/actions/user-sutras';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
@@ -11,9 +12,15 @@ const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 /**
  * 佛经管理组件
- * 用于管理员管理系统中的佛经模板（增删改查）
+ * 支持管理员模式(公共佛经)和用户模式(私有佛经)
  */
-export default function SutraManager({ initialSutras }: { initialSutras: any[] }) {
+export default function SutraManager({
+  initialSutras,
+  mode = 'admin'
+}: {
+  initialSutras: any[];
+  mode?: 'admin' | 'user';
+}) {
   const [sutras, setSutras] = useState(initialSutras);
   const [editingSutra, setEditingSutra] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,6 +33,26 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
     defaultStep: 1
   });
   const [loading, setLoading] = useState(false);
+
+  // Android 返回键支持
+  useEffect(() => {
+    if (isModalOpen) {
+      window.history.pushState({ modal: 'sutra-manager' }, '');
+
+      const handlePopState = () => {
+        setIsModalOpen(false);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        if (window.history.state?.modal === 'sutra-manager') {
+          window.history.back();
+        }
+      };
+    }
+  }, [isModalOpen]);
 
   const openAdd = () => {
     setEditingSutra(null);
@@ -58,10 +85,20 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
     setLoading(true);
 
     let result;
-    if (editingSutra) {
-      result = await updateSutra(editingSutra.id, formData);
+    if (mode === 'admin') {
+      // 管理员模式:操作公共佛经
+      if (editingSutra) {
+        result = await updateSutra(editingSutra.id, formData);
+      } else {
+        result = await createSutra(formData);
+      }
     } else {
-      result = await createSutra(formData);
+      // 用户模式:操作私有佛经
+      if (editingSutra) {
+        result = await updateUserSutra(editingSutra.id, formData);
+      } else {
+        result = await createUserSutra(formData);
+      }
     }
 
     setLoading(false);
@@ -76,7 +113,11 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
 
   const handleDelete = async (id: string) => {
     if (confirm('确定要删除这个模板吗？这将影响所有已请领的相应功课。')) {
-      await deleteSutra(id);
+      if (mode === 'admin') {
+        await deleteSutra(id);
+      } else {
+        await deleteUserSutra(id);
+      }
       window.location.reload();
     }
   };
@@ -89,7 +130,9 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
             <Link href="/dashboard" className="p-2 bg-white rounded-full text-stone-400 hover:text-stone-800 transition-colors shadow-sm">
               <ChevronLeft size={20} />
             </Link>
-            <h1 className="text-2xl font-serif text-stone-800 tracking-wide">功课库管理</h1>
+            <h1 className="text-2xl font-serif text-stone-800 tracking-wide">
+              {mode === 'admin' ? '功课库管理' : '我的功课库'}
+            </h1>
           </div>
           <button onClick={openAdd} className="px-6 py-3 bg-emerald-100 text-emerald-700 rounded-2xl shadow-sm active:scale-95 flex items-center gap-2 hover:bg-emerald-200 transition-all">
             <Plus size={20} /> 新增功课模板
@@ -188,14 +231,14 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
               </div>
 
               {formData.type === 'sutra' && (
-                <div className="space-y-2 h-full flex-1">
+                <div className="space-y-2">
                   <label className="text-xs text-stone-400 tracking-widest uppercase ml-1">经文全文 (支持富文本与图片)</label>
-                  <div className="h-64 mb-12">
+                  <div className="relative">
                     <ReactQuill
                       theme="snow"
                       value={formData.content}
                       onChange={(value) => setFormData({ ...formData, content: value })}
-                      className="h-full bg-white rounded-2xl overflow-hidden"
+                      className="bg-white rounded-2xl overflow-hidden"
                       modules={{
                         toolbar: [
                           [{ 'header': [1, 2, false] }],
@@ -209,6 +252,7 @@ export default function SutraManager({ initialSutras }: { initialSutras: any[] }
                       }}
                     />
                   </div>
+                  <div className="h-16" /> {/* 占位空间,防止底部被遮挡 */}
                 </div>
               )}
 

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot } from 'lucide-react';
-import { chat, clearChatHistory } from '@/actions/ai';
+import { clearChatHistory } from '@/actions/ai';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import ReactMarkdown from 'react-markdown';
@@ -43,17 +43,102 @@ export default function ChatInterface({ initialMessages = [] }: { initialMessage
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
 
+    // 创建一个空的 assistant 消息用于流式更新
+    const assistantMessageIndex = messages.length + 1;
+    setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+
     try {
-      const result = await chat(userMessage);
-      if (result.success && result.response) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: result.response! }]);
+      // 创建 AbortController 用于超时控制
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 秒超时
+
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: userMessage }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } catch (error) {
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      let accumulatedContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                accumulatedContent += parsed.content;
+                // 实时更新 assistant 消息
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  newMessages[assistantMessageIndex] = {
+                    role: 'assistant',
+                    content: accumulatedContent,
+                  };
+                  return newMessages;
+                });
+              }
+            } catch (e) {
+              // 忽略解析错误
+            }
+          }
+        }
+      }
+
+      // 如果没有收到任何内容,显示默认消息
+      if (!accumulatedContent) {
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          newMessages[assistantMessageIndex] = {
+            role: 'assistant',
+            content: '抱歉,我现在无法回答。',
+          };
+          return newMessages;
+        });
+      }
+    } catch (error: any) {
       console.error('Chat error:', error);
+
+      // 处理超时或其他错误
+      const errorMessage = error.name === 'AbortError'
+        ? '请求超时,请稍后重试。'
+        : '对话服务暂时不可用,请稍后重试。';
+
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        newMessages[assistantMessageIndex] = {
+          role: 'assistant',
+          content: errorMessage,
+        };
+        return newMessages;
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handleClear = async () => {
     if (confirm('确定要清除所有对话记录吗？')) {
@@ -74,7 +159,7 @@ export default function ChatInterface({ initialMessages = [] }: { initialMessage
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-stone-400 space-y-4">
             <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center">
-               <Bot className="w-8 h-8 text-stone-300" />
+              <Bot className="w-8 h-8 text-stone-300" />
             </div>
             <p className="font-serif italic tracking-widest text-lg">万虑俱寂，一心参究...</p>
           </div>
@@ -105,13 +190,14 @@ export default function ChatInterface({ initialMessages = [] }: { initialMessage
                 <div className="markdown-content">
                   <ReactMarkdown
                     components={{
-                      h1: ({...props}) => <h1 className="text-lg font-serif tracking-wide text-stone-800 mt-4 mb-2" {...props} />,                      h2: ({...props}) => <h2 className="text-base font-serif tracking-wide text-stone-800 mt-3 mb-1.5" {...props} />,                      h3: ({...props}) => <h3 className="text-sm font-serif tracking-wide text-stone-800 mt-2 mb-1" {...props} />,                      p: ({...props}) => <p className="text-stone-700 leading-relaxed mb-2" {...props} />,                      ul: ({...props}) => <ul className="list-disc list-inside text-stone-700 mb-2 space-y-1" {...props} />,                      ol: ({...props}) => <ol className="list-decimal list-inside text-stone-700 mb-2 space-y-1" {...props} />,                      li: ({...props}) => <li className="text-stone-700" {...props} />,                      strong: ({...props}) => <strong className="font-semibold text-stone-800" {...props} />,                      em: ({...props}) => <em className="italic text-stone-700" {...props} />,                      code: ({inline, ...props}: any) => 
+                      h1: ({ ...props }) => <h1 className="text-lg font-serif tracking-wide text-stone-800 mt-4 mb-2" {...props} />, h2: ({ ...props }) => <h2 className="text-base font-serif tracking-wide text-stone-800 mt-3 mb-1.5" {...props} />, h3: ({ ...props }) => <h3 className="text-sm font-serif tracking-wide text-stone-800 mt-2 mb-1" {...props} />, p: ({ ...props }) => <p className="text-stone-700 leading-relaxed mb-2" {...props} />, ul: ({ ...props }) => <ul className="list-disc list-inside text-stone-700 mb-2 space-y-1" {...props} />, ol: ({ ...props }) => <ol className="list-decimal list-inside text-stone-700 mb-2 space-y-1" {...props} />, li: ({ ...props }) => <li className="text-stone-700" {...props} />, strong: ({ ...props }) => <strong className="font-semibold text-stone-800" {...props} />, em: ({ ...props }) => <em className="italic text-stone-700" {...props} />, code: ({ inline, ...props }: any) =>
                         inline ? (
                           <code className="bg-stone-100 text-emerald-700 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />
                         ) : (
                           <code className="bg-stone-100 text-emerald-700 p-2 rounded block text-sm font-mono mb-2 overflow-x-auto" {...props} />
                         ),
-                      blockquote: ({...props}) => <blockquote className="border-l-4 border-emerald-400 pl-4 italic text-stone-600 my-2" {...props} />,                      a: ({...props}) => <a className="text-emerald-600 hover:underline" {...props} />,                    }}
+                      blockquote: ({ ...props }) => <blockquote className="border-l-4 border-emerald-400 pl-4 italic text-stone-600 my-2" {...props} />, a: ({ ...props }) => <a className="text-emerald-600 hover:underline" {...props} />,
+                    }}
                   >
                     {cleanContent(m.content)}
                   </ReactMarkdown>
@@ -119,8 +205,8 @@ export default function ChatInterface({ initialMessages = [] }: { initialMessage
               ) : (
                 <div className={cn(
                   "text-lg leading-relaxed tracking-wide",
-                  m.role === 'user' 
-                    ? "text-stone-600 font-sans" 
+                  m.role === 'user'
+                    ? "text-stone-600 font-sans"
                     : "text-stone-800 font-serif"
                 )}>
                   {cleanContent(m.content)}
@@ -128,16 +214,16 @@ export default function ChatInterface({ initialMessages = [] }: { initialMessage
               )}
             </div>
             {m.role === 'user' && (
-               <div className="w-8 h-[1px] bg-stone-100 mr-2" />
+              <div className="w-8 h-[1px] bg-stone-100 mr-2" />
             )}
           </div>
         ))}
         {isLoading && (
           <div className="flex flex-col items-start space-y-4">
-             <div className="flex items-center space-x-2 px-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600/40 animate-pulse" />
-                <span className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-medium italic">妙语酝酿中...</span>
-              </div>
+            <div className="flex items-center space-x-2 px-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-600/40 animate-pulse" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-medium italic">妙语酝酿中...</span>
+            </div>
           </div>
         )}
         <div ref={messagesEndRef} />

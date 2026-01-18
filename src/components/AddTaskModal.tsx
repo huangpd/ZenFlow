@@ -13,15 +13,15 @@ function cn(...inputs: ClassValue[]) {
  * 添加/编辑功课弹窗组件
  * 用于用户请领新的功课或修改现有功课的配置（如每日目标、是否为每日功课等）
  */
-export default function AddTaskModal({ 
-  isOpen, 
-  onClose, 
+export default function AddTaskModal({
+  isOpen,
+  onClose,
   onTaskCreated,
   onTaskUpdated,
-  taskToEdit 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
+  taskToEdit
+}: {
+  isOpen: boolean;
+  onClose: () => void;
   onTaskCreated?: (task: any) => void;
   onTaskUpdated?: (task: any) => void;
   taskToEdit?: any;
@@ -38,13 +38,13 @@ export default function AddTaskModal({
     if (isOpen) {
       // 打开时加载所有可用的经文/功课列表
       getAvailableSutras().then(setDbSutras);
-      
+
       if (taskToEdit) {
         // 如果是编辑模式，初始化表单状态
-        const text = taskToEdit.text.startsWith("读诵《") && taskToEdit.text.endsWith("》") 
-          ? taskToEdit.text.slice(3, -1) 
+        const text = taskToEdit.text.startsWith("读诵《") && taskToEdit.text.endsWith("》")
+          ? taskToEdit.text.slice(3, -1)
           : taskToEdit.text;
-          
+
         setConfiguringTask({
           ...taskToEdit,
           text
@@ -62,8 +62,24 @@ export default function AddTaskModal({
         setConfigStep(1);
         setIsDaily(false);
       }
+
+      // Android 返回键支持
+      window.history.pushState({ modal: 'add-task' }, '');
+
+      const handlePopState = () => {
+        onClose();
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        if (window.history.state?.modal === 'add-task') {
+          window.history.back();
+        }
+      };
     }
-  }, [isOpen, taskToEdit]);
+  }, [isOpen, taskToEdit, onClose]);
 
   if (!isOpen) return null;
 
@@ -75,7 +91,7 @@ export default function AddTaskModal({
     setSelectedSutra(item);
     setConfigTarget(item.currentTarget || item.defaultTarget || 1);
     setConfigStep(item.defaultStep || 1);
-    
+
     // 确保布尔值转换的鲁棒性
     const dailyStatus = !!(item.isDaily === true || item.isDaily === "true" || item.isDaily === 1);
     setIsDaily(dailyStatus);
@@ -109,7 +125,7 @@ export default function AddTaskModal({
         step: configStep,
         isDaily: isDaily,
       });
-      
+
       if (onTaskCreated) {
         onTaskCreated(newTask);
       }
@@ -138,11 +154,11 @@ export default function AddTaskModal({
         if (result.success) {
           // 同步父组件的状态
           if (onTaskUpdated) onTaskUpdated(result.task);
-          
+
           // 再次确认状态（以数据库返回为准）
           const finalDaily = !!(result.task.isDaily === true || (result.task.isDaily as unknown as string) === "true" || (result.task.isDaily as unknown as number) === 1);
           setIsDaily(finalDaily);
-          
+
           // 更新当前配置中的对象，确保后续操作基于最新数据
           setConfiguringTask((prev: any) => ({ ...prev, ...result.task }));
         } else {
@@ -167,9 +183,9 @@ export default function AddTaskModal({
    */
   const updateTargetValue = async (val: string | number) => {
     setConfigTarget(val);
-    
+
     const numVal = typeof val === 'string' ? parseInt(val) : val;
-    
+
     // 仅当是 >= 1 的有效数字时才更新后端
     if (!isNaN(numVal) && numVal >= 1) {
       const targetTask = taskToEdit || configuringTask;
@@ -243,7 +259,7 @@ export default function AddTaskModal({
               {displayItems.map((item: any) => (
                 <button key={item.id} onClick={() => handleSelectPreset(item)} className="w-full flex items-center p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 hover:border-emerald-100 transition-all hover:bg-stone-100 group">
                   <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mr-4 shadow-sm group-hover:scale-110 transition-transform">
-                    {ICON_MAP[item.iconId || ''] || <BookOpen className="text-blue-600" size={18}/>}
+                    {ICON_MAP[item.iconId || ''] || <BookOpen className="text-blue-600" size={18} />}
                   </div>
                   <div className="text-left flex-1">
                     <span className="text-stone-800 block">{item.text}</span>
@@ -272,69 +288,69 @@ export default function AddTaskModal({
               )}
               {taskToEdit && !loading && (
                 <button onClick={onClose} className="w-10 h-10 bg-stone-50 rounded-full flex items-center justify-center text-stone-400">
-                   <Plus size={24} className="rotate-45" />
+                  <Plus size={24} className="rotate-45" />
                 </button>
               )}
             </div>
             <div className="space-y-8 mb-10">
-               <div className="text-center py-6 bg-stone-50 rounded-[2rem] border border-stone-100 mb-4 px-4">
-                  <div className="scale-150 flex justify-center mb-2">{ICON_MAP[(configuringTask || selectedSutra).iconId || ''] || <BookOpen className="text-blue-600" size={18}/>}</div>
-                  <p className="text-lg text-stone-800 font-serif">{(configuringTask || selectedSutra).text}</p>
-                  {selectedSutra?.description && (
-                    <p className="text-xs text-stone-400 mt-2 px-4 leading-relaxed line-clamp-2 italic">
-                      {selectedSutra.description}
-                    </p>
-                  )}
-                  {taskToEdit && (
-                    <p className="text-[10px] text-stone-300 mt-2 uppercase tracking-[0.2em]">所有改动将实时保存</p>
-                  )}
-               </div>
+              <div className="text-center py-6 bg-stone-50 rounded-[2rem] border border-stone-100 mb-4 px-4">
+                <div className="scale-150 flex justify-center mb-2">{ICON_MAP[(configuringTask || selectedSutra).iconId || ''] || <BookOpen className="text-blue-600" size={18} />}</div>
+                <p className="text-lg text-stone-800 font-serif">{(configuringTask || selectedSutra).text}</p>
+                {selectedSutra?.description && (
+                  <p className="text-xs text-stone-400 mt-2 px-4 leading-relaxed line-clamp-2 italic">
+                    {selectedSutra.description}
+                  </p>
+                )}
+                {taskToEdit && (
+                  <p className="text-[10px] text-stone-300 mt-2 uppercase tracking-[0.2em]">所有改动将实时保存</p>
+                )}
+              </div>
 
-               <div 
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   updateDailyStatus(!isDaily);
-                 }}
-                 className="flex items-center justify-between px-6 py-4 bg-stone-50 rounded-3xl border border-stone-100 cursor-pointer hover:bg-stone-100/50 transition-colors"
-               >
-                  <div className="flex flex-col">
-                    <span className="text-sm text-stone-800">设为每日功课</span>
-                    <span className="text-[10px] text-stone-400">每天凌晨自动重置进度</span>
-                  </div>
-                  <div 
-                    className={cn(
-                      "w-12 h-6 rounded-full transition-colors relative flex items-center px-1",
-                      isDaily ? "bg-emerald-500" : "bg-stone-300",
-                      loading && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {loading && taskToEdit && (
-                      <Loader2 size={10} className="text-white animate-spin absolute left-1/2 -translate-x-1/2 z-10" />
-                    )}
-                    <div className={cn(
-                      "w-4 h-4 bg-white rounded-full transition-all shadow-sm",
-                      isDaily ? "ml-auto" : "ml-0"
-                    )} />
-                  </div>
-               </div>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateDailyStatus(!isDaily);
+                }}
+                className="flex items-center justify-between px-6 py-4 bg-stone-50 rounded-3xl border border-stone-100 cursor-pointer hover:bg-stone-100/50 transition-colors"
+              >
+                <div className="flex flex-col">
+                  <span className="text-sm text-stone-800">设为每日功课</span>
+                  <span className="text-[10px] text-stone-400">每天凌晨自动重置进度</span>
+                </div>
+                <div
+                  className={cn(
+                    "w-12 h-6 rounded-full transition-colors relative flex items-center px-1",
+                    isDaily ? "bg-emerald-500" : "bg-stone-300",
+                    loading && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  {loading && taskToEdit && (
+                    <Loader2 size={10} className="text-white animate-spin absolute left-1/2 -translate-x-1/2 z-10" />
+                  )}
+                  <div className={cn(
+                    "w-4 h-4 bg-white rounded-full transition-all shadow-sm",
+                    isDaily ? "ml-auto" : "ml-0"
+                  )} />
+                </div>
+              </div>
 
-               <div className="space-y-4">
-                  <label className="text-xs font-bold text-stone-400 tracking-[0.2em] flex items-center">
-                    <Settings2 size={12} className="mr-2"/> 每日发愿目标 (遍/日)
-                  </label>
-                  <input 
-                    type="number" 
-                    value={configTarget} 
-                    onChange={(e) => updateTargetValue(e.target.value)} 
-                    onBlur={handleTargetBlur}
-                    className="w-full bg-stone-50 border border-stone-200 p-6 rounded-3xl text-center text-3xl font-serif text-emerald-700 focus:ring-2 focus:ring-stone-300 transition-all outline-none" 
-                  />
-               </div>
+              <div className="space-y-4">
+                <label className="text-xs font-bold text-stone-400 tracking-[0.2em] flex items-center">
+                  <Settings2 size={12} className="mr-2" /> 每日发愿目标 (遍/日)
+                </label>
+                <input
+                  type="number"
+                  value={configTarget}
+                  onChange={(e) => updateTargetValue(e.target.value)}
+                  onBlur={handleTargetBlur}
+                  className="w-full bg-stone-50 border border-stone-200 p-6 rounded-3xl text-center text-3xl font-serif text-emerald-700 focus:ring-2 focus:ring-stone-300 transition-all outline-none"
+                />
+              </div>
             </div>
-            
+
             {selectedSutra && (
-              <button 
-                onClick={handleClaim} 
+              <button
+                onClick={handleClaim}
                 disabled={loading}
                 className="w-full h-14 bg-stone-800 text-white rounded-[1.5rem] text-base shadow-lg active:scale-95 transition-all hover:bg-stone-900 flex items-center justify-center gap-2"
               >

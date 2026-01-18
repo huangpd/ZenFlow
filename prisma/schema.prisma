@@ -25,6 +25,7 @@ model User {
   taskLogs       TaskLog[]
   meditationSessions MeditationSession[]
   preferences    UserPreference?
+  sutras         Sutra[]  // 用户自定义佛经
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -150,15 +151,25 @@ model UserPreference {
 
 model Sutra {
   id            String   @id @default(cuid())
-  title         String   @unique
+  title         String
   content       String?  @db.Text
   type          String   @default("sutra") // "normal", "counter", "sutra"
   iconId        String?  @default("book")
   defaultTarget Int?     @default(1)
   defaultStep   Int?     @default(1)
   description   String?
+  
+  // 用户所有权字段
+  userId        String?  // null = 公共佛经, 有值 = 私有佛经
+  isPublic      Boolean  @default(false) // true = 公共, false = 私有
+  
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  
+  @@index([userId, isPublic])
+  @@unique([userId, title]) // 同一用户不能有重名佛经
 }
 
 model PasswordResetToken {

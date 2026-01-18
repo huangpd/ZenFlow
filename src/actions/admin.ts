@@ -14,11 +14,12 @@ async function ensureAuth() {
 }
 
 /**
- * 获取所有佛经列表
+ * 获取所有公共佛经列表
  */
 export async function getSutras() {
   await ensureAuth();
   return db.sutra.findMany({
+    where: { isPublic: true },
     orderBy: { updatedAt: 'desc' },
   });
 }
@@ -27,9 +28,9 @@ export async function getSutras() {
  * 创建新佛经
  * @param data 佛经数据
  */
-export async function createSutra(data: { 
-  title: string; 
-  description?: string; 
+export async function createSutra(data: {
+  title: string;
+  description?: string;
   content?: string;
   type?: string;
   iconId?: string;
@@ -37,12 +38,14 @@ export async function createSutra(data: {
   defaultStep?: number;
 }) {
   await ensureAuth();
-  
+
   try {
     const formattedData = {
       ...data,
       defaultStep: data.defaultStep ? parseInt(data.defaultStep.toString()) : 1,
       defaultTarget: data.defaultTarget ? parseInt(data.defaultTarget.toString()) : 1,
+      isPublic: true,  // 管理员创建的是公共佛经
+      userId: null,    // 公共佛经不属于任何用户
     };
 
     await db.sutra.create({
@@ -65,9 +68,9 @@ export async function createSutra(data: {
  * @param id 佛经ID
  * @param data 更新的数据
  */
-export async function updateSutra(id: string, data: { 
-  title: string; 
-  description?: string; 
+export async function updateSutra(id: string, data: {
+  title: string;
+  description?: string;
   content?: string;
   type?: string;
   iconId?: string;

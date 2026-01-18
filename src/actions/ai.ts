@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@/auth';
-import { generateChatResponse, getSutraInsight, getDailyGuidance as getGeminiGuidance } from '@/lib/ai/gemini';
+import { generateChatResponse, getSutraInsight, getDailyGuidance as getGeminiGuidance } from '@/lib/ai/ai-client';
 import { db } from '@/lib/db';
 
 /**
@@ -25,7 +25,7 @@ export async function getGuidance(sutraContent: string) {
  * 获取基于今日修行数据的每日寄语
  */
 export async function getDailyGuidance(
-  meditationMins: number, 
+  meditationMins: number,
   tasksCount: number,
   tasksCompleted: number,
   journalCount: number,
@@ -69,7 +69,7 @@ export async function chat(content: string) {
     const formattedHistory = history
       .reverse()
       .map((msg) => ({ role: msg.role, content: msg.content }));
-    
+
     formattedHistory.push({ role: 'user', content });
 
     // 2. 调用 AI
