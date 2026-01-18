@@ -19,11 +19,27 @@ const sutras = [
 async function main() {
   console.log('Seeding sutras...');
   for (const sutra of sutras) {
-    await prisma.sutra.upsert({
-      where: { title: sutra.title },
-      update: {},
-      create: sutra,
+    // 检查是否已存在
+    const existing = await prisma.sutra.findFirst({
+      where: {
+        userId: null,
+        title: sutra.title
+      }
     });
+
+    if (!existing) {
+      // 不存在则创建
+      await prisma.sutra.create({
+        data: {
+          ...sutra,
+          userId: null,
+          isPublic: true,
+        }
+      });
+      console.log(`Created: ${sutra.title}`);
+    } else {
+      console.log(`Skipped (already exists): ${sutra.title}`);
+    }
   }
   console.log('Seeding completed.');
 }
