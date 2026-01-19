@@ -1,6 +1,6 @@
 const API_URL = process.env.AI_API_URL || 'https://geminikey.top/v1/chat/completions';
 const API_KEY = process.env.AI_API_KEY;
-const AI_MODEL = process.env.AI_MODEL || 'gemini-3-flash-preview';
+const AI_MODEL = process.env.AI_MODEL || 'gemini-2.5-flash';
 
 async function openRouterFetch(messages: any[], systemInstruction?: string) {
   if (!API_KEY) throw new Error('AI_API_KEY is not defined in environment variables');
@@ -26,6 +26,10 @@ async function openRouterFetch(messages: any[], systemInstruction?: string) {
     body: JSON.stringify({
       model: AI_MODEL,
       messages: finalMessages,
+      temperature: 0.7,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
     }),
   });
 
@@ -67,6 +71,10 @@ async function openRouterFetchStream(messages: any[], systemInstruction?: string
       model: AI_MODEL,
       messages: finalMessages,
       stream: true, // 启用流式响应
+      temperature: 0.7,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
     }),
   });
 

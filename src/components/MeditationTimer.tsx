@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Play, Pause, RotateCcw, Wind, Settings2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Wind, Settings2, Music2 } from 'lucide-react';
 import { saveMeditationSession } from '@/actions/meditation';
 import CelebrationEffect from './CelebrationEffect';
 import { Capacitor } from '@capacitor/core';
 import { KeepAwake } from '@capacitor-community/keep-awake';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { App } from '@capacitor/app';
+import MeditationSoundModal from './MeditationSoundModal';
+import { MEDITATION_SOUNDS } from '@/constants';
 
 export default function MeditationTimer() {
   const [timerRunning, setTimerRunning] = useState(false);
@@ -15,7 +17,9 @@ export default function MeditationTimer() {
   // timeLeft 仅用于 UI 显示，逻辑核心由 endTimeRef 控制
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [showEffect, setShowEffect] = useState(false);
-  
+  const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
+  const [selectedSoundId, setSelectedSoundId] = useState('temple-bell');
+
   // 使用 Ref 存储核心计时状态，避免闭包陷阱和重渲染
   const endTimeRef = useRef<number | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -27,11 +31,60 @@ export default function MeditationTimer() {
     }
   }, []);
 
+  const [isMuted, setIsMuted] = useState(false);
+  const bgAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // 监听音频源变化
+  useEffect(() => {
+    const soundConfig = MEDITATION_SOUNDS.find(s => s.id === selectedSoundId);
+
+    // 如果之前有音频实例，先清理
+    if (bgAudioRef.current) {
+      bgAudioRef.current.pause();
+      bgAudioRef.current = null;
+    }
+
+    // 如果选中的不是"无声"，则创建新音频
+    if (soundConfig && soundConfig.id !== 'none' && soundConfig.url) {
+      bgAudioRef.current = new Audio(soundConfig.url);
+      bgAudioRef.current.loop = true;
+      bgAudioRef.current.volume = 0.6;
+      bgAudioRef.current.muted = isMuted;
+
+      // 如果计时器正在运行，切换音频后应当立即播放
+      if (timerRunning) {
+        bgAudioRef.current.play().catch(e => console.error("Audio switching play failed:", e));
+      }
+    }
+
+    return () => {
+      if (bgAudioRef.current) {
+        bgAudioRef.current.pause();
+        bgAudioRef.current = null;
+      }
+    };
+  }, [selectedSoundId]); // 当选择的音频ID变化时重新执行
+
+  // 监听静音状态变化
+  useEffect(() => {
+    if (bgAudioRef.current) {
+      bgAudioRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  const toggleMute = () => {
+    const newState = !isMuted;
+    setIsMuted(newState);
+    if (bgAudioRef.current) {
+      bgAudioRef.current.muted = newState;
+    }
+  };
+
   const playBell = useCallback(() => {
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContext();
-      
+
       const playAlarmTone = () => {
         const pattern = [
           { freq: 1000, duration: 0.1 },
@@ -42,29 +95,29 @@ export default function MeditationTimer() {
           { freq: 0, duration: 0.1 },
           { freq: 1200, duration: 0.15 },
         ];
-        
+
         let time = ctx.currentTime;
         pattern.forEach(({ freq, duration }) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          
+
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, time);
-          
+
           gain.gain.setValueAtTime(freq ? 0.4 : 0, time);
           gain.gain.linearRampToValueAtTime(freq ? 0.4 : 0, time + duration * 0.9);
           gain.gain.linearRampToValueAtTime(0, time + duration);
-          
+
           osc.connect(gain);
           gain.connect(ctx.destination);
-          
+
           osc.start(time);
           osc.stop(time + duration);
-          
+
           time += duration;
         });
       };
-      
+
       playAlarmTone();
       setTimeout(playAlarmTone, 1000);
       setTimeout(playAlarmTone, 2000);
@@ -79,7 +132,13 @@ export default function MeditationTimer() {
       timerIntervalRef.current = null;
     }
     setTimerRunning(false);
-    
+
+    // 停止背景音乐
+    if (bgAudioRef.current) {
+      bgAudioRef.current.pause();
+      bgAudioRef.current.currentTime = 0;
+    }
+
     if (Capacitor.isNativePlatform()) {
       try {
         await KeepAwake.allowSleep();
@@ -102,6 +161,11 @@ export default function MeditationTimer() {
   // 启动计时器
   const startTimer = async () => {
     if (timeLeft <= 0) return;
+
+    // 播放背景音乐
+    if (bgAudioRef.current) {
+      bgAudioRef.current.play().catch(e => console.error("Audio play failed:", e));
+    }
 
     // 计算结束时间戳
     const now = Date.now();
@@ -144,8 +208,25 @@ export default function MeditationTimer() {
   };
 
   const pauseTimer = async () => {
-    await stopTimerLogic();
-    // timeLeft 已经在 state 中，下次 start 会基于它计算新的 endTime
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    setTimerRunning(false);
+
+    // 暂停背景音乐
+    if (bgAudioRef.current) {
+      bgAudioRef.current.pause();
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await KeepAwake.allowSleep();
+        await LocalNotifications.cancel({ notifications: [{ id: 1001 }] });
+      } catch (e) {
+        console.error('Failed to clear native resources', e);
+      }
+    }
   };
 
   const toggleTimer = () => {
@@ -171,7 +252,7 @@ export default function MeditationTimer() {
   // 监听 App 状态恢复 (Resume)，校准时间
   useEffect(() => {
     let resumeListener: any;
-    
+
     if (Capacitor.isNativePlatform()) {
       resumeListener = App.addListener('appStateChange', ({ isActive }) => {
         if (isActive && timerRunning && endTimeRef.current) {
@@ -194,8 +275,12 @@ export default function MeditationTimer() {
   useEffect(() => {
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (bgAudioRef.current) {
+        bgAudioRef.current.pause();
+        bgAudioRef.current = null;
+      }
       if (Capacitor.isNativePlatform()) {
-        KeepAwake.allowSleep().catch(() => {});
+        KeepAwake.allowSleep().catch(() => { });
       }
     };
   }, []);
@@ -211,7 +296,7 @@ export default function MeditationTimer() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center space-y-8 py-12 animate-in fade-in duration-700">
       {showEffect && <CelebrationEffect />}
-      
+
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-serif text-stone-800 tracking-wide">静坐冥想</h2>
         <p className="text-xs text-stone-400 font-medium italic">心安神定 · 观照内外</p>
@@ -220,11 +305,11 @@ export default function MeditationTimer() {
       <div className="relative flex items-center justify-center">
         <svg className="w-64 h-64 -rotate-90" viewBox="0 0 144 144">
           <circle cx="72" cy="72" r="68" className="stroke-stone-100 fill-none stroke-[3px]" />
-          <circle 
-            cx="72" 
-            cy="72" 
-            r="68" 
-            className="stroke-emerald-800 fill-none stroke-[3px] transition-all duration-1000" 
+          <circle
+            cx="72"
+            cy="72"
+            r="68"
+            className="stroke-emerald-800 fill-none stroke-[3px] transition-all duration-1000"
             strokeDasharray={427.2}
             strokeDashoffset={427.2 * (1 - progress)}
             strokeLinecap="round"
@@ -235,46 +320,71 @@ export default function MeditationTimer() {
             {formatTime(Math.max(0, timeLeft))}
           </div>
           {timerRunning && (
-             <div className="flex items-center mt-2 space-x-1 text-emerald-600 animate-pulse opacity-60">
-                <Wind size={12} />
-                <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-emerald-700">静心</span>
-             </div>
+            <div className="flex items-center mt-2 space-x-1 text-emerald-600 animate-pulse opacity-60">
+              <Wind size={12} />
+              <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-emerald-700">静心</span>
+            </div>
           )}
         </div>
       </div>
 
       <div className="flex flex-col items-center space-y-8 w-full max-w-[280px]">
         <div className="flex justify-between w-full bg-stone-100/50 p-1 rounded-2xl">
-           {[3, 10, 25, 45, 60].map(mins => (
-              <button 
-                key={mins} 
-                disabled={timerRunning} 
-                onClick={() => handleDurationChange(mins)} 
-                className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${selectedDuration === mins ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
-              >
-                {mins}m
-              </button>
-           ))}
+          {[3, 10, 25, 45, 60].map(mins => (
+            <button
+              key={mins}
+              disabled={timerRunning}
+              onClick={() => handleDurationChange(mins)}
+              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${selectedDuration === mins ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
+            >
+              {mins}m
+            </button>
+          ))}
         </div>
 
         <div className="flex items-center space-x-10">
-          <button 
-            onClick={resetTimer} 
-            className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 active:scale-90 transition-all hover:bg-stone-200"
-          >
-            <RotateCcw size={20} />
-          </button>
-          <button 
-            onClick={toggleTimer} 
-            className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all active:scale-95 ${timerRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-stone-800 hover:bg-stone-900'}`}
-          >
-            {timerRunning ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
-          </button>
-          <button className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 active:scale-90 transition-all hover:bg-stone-200">
-            <Settings2 size={20} />
-          </button>
+          <div className="flex items-center justify-center gap-6 mt-4">
+            <button
+              onClick={() => setIsSoundModalOpen(true)}
+              className={`w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all ${selectedSoundId !== 'none' ? 'bg-emerald-100 text-emerald-600' : 'bg-stone-100 text-stone-400'}`}
+              title="选择背景音"
+            >
+              <Music2 size={20} />
+            </button>
+
+            <button
+              onClick={resetTimer}
+              className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 active:scale-90 transition-all hover:bg-stone-200"
+              title="重置"
+            >
+              <RotateCcw size={20} />
+            </button>
+
+            <button
+              onClick={toggleTimer}
+              className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all active:scale-95 ${timerRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-stone-800 hover:bg-stone-900'}`}
+            >
+              {timerRunning ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
+            </button>
+
+            <button
+              onClick={toggleMute}
+              className={`w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all ${isMuted ? 'bg-rose-50 text-rose-400' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'}`}
+              title={isMuted ? "取消静音" : "静音"}
+            >
+              <Settings2 size={20} className={isMuted ? "opacity-50" : "opacity-100"} />
+            </button>
+          </div>
         </div>
       </div>
+
+      <MeditationSoundModal
+        isOpen={isSoundModalOpen}
+        onClose={() => setIsSoundModalOpen(false)}
+        selectedSoundId={selectedSoundId}
+        onSelectSound={setSelectedSoundId}
+      />
     </div>
   );
 }
+
