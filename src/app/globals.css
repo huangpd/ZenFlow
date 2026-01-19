@@ -64,3 +64,20 @@ body {
 .quill .ql-editor {
   min-height: 250px;
 }
+
+/* 强制富文本内容的样式 (解决部分移动端显示问题) */
+.ql-editor strong,
+.ql-editor b,
+.prose strong,
+.prose b {
+  font-weight: 700 !important;
+  color: inherit;
+  /* 保持颜色一致 */
+}
+
+.ql-editor em,
+.ql-editor i,
+.prose em,
+.prose i {
+  font-style: italic !important;
+}
