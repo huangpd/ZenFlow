@@ -8,7 +8,7 @@ import SutraReader from './SutraReader';
 import AddTaskModal from './AddTaskModal';
 import CelebrationEffect from './CelebrationEffect';
 
-export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }) {
+export default function PracticeSystem({ initialTasks, onTaskUpdate }: { initialTasks: any[], onTaskUpdate?: () => void }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [readingTask, setReadingTask] = useState<any | null>(null);
   const [editingTask, setEditingTask] = useState<any | null>(null);
@@ -24,6 +24,8 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
     setTasks(prevTasks => prevTasks.map(t =>
       t.id === taskId ? { ...t, current: newCurrent, completed } : t
     ));
+    // Notify parent to refresh stats
+    onTaskUpdate?.();
   };
 
   const handleTaskUpdate = (updatedTask: any) => {
@@ -34,6 +36,8 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
     if (editingTask && editingTask.id === updatedTask.id) {
       setEditingTask((prev: any) => ({ ...prev, ...updatedTask }));
     }
+    // Notify parent to refresh stats (e.g. if target changed)
+    onTaskUpdate?.();
   };
 
   if (readingTask) {
@@ -106,6 +110,7 @@ export default function PracticeSystem({ initialTasks }: { initialTasks: any[] }
             }
             return [...prev, newTask];
           });
+          onTaskUpdate?.();
         }}
         onTaskUpdated={handleTaskUpdate}
         taskToEdit={editingTask}

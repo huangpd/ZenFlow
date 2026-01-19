@@ -31,30 +31,45 @@ export async function getTasks() {
     resetThreshold.setDate(resetThreshold.getDate() - 1);
   }
 
-  // A. 删除早于阈值且已完成的非每日任务
-  const deleted = await db.spiritualTask.deleteMany({
+  // 优化：先检查是否有需要重置的任务，避免每次查询都执行昂贵的写操作
+  const needReset = await db.spiritualTask.findFirst({
     where: {
       userId,
-      isDaily: false,
-      completed: true,
-      updatedAt: { lt: resetThreshold }
-    }
+      OR: [
+        { isDaily: false, completed: true, updatedAt: { lt: resetThreshold } },
+        { isDaily: true, updatedAt: { lt: resetThreshold } }
+      ]
+    },
+    select: { id: true }
   });
 
-  // B. 重置旧的每日任务
-  // 注意：显式设置 updatedAt 是必需的，因为 Prisma 的 updateMany 不会自动更新它。
-  const updated = await db.spiritualTask.updateMany({
-    where: {
-      userId,
-      isDaily: true,
-      updatedAt: { lt: resetThreshold }
-    },
-    data: {
-      current: 0,
-      completed: false,
-      updatedAt: new Date()
-    }
-  });
+
+
+  if (needReset) {
+    // A. 删除早于阈值且已完成的非每日任务
+    await db.spiritualTask.deleteMany({
+      where: {
+        userId,
+        isDaily: false,
+        completed: true,
+        updatedAt: { lt: resetThreshold }
+      }
+    });
+
+    // B. 重置旧的每日任务
+    await db.spiritualTask.updateMany({
+      where: {
+        userId,
+        isDaily: true,
+        updatedAt: { lt: resetThreshold }
+      },
+      data: {
+        current: 0,
+        completed: false,
+        updatedAt: new Date()
+      }
+    });
+  }
 
   // 如果有任何更改，使仪表盘路径失效以显示新鲜数据
   // 注意：移除 revalidatePath 以避免“在渲染期间”出错。 
@@ -119,8 +134,9 @@ export async function createTask(data: {
     const task = await db.spiritualTask.create({
       data: {
         userId: session.user.id,
-        isDaily: false, // 根据用户要求，默认为 false
+
         ...data,
+        isDaily: data.isDaily === true, // 强制确保为布尔值 (防止 undefined/null 意外行为)
       },
     });
 
@@ -141,6 +157,12 @@ export async function getAvailableSutras() {
   const userId = session?.user?.id;
 
   const sutras = await db.sutra.findMany({
+    where: {
+      OR: [
+        { isPublic: true },
+        { userId: userId || 'non-existent-user' } // 确保未登录时不返回任何私有佛经
+      ]
+    },
     select: {
       id: true,
       title: true,
@@ -148,8 +170,11 @@ export async function getAvailableSutras() {
       type: true,
       iconId: true,
       defaultStep: true,
-      defaultTarget: true
-    }
+      defaultTarget: true,
+      isPublic: true,
+      userId: true
+    },
+    orderBy: { updatedAt: 'desc' },
   });
 
   if (!userId) {
@@ -257,7 +282,8 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
     },
   });
 
-  revalidatePath('/dashboard');
+  // 移除了 revalidatePath('/dashboard') 以避免不必要的整页重刷和 SQL 查询风暴
+  // 前端将通过返回值更新本地状态，并通知 PracticeStats 组件刷新统计数据
   return { success: true, completed: isFinished && !task.completed };
 }
 
@@ -353,7 +379,7 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
     });
   }
 
-  revalidatePath('/dashboard');
+  // 移除了 revalidatePath('/dashboard')
   return { success: true, task: updated };
 }
 

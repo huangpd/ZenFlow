@@ -8,7 +8,7 @@ import { calculateProgressIndex } from '@/lib/progressIndex';
 import { getDailyGuidance } from '@/actions/ai';
 import { getTodayJournals } from '@/actions/journal';
 
-export default function PracticeStats({ userName }: { userName: string }) {
+export default function PracticeStats({ userName, refreshTrigger }: { userName: string, refreshTrigger?: number }) {
   const [stats, setStats] = useState<any[]>([]);
   const [taskStats, setTaskStats] = useState<{ today: any[], allTime: any[] }>({ today: [], allTime: [] });
   const [todayJournals, setTodayJournals] = useState<any[]>([]);
@@ -29,7 +29,7 @@ export default function PracticeStats({ userName }: { userName: string }) {
       setProgressIndex(index);
     };
     loadStats();
-  }, []);
+  }, [refreshTrigger]);
 
   const getHeatmapColor = (value: number) => {
     switch (value) {
