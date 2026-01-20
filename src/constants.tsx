@@ -22,7 +22,7 @@ export const CATEGORIES = [
 export const MEDITATION_SOUNDS = [
   { id: 'none', name: '清净无声', url: '', description: '万籁俱寂，专注于心' },
   { id: 'temple-bell', name: '古寺钟磬', url: '/sounds/meditation-bg.mp3', description: '晨钟暮鼓，涤荡心灵' },
-  // Future sounds:
-  // { id: 'rain', name: '空山新雨', url: '/sounds/rain.mp3', description: '雨落空阶，静心养性' },
-  // { id: 'stream', name: '清泉流响', url: '/sounds/stream.mp3', description: '行到水穷，坐看云起' },
+  { id: 'wolong-yin', name: '卧龙吟', url: '/sounds/卧龙吟.mp3', description: '古琴铮铮，浩气长存' },
+  { id: 'empty-valley', name: '空谷幽兰', url: '/sounds/空谷幽鸣.mp3', description: '鸟鸣山幽，回归自然' },
+  { id: 'huangting-zen', name: '黄庭禅坐', url: '/sounds/黄庭禅坐.mp3', description: '道法自然，清净无为' },
 ];

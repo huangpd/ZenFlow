@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Play, Pause, RotateCcw, Wind, Settings2, Music2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Wind, Music2 } from 'lucide-react';
 import { saveMeditationSession } from '@/actions/meditation';
 import CelebrationEffect from './CelebrationEffect';
 import { Capacitor } from '@capacitor/core';
@@ -31,7 +31,6 @@ export default function MeditationTimer() {
     }
   }, []);
 
-  const [isMuted, setIsMuted] = useState(false);
   const bgAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // 监听音频源变化
@@ -49,7 +48,6 @@ export default function MeditationTimer() {
       bgAudioRef.current = new Audio(soundConfig.url);
       bgAudioRef.current.loop = true;
       bgAudioRef.current.volume = 0.6;
-      bgAudioRef.current.muted = isMuted;
 
       // 如果计时器正在运行，切换音频后应当立即播放
       if (timerRunning) {
@@ -64,21 +62,6 @@ export default function MeditationTimer() {
       }
     };
   }, [selectedSoundId]); // 当选择的音频ID变化时重新执行
-
-  // 监听静音状态变化
-  useEffect(() => {
-    if (bgAudioRef.current) {
-      bgAudioRef.current.muted = isMuted;
-    }
-  }, [isMuted]);
-
-  const toggleMute = () => {
-    const newState = !isMuted;
-    setIsMuted(newState);
-    if (bgAudioRef.current) {
-      bgAudioRef.current.muted = newState;
-    }
-  };
 
   const playBell = useCallback(() => {
     try {
@@ -353,14 +336,6 @@ export default function MeditationTimer() {
             </button>
 
             <button
-              onClick={resetTimer}
-              className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 active:scale-90 transition-all hover:bg-stone-200"
-              title="重置"
-            >
-              <RotateCcw size={20} />
-            </button>
-
-            <button
               onClick={toggleTimer}
               className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all active:scale-95 ${timerRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-stone-800 hover:bg-stone-900'}`}
             >
@@ -368,11 +343,11 @@ export default function MeditationTimer() {
             </button>
 
             <button
-              onClick={toggleMute}
-              className={`w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all ${isMuted ? 'bg-rose-50 text-rose-400' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'}`}
-              title={isMuted ? "取消静音" : "静音"}
+              onClick={resetTimer}
+              className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 active:scale-90 transition-all hover:bg-stone-200"
+              title="重置"
             >
-              <Settings2 size={20} className={isMuted ? "opacity-50" : "opacity-100"} />
+              <RotateCcw size={20} />
             </button>
           </div>
         </div>
