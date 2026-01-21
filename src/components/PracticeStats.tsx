@@ -7,6 +7,7 @@ import { getPracticeStats, getDetailedTaskStats } from '@/actions/stats';
 import { calculateProgressIndex } from '@/lib/progressIndex';
 import { getDailyGuidance } from '@/actions/ai';
 import { getTodayJournals } from '@/actions/journal';
+import { getDailyZen } from '@/actions/zen';
 
 export default function PracticeStats({ userName, refreshTrigger }: { userName: string, refreshTrigger?: number }) {
   const [stats, setStats] = useState<any[]>([]);
@@ -14,22 +15,48 @@ export default function PracticeStats({ userName, refreshTrigger }: { userName: 
   const [todayJournals, setTodayJournals] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<any>(null);
   const [aiInsight, setAiInsight] = useState('');
+  const [zenQuote, setZenQuote] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [progressIndex, setProgressIndex] = useState(0);
 
   useEffect(() => {
-    const loadStats = async () => {
-      const statsData = await getPracticeStats();
-      const taskData = await getDetailedTaskStats();
-      const journalData = await getTodayJournals();
-      setStats(statsData);
-      setTaskStats(taskData);
-      setTodayJournals(journalData);
-      const index = calculateProgressIndex(statsData, taskData);
-      setProgressIndex(index);
+    // 独立加载各个数据模块，实现渐进式渲染
+    const loadStats = () => {
+      // 1. 加载每日一禅 (通常最快)
+      getDailyZen().then(zenData => {
+        if (zenData?.quote) setZenQuote(zenData.quote);
+      }).catch(err => console.error("Failed to load zen", err));
+
+      // 2. 加载今日日记
+      getTodayJournals().then(journalData => {
+        setTodayJournals(journalData);
+      }).catch(err => console.error("Failed to load journals", err));
+
+      // 3. 加载功课统计
+      getDetailedTaskStats().then(taskData => {
+        setTaskStats(taskData);
+        // 需要等待热力图数据回来才能计算指数，或者先计算一部分？
+        // calculateProgressIndex 需要 statsData 和 taskData。
+        //这里我们可以存一个 ref 或者 effect 依赖。
+        // 但简单起见，我们可以在热力图回来后统一计算，或者监听状态变化。
+      }).catch(err => console.error("Failed to load task stats", err));
+
+      // 4. 加载热力图 (最慢，最后渲染)
+      getPracticeStats().then(statsData => {
+        setStats(statsData);
+      }).catch(err => console.error("Failed to load practice stats", err));
     };
+
     loadStats();
   }, [refreshTrigger]);
+
+  // 当 stats 或 taskStats 更新时，重新计算精进指数
+  useEffect(() => {
+    if (stats.length > 0 && (taskStats.today.length > 0 || taskStats.allTime.length > 0)) {
+      const index = calculateProgressIndex(stats, taskStats);
+      setProgressIndex(index);
+    }
+  }, [stats, taskStats]);
 
   const getHeatmapColor = (value: number) => {
     switch (value) {
@@ -88,17 +115,40 @@ export default function PracticeStats({ userName, refreshTrigger }: { userName: 
 
       <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 p-7 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform"><Sparkles size={120} /></div>
-        <div className="relative z-10 space-y-4">
-          <div className="flex justify-between items-start">
-            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md"><Brain size={24} /></div>
-            <button onClick={handleGuidance} className="text-[10px] bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md hover:bg-white/30 transition-all tracking-widest">刷新启示</button>
+
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* AI Guidance Section */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md"><Brain size={24} /></div>
+              <button onClick={handleGuidance} className="text-[10px] bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md hover:bg-white/30 transition-all tracking-widest">刷新启示</button>
+            </div>
+            <h4 className="text-xl text-white">每日修行指引</h4>
+            <p className="text-emerald-50/80 text-sm leading-relaxed italic font-serif font-light">
+              {aiInsight || (loading ? "正在请教 AI 向导..." : "点击下方按钮开启今日智慧。")}
+            </p>
+            {!aiInsight && !loading && (
+              <button onClick={handleGuidance} className="w-full sm:w-auto px-6 py-3 bg-white text-emerald-700 rounded-2xl text-sm shadow-sm active:scale-95">开启修行寄语</button>
+            )}
           </div>
-          <h4 className="text-xl text-white">每日修行指引</h4>
-          <p className="text-emerald-50/80 text-sm leading-relaxed italic font-serif font-light">
-            {aiInsight || (loading ? "正在请教 AI 向导..." : "点击下方按钮开启今日智慧。")}
-          </p>
-          {!aiInsight && !loading && (
-            <button onClick={handleGuidance} className="w-full py-3.5 bg-white text-emerald-700 rounded-2xl text-sm shadow-sm active:scale-95">开启修行寄语</button>
+
+          {/* Daily Zen Section - Merged */}
+          {zenQuote && (
+            <div className="md:col-span-1 pt-6 md:pt-0 md:border-l border-white/10 md:pl-8 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-3 opacity-80">
+                <Sparkles size={14} className="text-amber-300" />
+                <span className="text-[10px] tracking-[0.2em] font-medium text-emerald-100">每日一禅</span>
+              </div>
+              <blockquote className="space-y-4">
+                <p className="text-lg font-serif leading-relaxed text-white italic opacity-95">
+                  "{zenQuote.content}"
+                </p>
+                <footer className="text-right">
+                  <div className="text-xs text-emerald-200 font-light tracking-widest opacity-80">
+                  </div>
+                </footer>
+              </blockquote>
+            </div>
           )}
         </div>
       </div>

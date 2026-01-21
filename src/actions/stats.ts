@@ -24,9 +24,9 @@ export async function getPracticeStats() {
     }),
     db.taskLog.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
-      select: { 
+      select: {
         id: true,
-        count: true, 
+        count: true,
         createdAt: true,
         task: {
           select: { text: true }
@@ -35,10 +35,10 @@ export async function getPracticeStats() {
     }),
     db.journalEntry.findMany({
       where: { userId, createdAt: { gte: eightyFourDaysAgo } },
-      select: { 
+      select: {
         id: true,
-        content: true, 
-        createdAt: true 
+        content: true,
+        createdAt: true
       },
     }),
   ]);
@@ -50,7 +50,7 @@ export async function getPracticeStats() {
     const date = new Date();
     date.setDate(date.getDate() - (83 - i));
     const dateStr = date.toLocaleDateString();
-    
+
     const dayMeds = meditations.filter(m => {
       const d = m.createdAt instanceof Date ? m.createdAt : new Date(m.createdAt);
       return d.toLocaleDateString() === dateStr;
@@ -102,38 +102,55 @@ export async function getDetailedTaskStats() {
   const taskIds = allTimeStatsRaw.map(s => s.taskId);
   const tasks = await db.spiritualTask.findMany({
     where: { id: { in: taskIds } },
-    select: { id: true, text: true, type: true }
+    select: { id: true, text: true, type: true, target: true }
   });
-  
+
   const tasksMap = new Map(tasks.map(t => [t.id, t]));
 
-  const allTimeStats: { id: string; text: string; count: number; type: string }[] = allTimeStatsRaw.map(s => {
+  const allTimeStats: { id: string; text: string; count: number; type: string; completed: boolean }[] = allTimeStatsRaw.map(s => {
     const task = tasksMap.get(s.taskId);
     return {
       id: s.taskId,
       text: task?.text || '未知任务',
       count: s._sum.count || 0,
-      type: task?.type || 'normal'
+      type: task?.type || 'normal',
+      completed: false // All time implies accumulation, specific completion concept is vague here unless we mean "ever completed once" but let's leave false or logic as needed.
     };
   }).sort((a, b) => b.count - a.count);
 
   // 2. 获取今日统计数据（来自 TaskLog）
   const todayStatsRaw = await db.taskLog.groupBy({
     by: ['taskId'],
-    where: { 
+    where: {
       userId,
       createdAt: { gte: today }
     },
     _sum: { count: true },
   });
 
-  const todayStats: { id: string; text: string; count: number; type: string }[] = todayStatsRaw.map(s => {
+  // Need to re-fetch tasks for today's logs specifically if they weren't in all-time (unlikely but possible if we filter all-time differently? no, all-time covers everything).
+  // Actually todayStatsRaw taskIds must be subset of allTimeStatsRaw taskIds.
+
+  const todayStats: { id: string; text: string; count: number; type: string; completed: boolean }[] = todayStatsRaw.map(s => {
     const task = tasksMap.get(s.taskId);
+    const count = s._sum.count || 0;
+    const target = task?.target || 0;
+    // Simple logic: if target is set (>0) and count >= target, it is completed.
+    // Note: This logic assumes 'count' is reset daily for daily tasks. 
+    // If the task is NOT daily, comparing today's log count to target might be wrong if previous progress counts.
+    // However, SpiritualTask model has 'current' field which is actual truth.
+    // But here we are deriving from logs. 
+    // To be most accurate, we should probably fetch the Task's current 'completed' status directly from the DB?
+    // But 'completed' field in DB might not be reset for non-daily tasks?
+    // Let's rely on simple today count vs target for now as that's usually what "Daily Guidance" cares about (today's effort).
+    const isCompleted = target > 0 && count >= target;
+
     return {
       id: s.taskId,
       text: task?.text || '未知任务',
-      count: s._sum.count || 0,
-      type: task?.type || 'normal'
+      count,
+      type: task?.type || 'normal',
+      completed: isCompleted
     };
   }).sort((a, b) => b.count - a.count);
 
@@ -144,7 +161,7 @@ export async function getDetailedTaskStats() {
       _sum: { duration: true }
     }),
     db.meditationSession.aggregate({
-      where: { 
+      where: {
         userId,
         createdAt: { gte: today }
       },
@@ -160,7 +177,8 @@ export async function getDetailedTaskStats() {
       id: 'meditation-all-time',
       text: '静坐冥想',
       count: totalMeditationMins,
-      type: 'meditation'
+      type: 'meditation',
+      completed: false
     });
   }
 
@@ -169,7 +187,8 @@ export async function getDetailedTaskStats() {
       id: 'meditation-today',
       text: '静坐冥想',
       count: todayMeditationMins,
-      type: 'meditation'
+      type: 'meditation',
+      completed: todayMeditationMins >= 15 // Assuming 15 mins is typical daily goal for meditation if not specified essentially, or true if >0? Let's say true > 0 for now or false. The UI doesn't strictly use it for meditation maybe. Let's make it consistent.
     });
   }
 

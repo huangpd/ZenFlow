@@ -26,6 +26,7 @@ model User {
   meditationSessions MeditationSession[]
   preferences    UserPreference?
   sutras         Sutra[]  // 用户自定义佛经
+  dailyZens      DailyZen[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -125,6 +126,7 @@ model TaskLog {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([taskId])
 }
 
 model MeditationSession {
@@ -178,5 +180,30 @@ model PasswordResetToken {
   token   String   @unique
   expires DateTime
 
+
   @@unique([email, token])
+}
+
+model ZenQuote {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  author    String?
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  dailyOccurrences DailyZen[]
+}
+
+model DailyZen {
+  id        String   @id @default(cuid())
+  userId    String
+  quoteId   String
+  date      String   // YYYY-MM-DD
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quote     ZenQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
 }
