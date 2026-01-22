@@ -1,8 +1,34 @@
 import nodemailer from 'nodemailer';
+import { headers } from 'next/headers';
 
-const domain = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+/**
+ * 获取当前的域名基础路径
+ * 优先级：环境变量 > 请求头 > 默认 localhost
+ */
+const getDomain = async () => {
+  // 1. 优先使用环境变量 (生产环境推荐)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  // 2. 尝试从请求头动态获取 (Next.js Server Actions 运行环境)
+  try {
+    const headersList = await headers();
+    const host = headersList.get('host');
+    const protocol = headersList.get('x-forwarded-proto') || 'http';
+    if (host) {
+      return `${protocol}://${host}`;
+    }
+  } catch (e) {
+    // 如果在非请求环境（如定时任务）运行，headers() 会报错
+  }
+
+  // 3. 最终回退
+  return 'http://localhost:3000';
+};
 
 export const sendVerificationEmail = async (email: string, token: string) => {
+  const domain = await getDomain();
   const confirmLink = `${domain}/auth/new-verification?token=${token}`;
 
   const transporter = nodemailer.createTransport({
@@ -57,29 +83,15 @@ export const sendVerificationEmail = async (email: string, token: string) => {
                 在继续之前，请先完成邮箱验证，以确保这是你的真实地址。
               </p>
 
-              <!-- Verification Code -->
-              <div style="margin:28px 0; text-align:center;">
-                <p style="margin:0 0 8px; color:#777; font-size:14px;">
-                  你的验证码
-                </p>
-                <div style="display:inline-block; padding:14px 28px; font-size:24px; letter-spacing:4px; font-weight:600; color:#2f4f4f; background-color:#eef4f1; border-radius:8px;">
-                  ${token}
-                </div>
-                <p style="margin:10px 0 0; font-size:12px; color:#999;">
-                  验证码将在 60 分钟后失效
-                </p>
-              </div>
-
-              <!-- Or Button -->
-              <p style="margin:32px 0 12px; font-size:14px; color:#777;">
-                或者，你也可以直接点击下方按钮完成验证：
-              </p>
-
-              <div style="text-align:center; margin:20px 0 32px;">
+              <!-- Verification Link Button -->
+              <div style="text-align:center; margin:40px 0;">
                 <a href="${confirmLink}" target="_blank"
-                   style="display:inline-block; padding:14px 32px; background-color:#4f766f; color:#ffffff; text-decoration:none; border-radius:24px; font-size:15px;">
-                  验证我的邮箱
+                   style="display:inline-block; padding:16px 40px; background-color:#4f766f; color:#ffffff; text-decoration:none; border-radius:30px; font-size:16px; font-weight:500; box-shadow:0 4px 12px rgba(79,118,111,0.2);">
+                  立即验证邮箱
                 </a>
+                <p style="margin:16px 0 0; font-size:12px; color:#999;">
+                  此链接将在 60 分钟后失效
+                </p>
               </div>
 
               <hr style="border:none; border-top:1px solid #eee; margin:32px 0;" />
@@ -145,6 +157,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
+  const domain = await getDomain();
   const resetLink = `${domain}/auth/new-password?token=${token}`;
 
   const transporter = nodemailer.createTransport({
