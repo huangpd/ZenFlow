@@ -3,6 +3,12 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 /**
  * 获取当前用户的所有功课任务
@@ -16,28 +22,34 @@ export async function getTasks() {
 
   const userId = session.user.id;
 
-  // 使用本地系统时间作为重置阈值（例如：今天的 00:00）
-  const now = new Date();
-  const resetThreshold = new Date(now);
-  resetThreshold.setHours(0, 0, 0, 0);
-
-  // 如果你想使用环境变量中指定的每日重置时间：
+  // 使用 Asia/Shanghai 时区计算重置阈值，解决服务器 UTC 时区导致的早晨 8 点重置问题
+  const timezone = 'Asia/Shanghai';
+  const now = dayjs().tz(timezone);
+  
+  // 获取每日重置时间 (默认 00:00)
   const resetTime = process.env.DAILY_RESET_TIME || '00:00';
   const [resetHour, resetMinute] = resetTime.split(':').map(n => parseInt(n) || 0);
-  resetThreshold.setHours(resetHour, resetMinute, 0, 0);
+  
+  // 设定今天的重置时间点
+  let resetThreshold = now.hour(resetHour).minute(resetMinute).second(0).millisecond(0);
 
-  // 如果当前时间早于重置时间，则实际阈值为昨天
-  if (now < resetThreshold) {
-    resetThreshold.setDate(resetThreshold.getDate() - 1);
+  // 如果当前时间早于重置时间，说明还没到今天的重置点，阈值应该是"昨天"的重置点
+  // 例如：设置 00:00 重置，现在是 23:00，阈值是今天 00:00 (resetThreshold 不变)
+  // 例如：设置 04:00 重置，现在是 02:00，阈值应该是昨天 04:00
+  if (now.isBefore(resetThreshold)) {
+    resetThreshold = resetThreshold.subtract(1, 'day');
   }
+
+  // 转换为 Date 对象供 Prisma 查询使用
+  const resetThresholdDate = resetThreshold.toDate();
 
   // 优化：先检查是否有需要重置的任务，避免每次查询都执行昂贵的写操作
   const needReset = await db.spiritualTask.findFirst({
     where: {
       userId,
       OR: [
-        { isDaily: false, completed: true, updatedAt: { lt: resetThreshold } },
-        { isDaily: true, updatedAt: { lt: resetThreshold } }
+        { isDaily: false, completed: true, updatedAt: { lt: resetThresholdDate } },
+        { isDaily: true, updatedAt: { lt: resetThresholdDate } }
       ]
     },
     select: { id: true }
@@ -52,7 +64,7 @@ export async function getTasks() {
         userId,
         isDaily: false,
         completed: true,
-        updatedAt: { lt: resetThreshold }
+        updatedAt: { lt: resetThresholdDate }
       }
     });
 
@@ -61,7 +73,7 @@ export async function getTasks() {
       where: {
         userId,
         isDaily: true,
-        updatedAt: { lt: resetThreshold }
+        updatedAt: { lt: resetThresholdDate }
       },
       data: {
         current: 0,
