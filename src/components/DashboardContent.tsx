@@ -32,7 +32,7 @@ export default function DashboardContent({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 pb-24">
+      <div className="flex-1 pb-32">
         {activeTab === 'homework' && <PracticeSystem initialTasks={initialTasks} onTaskUpdate={handleTaskUpdate} />}
         {activeTab === 'log' && <JournalSection entries={initialJournal} />}
         {activeTab === 'chat' && <ChatInterface initialMessages={initialHistory} />}
@@ -40,39 +40,41 @@ export default function DashboardContent({
         {activeTab === 'stats' && <PracticeStats userName={userName} refreshTrigger={refreshTrigger} />}
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 md:absolute h-20 bg-white/95 backdrop-blur-xl border-t border-stone-100 flex items-center justify-around px-4 pb-2 z-50">
-        <NavItem
-          active={activeTab === 'homework'}
-          onClick={() => setActiveTab('homework')}
-          icon={<ClipboardList size={24} strokeWidth={activeTab === 'homework' ? 2.5 : 2} />}
-          label="功课"
-        />
-        <NavItem
-          active={activeTab === 'log'}
-          onClick={() => setActiveTab('log')}
-          icon={<PenLine size={24} strokeWidth={activeTab === 'log' ? 2.5 : 2} />}
-          label="随喜"
-        />
-        <NavItem
-          active={activeTab === 'chat'}
-          onClick={() => setActiveTab('chat')}
-          icon={<Bot size={24} strokeWidth={activeTab === 'chat' ? 2.5 : 2} />}
-          label="问道"
-        />
-        <NavItem
-          active={activeTab === 'timer'}
-          onClick={() => setActiveTab('timer')}
-          icon={<TimerIcon size={24} strokeWidth={activeTab === 'timer' ? 2.5 : 2} />}
-          label="静坐"
-        />
-        <NavItem
-          active={activeTab === 'stats'}
-          onClick={() => setActiveTab('stats')}
-          icon={<BarChart3 size={24} strokeWidth={activeTab === 'stats' ? 2.5 : 2} />}
-          label="精进"
-        />
-      </nav>
+      {/* Modern Floating Glass Dock */}
+      <div className="fixed bottom-6 left-0 right-0 flex justify-center px-6 z-50 pointer-events-none">
+        <nav className="pointer-events-auto h-16 px-4 bg-white/70 dark:bg-stone-900/70 backdrop-blur-xl border border-white/20 dark:border-stone-800/50 rounded-full flex items-center justify-around gap-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] max-w-md w-full">
+          <NavItem
+            active={activeTab === 'homework'}
+            onClick={() => setActiveTab('homework')}
+            icon={<ClipboardList size={22} />}
+            label="功课"
+          />
+          <NavItem
+            active={activeTab === 'log'}
+            onClick={() => setActiveTab('log')}
+            icon={<PenLine size={22} />}
+            label="随喜"
+          />
+          <NavItem
+            active={activeTab === 'chat'}
+            onClick={() => setActiveTab('chat')}
+            icon={<Bot size={22} />}
+            label="问道"
+          />
+          <NavItem
+            active={activeTab === 'timer'}
+            onClick={() => setActiveTab('timer')}
+            icon={<TimerIcon size={22} />}
+            label="静坐"
+          />
+          <NavItem
+            active={activeTab === 'stats'}
+            onClick={() => setActiveTab('stats')}
+            icon={<BarChart3 size={22} />}
+            label="精进"
+          />
+        </nav>
+      </div>
     </div>
   );
 }
@@ -81,10 +83,17 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 w-14 ${active ? 'text-emerald-600 scale-105' : 'text-black hover:text-stone-600'}`}
+      className={`relative flex flex-col items-center justify-center flex-1 h-12 rounded-full transition-all duration-500 overflow-hidden ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-200'}`}
     >
-      <div className={`p-1 rounded-xl transition-all`}>{icon}</div>
-      <span className={`text-[10px] font-medium tracking-[0.3em] ${active ? 'opacity-100 text-stone-800' : 'opacity-40 text-stone-400'}`}>{label}</span>
+      {active && (
+        <span className="absolute inset-0 bg-emerald-500/10 dark:bg-emerald-500/20 animate-in fade-in zoom-in duration-300 rounded-full" />
+      )}
+      <div className={`relative transition-transform duration-300 ${active ? 'scale-110 -translate-y-1' : ''}`}>
+        {icon}
+      </div>
+      <span className={`text-[9px] font-medium tracking-wider transition-all duration-300 ${active ? 'opacity-100 mt-0.5' : 'opacity-0 h-0 overflow-hidden'}`}>
+        {label}
+      </span>
     </button>
   );
 }
