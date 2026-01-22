@@ -19,6 +19,9 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
   const [aiResponse, setAiResponse] = useState('');
   const [sutraContent, setSutraContent] = useState<{ title: string; content: string } | null>(null);
 
+  const isMountedRef = React.useRef(false);
+
+  // 加载经文内容
   useEffect(() => {
     async function loadSutra() {
       if (task.sutraId && task.sutraId !== "") {
@@ -33,7 +36,6 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
           }
         } catch (error) {
           console.error("Failed to fetch sutra content from DB:", error);
-          // console.error("Failed to fetch sutra content from DB:", error);
         }
       }
 
@@ -42,26 +44,33 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
     }
 
     loadSutra();
+  }, [task]);
 
-    // Android 返回键支持
-    // 添加一个历史记录条目
-    window.history.pushState({ modal: 'sutra-reader' }, '');
+  // Android 返回键支持（独立的 useEffect，避免与数据加载冲突）
+  useEffect(() => {
+    // 标记组件已真正 mount（跳过 StrictMode 的第一次假渲染）
+    const timer = setTimeout(() => {
+      isMountedRef.current = true;
+      window.history.pushState({ modal: 'sutra-reader' }, '');
+    }, 100);
 
-    const handlePopState = (event: PopStateEvent) => {
-      // 当用户按返回键时,触发 onBack
-      onBack();
+    const handlePopState = () => {
+      if (isMountedRef.current) {
+        onBack();
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('popstate', handlePopState);
-      // 清理历史记录(如果组件正常卸载)
-      if (window.history.state?.modal === 'sutra-reader') {
+      // 只有在真正 mount 过的情况下才清理历史
+      if (isMountedRef.current && window.history.state?.modal === 'sutra-reader') {
         window.history.back();
       }
     };
-  }, [task, onBack]);
+  }, [onBack]);
 
   if (!sutraContent) {
     return (
@@ -108,7 +117,7 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
       </button>
       <h2 className="text-2xl font-serif text-stone-800 tracking-wide text-center mb-8">《{sutraContent.title}》</h2>
       <div
-        className="flex-1 overflow-y-auto p-8 bg-stone-50/30 rounded-[2.5rem] border border-stone-100/50 text-xl leading-loose text-stone-700 font-serif tracking-wide mb-8 prose prose-stone max-w-none prose-p:my-4 prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-sm"
+        className="ql-editor flex-1 overflow-y-auto p-8 bg-stone-50/30 rounded-[2.5rem] border-2 border-red-800/60 text-xl leading-loose text-stone-700 font-serif tracking-wide mb-8 prose prose-stone max-w-none prose-p:my-4 prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-sm"
         dangerouslySetInnerHTML={{ __html: sutraContent.content }}
       />
 

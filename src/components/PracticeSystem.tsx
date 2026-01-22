@@ -42,7 +42,7 @@ export default function PracticeSystem({ initialTasks, onTaskUpdate }: { initial
 
   if (readingTask) {
     return (
-      <div className="h-full">
+      <div className="min-h-screen bg-white">
         {showCelebration && <CelebrationEffect />}
         <SutraReader
           task={readingTask}
