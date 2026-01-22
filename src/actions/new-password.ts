@@ -8,11 +8,11 @@ export async function newPassword(prevState: any, formData: FormData): Promise<{
     const password = formData.get('password') as string;
 
     if (!token) {
-        return { error: 'Missing token!' };
+        return { error: '缺少令牌！' };
     }
 
     if (!password) {
-        return { error: 'Missing password!' };
+        return { error: '请输入新密码！' };
     }
 
     const existingToken = await db.passwordResetToken.findUnique({
@@ -20,13 +20,13 @@ export async function newPassword(prevState: any, formData: FormData): Promise<{
     });
 
     if (!existingToken) {
-        return { error: 'Invalid token!' };
+        return { error: '无效的令牌！' };
     }
 
     const hasExpired = new Date(existingToken.expires) < new Date();
 
     if (hasExpired) {
-        return { error: 'Token has expired!' };
+        return { error: '令牌已过期！' };
     }
 
     const existingUser = await db.user.findUnique({
@@ -34,7 +34,7 @@ export async function newPassword(prevState: any, formData: FormData): Promise<{
     });
 
     if (!existingUser) {
-        return { error: 'Email does not exist!' };
+        return { error: '该邮箱不存在！' };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

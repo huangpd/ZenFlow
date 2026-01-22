@@ -24,7 +24,7 @@ export async function register(prevState: any, formData: FormData) {
   const name = formData.get('name') as string;
 
   if (!email || !password) {
-    return { error: 'Email and password are required' };
+    return { error: '请填写邮箱和密码' };
   }
 
   const existingUser = await db.user.findUnique({
@@ -32,7 +32,7 @@ export async function register(prevState: any, formData: FormData) {
   });
 
   if (existingUser) {
-    return { error: 'User already exists' };
+    return { error: '该邮箱已被注册' };
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -46,7 +46,11 @@ export async function register(prevState: any, formData: FormData) {
   });
 
   const verificationToken = await generateVerificationToken(email);
-  await sendVerificationEmail(verificationToken.identifier, verificationToken.token);
+  try {
+    await sendVerificationEmail(verificationToken.identifier, verificationToken.token);
+  } catch (error) {
+    return { error: '发送验证邮件失败，请稍后重试' };
+  }
 
-  return { success: 'Verification email sent!', error: '' };
+  return { success: '验证邮件已发送，请登录您的邮箱查收并激活账号！若未收到，请检查垃圾邮件箱。', error: '' };
 }

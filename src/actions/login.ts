@@ -28,7 +28,7 @@ export async function login(prevState: any, formData: FormData) {
         case 'CredentialsSignin':
           return { error: '无效的用户名或者密码' };
         default:
-          return { error: 'Something went wrong.' };
+          return { error: '发生了一些错误。' };
       }
     }
     throw error;

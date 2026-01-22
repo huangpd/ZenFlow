@@ -16,7 +16,7 @@ export async function reset(prevState: any, formData: FormData): Promise<{ error
     const email = formData.get('email') as string;
 
     if (!email) {
-        return { error: 'Email is required' };
+        return { error: '请输入邮箱地址' };
     }
 
     const existingUser = await db.user.findUnique({

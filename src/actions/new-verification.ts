@@ -8,13 +8,13 @@ export async function newVerification(token: string) {
     });
 
     if (!existingToken) {
-        return { error: 'Token does not exist!' };
+        return { error: '验证令牌不存在！' };
     }
 
     const hasExpired = new Date(existingToken.expires) < new Date();
 
     if (hasExpired) {
-        return { error: 'Token has expired!' };
+        return { error: '验证令牌已过期！' };
     }
 
     const existingUser = await db.user.findUnique({
@@ -22,7 +22,7 @@ export async function newVerification(token: string) {
     });
 
     if (!existingUser) {
-        return { error: 'Email does not exist!' };
+        return { error: '该邮箱不存在！' };
     }
 
     await db.user.update({
@@ -37,5 +37,5 @@ export async function newVerification(token: string) {
         where: { id: existingToken.id },
     });
 
-    return { success: 'Email verified!' };
+    return { success: '邮箱验证成功！' };
 }
