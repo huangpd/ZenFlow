@@ -33,12 +33,14 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
           }
         } catch (error) {
           console.error("Failed to fetch sutra content from DB:", error);
+          // console.error("Failed to fetch sutra content from DB:", error);
         }
       }
 
       // Fallback
       setSutraContent({ title: task.text, content: '暂无经文内容，请在管理后台检查经文设置或静心念诵。' });
     }
+
     loadSutra();
 
     // Android 返回键支持
@@ -94,7 +96,7 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
       }
       onBack();
     } catch (error) {
-      console.error("Submission error:", error);
+      // console.error("Submission error:", error);
       setSubmitting(false);
     }
   };
@@ -106,7 +108,7 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
       </button>
       <h2 className="text-2xl font-serif text-stone-800 tracking-wide text-center mb-8">《{sutraContent.title}》</h2>
       <div
-        className="ql-editor flex-1 overflow-y-auto p-8 bg-stone-50/30 rounded-[2.5rem] border border-stone-100/50 text-xl leading-loose text-stone-700 font-serif tracking-wide mb-8 prose prose-stone max-w-none prose-p:my-4 prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-sm"
+        className="flex-1 overflow-y-auto p-8 bg-stone-50/30 rounded-[2.5rem] border border-stone-100/50 text-xl leading-loose text-stone-700 font-serif tracking-wide mb-8 prose prose-stone max-w-none prose-p:my-4 prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-sm"
         dangerouslySetInnerHTML={{ __html: sutraContent.content }}
       />
 
