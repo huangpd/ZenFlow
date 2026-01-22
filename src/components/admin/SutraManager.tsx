@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit3, Trash2, ChevronLeft, Save, X, Loader2 } from 'lucide-react';
 import { createSutra, updateSutra, deleteSutra } from '@/actions/admin';
-import { createUserSutra, updateUserSutra, deleteUserSutra } from '@/actions/user-sutras';
+import { createUserSutra, updateUserSutra, deleteUserSutra, getUserSutraById } from '@/actions/user-sutras';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -35,6 +35,7 @@ export default function SutraManager({
     defaultStep: 1
   });
   const [loading, setLoading] = useState(false);
+  const [fetchingDetail, setFetchingDetail] = useState<string | null>(null);
 
   const isMountedRef = React.useRef(false);
 
@@ -78,17 +79,32 @@ export default function SutraManager({
     setIsModalOpen(true);
   };
 
-  const openEdit = (sutra: any) => {
-    setEditingSutra(sutra);
-    setFormData({
-      title: sutra.title,
-      description: sutra.description || '',
-      content: sutra.content || '',
-      type: sutra.type || 'sutra',
-      iconId: sutra.iconId || 'book',
-      defaultStep: sutra.defaultStep || 1
-    });
-    setIsModalOpen(true);
+  const openEdit = async (sutra: any) => {
+    try {
+        setFetchingDetail(sutra.id);
+        const fullSutra = await getUserSutraById(sutra.id);
+        
+        if (!fullSutra) {
+            alert('无法加载经文详情');
+            return;
+        }
+
+        setEditingSutra(fullSutra);
+        setFormData({
+          title: fullSutra.title,
+          description: fullSutra.description || '',
+          content: fullSutra.content || '',
+          type: fullSutra.type || 'sutra',
+          iconId: fullSutra.iconId || 'book',
+          defaultStep: fullSutra.defaultStep || 1
+        });
+        setIsModalOpen(true);
+    } catch (e) {
+        console.error(e);
+        alert('加载失败');
+    } finally {
+        setFetchingDetail(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,8 +177,12 @@ export default function SutraManager({
                 <p className="text-stone-400 text-sm line-clamp-1 max-w-lg">{sutra.description || '暂无简介'}</p>
               </div>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openEdit(sutra)} className="p-3 bg-stone-50 text-stone-600 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
-                  <Edit3 size={18} />
+                <button 
+                  onClick={() => openEdit(sutra)} 
+                  disabled={fetchingDetail === sutra.id}
+                  className="p-3 bg-stone-50 text-stone-600 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors disabled:opacity-50"
+                >
+                  {fetchingDetail === sutra.id ? <Loader2 size={18} className="animate-spin" /> : <Edit3 size={18} />}
                 </button>
                 <button onClick={() => handleDelete(sutra.id)} className="p-3 bg-stone-50 text-stone-600 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors">
                   <Trash2 size={18} />

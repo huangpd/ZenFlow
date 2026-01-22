@@ -24,6 +24,20 @@ export async function getUserSutras() {
             isPublic: false
         },
         orderBy: { updatedAt: 'desc' },
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            type: true,
+            iconId: true,
+            defaultTarget: true,
+            defaultStep: true,
+            userId: true,
+            isPublic: true,
+            updatedAt: true,
+            createdAt: true,
+            // 排除 content 字段以提高性能
+        }
     });
 }
 
@@ -40,7 +54,42 @@ export async function getAllAvailableSutras() {
             ]
         },
         orderBy: { updatedAt: 'desc' },
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            type: true,
+            iconId: true,
+            defaultTarget: true,
+            defaultStep: true,
+            userId: true,
+            isPublic: true,
+            updatedAt: true,
+            createdAt: true,
+            // 排除 content 字段以提高性能
+        }
     });
+}
+
+/**
+ * 获取单个佛经的完整详情(包含 content)
+ * @param id 佛经ID
+ */
+export async function getUserSutraById(id: string) {
+    const userId = await ensureAuth();
+    
+    const sutra = await db.sutra.findUnique({
+        where: { id }
+    });
+
+    if (!sutra) return null;
+
+    // 权限检查: 必须是公共的或者属于当前用户的
+    if (!sutra.isPublic && sutra.userId !== userId) {
+        return null; // 或者抛出 Unauthorized
+    }
+
+    return sutra;
 }
 
 /**
