@@ -81,3 +81,9 @@ body {
 .prose i {
   font-style: italic !important;
 }
+
+/* 保留换行符 */
+.ql-editor,
+.prose {
+  white-space: pre-wrap;
+}

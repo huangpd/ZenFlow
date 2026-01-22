@@ -118,7 +118,7 @@ export default function SutraReader({ task, onBack, onComplete, onProgress }: Su
       <h2 className="text-2xl font-serif text-stone-800 tracking-wide text-center mb-8">《{sutraContent.title}》</h2>
       <div
         className="ql-editor flex-1 overflow-y-auto p-8 bg-stone-50/30 rounded-[2.5rem] border-2 border-red-800/60 text-xl leading-loose text-stone-700 font-serif tracking-wide mb-8 prose prose-stone max-w-none prose-p:my-4 prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-sm"
-        dangerouslySetInnerHTML={{ __html: sutraContent.content }}
+        dangerouslySetInnerHTML={{ __html: sutraContent.content.split('\\n').join('<br>') }}
       />
 
       <div className="space-y-6 pb-12">

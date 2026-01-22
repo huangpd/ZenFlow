@@ -5,6 +5,7 @@ import { Plus, Edit3, Trash2, ChevronLeft, Save, X, Loader2 } from 'lucide-react
 import { createSutra, updateSutra, deleteSutra } from '@/actions/admin';
 import { createUserSutra, updateUserSutra, deleteUserSutra } from '@/actions/user-sutras';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -21,6 +22,7 @@ export default function SutraManager({
   initialSutras: any[];
   mode?: 'admin' | 'user';
 }) {
+  const router = useRouter();
   const [sutras, setSutras] = useState(initialSutras);
   const [editingSutra, setEditingSutra] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,21 +36,30 @@ export default function SutraManager({
   });
   const [loading, setLoading] = useState(false);
 
-  // Android 返回键支持
+  const isMountedRef = React.useRef(false);
+
+  // Android 返回键支持（兼容 React StrictMode）
   useEffect(() => {
     if (isModalOpen) {
-      window.history.pushState({ modal: 'sutra-manager' }, '');
+      const timer = setTimeout(() => {
+        isMountedRef.current = true;
+        window.history.pushState({ modal: 'sutra-manager' }, '');
+      }, 100);
 
       const handlePopState = () => {
-        setIsModalOpen(false);
+        if (isMountedRef.current) {
+          setIsModalOpen(false);
+        }
       };
 
       window.addEventListener('popstate', handlePopState);
 
       return () => {
+        clearTimeout(timer);
         window.removeEventListener('popstate', handlePopState);
-        if (window.history.state?.modal === 'sutra-manager') {
+        if (isMountedRef.current && window.history.state?.modal === 'sutra-manager') {
           window.history.back();
+          isMountedRef.current = false;
         }
       };
     }
@@ -105,7 +116,7 @@ export default function SutraManager({
 
     if (result.success) {
       setIsModalOpen(false);
-      window.location.reload();
+      router.refresh();
     } else {
       alert(result.error);
     }
@@ -118,7 +129,7 @@ export default function SutraManager({
       } else {
         await deleteUserSutra(id);
       }
-      window.location.reload();
+      router.refresh();
     }
   };
 
