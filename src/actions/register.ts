@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendVerificationEmail } from '@/lib/mail';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 /**
  * 处理新用户注册
@@ -11,6 +12,13 @@ import { sendVerificationEmail } from '@/lib/mail';
  * @param formData 注册表单数据 (email, password, name)
  */
 export async function register(prevState: any, formData: FormData) {
+  const token = formData.get('cf-turnstile-response') as string;
+  const verification = await verifyTurnstileToken(token);
+
+  if (!verification.success) {
+    return { error: '人机验证失败，请重试' };
+  }
+
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const name = formData.get('name') as string;

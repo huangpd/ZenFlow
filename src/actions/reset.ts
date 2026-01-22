@@ -3,8 +3,16 @@
 import { db } from '@/lib/db';
 import { generatePasswordResetToken } from '@/lib/tokens';
 import { sendPasswordResetEmail } from '@/lib/mail';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 export async function reset(prevState: any, formData: FormData): Promise<{ error?: string; success?: string }> {
+    const token = formData.get('cf-turnstile-response') as string;
+    const verification = await verifyTurnstileToken(token);
+
+    if (!verification.success) {
+        return { error: '人机验证失败，请重试' };
+    }
+
     const email = formData.get('email') as string;
 
     if (!email) {

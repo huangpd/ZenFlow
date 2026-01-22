@@ -2,6 +2,7 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 /**
  * 处理用户登录请求
@@ -10,6 +11,13 @@ import { AuthError } from 'next-auth';
  */
 export async function login(prevState: any, formData: FormData) {
   try {
+    const token = formData.get('cf-turnstile-response') as string;
+    const verification = await verifyTurnstileToken(token);
+
+    if (!verification.success) {
+      return { error: '人机验证失败，请重试' };
+    }
+
     await signIn('credentials', {
       ...Object.fromEntries(formData),
       redirectTo: '/',

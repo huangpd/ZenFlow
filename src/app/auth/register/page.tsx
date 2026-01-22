@@ -2,6 +2,7 @@
 
 import { register } from '@/actions/register';
 import { useActionState } from 'react';
+import TurnstileWidget from '@/components/auth/TurnstileWidget';
 
 const initialState = {
   error: '',
@@ -32,6 +33,7 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-stone-700">密码</label>
             <input name="password" type="password" required className="w-full p-2 border border-stone-200 rounded focus:ring-2 focus:ring-stone-500 outline-none" placeholder="请设置密码" />
           </div>
+          <TurnstileWidget />
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
           {state?.success && <p className="text-sm text-green-600">{state.success}</p>}
           <button

@@ -2,6 +2,7 @@
 
 import { reset } from '@/actions/reset';
 import { useActionState } from 'react';
+import TurnstileWidget from '@/components/auth/TurnstileWidget';
 
 const initialState: { error?: string; success?: string } = {};
 
@@ -26,6 +27,7 @@ export default function ResetPage() {
                             placeholder="请输入邮箱"
                         />
                     </div>
+                    <TurnstileWidget />
                     {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
                     {state?.success && <p className="text-sm text-green-600">{state.success}</p>}
                     <button

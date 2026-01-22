@@ -2,6 +2,7 @@
 
 import { login } from '@/actions/login';
 import { useActionState } from 'react';
+import TurnstileWidget from '@/components/auth/TurnstileWidget';
 
 const initialState = {
   error: '',
@@ -30,6 +31,7 @@ export default function LoginPage() {
           <div className="flex justify-end">
             <a href="/auth/reset" className="text-sm text-stone-500 hover:underline">忘记密码？</a>
           </div>
+          <TurnstileWidget />
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
           <button
             type="submit"
