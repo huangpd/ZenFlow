@@ -33,11 +33,17 @@ export default function AddTaskModal({
   const [isDaily, setIsDaily] = useState(false);
   const [dbSutras, setDbSutras] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const modalRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
-      // 打开时加载所有可用的经文/功课列表
-      getAvailableSutras().then(setDbSutras);
+      // 弹窗打开时滚动到顶部
+      modalRef.current?.scrollTo(0, 0);
+
+      // 延迟加载数据，让动画先完成，提升流畅度
+      const timer = setTimeout(() => {
+        getAvailableSutras().then(setDbSutras);
+      }, 150);
 
       if (taskToEdit) {
         // 如果是编辑模式，初始化表单状态
@@ -73,6 +79,7 @@ export default function AddTaskModal({
       window.addEventListener('popstate', handlePopState);
 
       return () => {
+        clearTimeout(timer);
         window.removeEventListener('popstate', handlePopState);
         if (window.history.state?.modal === 'add-task') {
           window.history.back();
@@ -246,7 +253,7 @@ export default function AddTaskModal({
 
   return (
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-[120] flex items-end justify-center">
-      <div className="bg-white w-full max-w-md rounded-t-[3rem] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[95dvh] overflow-y-auto">
+      <div ref={modalRef} className="bg-white w-full max-w-md rounded-t-[3rem] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[95dvh] overflow-y-auto">
         {!configuringTask && !selectedSutra ? (
           <>
             <div className="flex justify-between items-center mb-8">

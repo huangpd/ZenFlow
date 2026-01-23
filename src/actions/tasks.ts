@@ -25,11 +25,11 @@ export async function getTasks() {
   // 使用 Asia/Shanghai 时区计算重置阈值，解决服务器 UTC 时区导致的早晨 8 点重置问题
   const timezone = 'Asia/Shanghai';
   const now = dayjs().tz(timezone);
-  
+
   // 获取每日重置时间 (默认 00:00)
   const resetTime = process.env.DAILY_RESET_TIME || '00:00';
   const [resetHour, resetMinute] = resetTime.split(':').map(n => parseInt(n) || 0);
-  
+
   // 设定今天的重置时间点
   let resetThreshold = now.hour(resetHour).minute(resetMinute).second(0).millisecond(0);
 

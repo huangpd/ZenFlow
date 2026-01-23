@@ -1,0 +1,682 @@
+﻿60f68db perf: optimize sql queries and fix custom sutra visibility
+diff --git a/src/actions/tasks.ts b/src/actions/tasks.ts
+index 759c596..c156b8f 100644
+--- a/src/actions/tasks.ts
++++ b/src/actions/tasks.ts
+@@ -31,31 +31,46 @@ export async function getTasks() {
+     resetThreshold.setDate(resetThreshold.getDate() - 1);
+   }
+ 
+-  // A. 鍒犻櫎鏃╀簬闃堝€间笖宸插畬鎴愮殑闈炴瘡鏃ヤ换鍔?-  const deleted = await db.spiritualTask.deleteMany({
++  // 浼樺寲锛氬厛妫€鏌ユ槸鍚︽湁闇€瑕侀噸缃殑浠诲姟锛岄伩鍏嶆瘡娆℃煡璇㈤兘鎵ц鏄傝吹鐨勫啓鎿嶄綔
++  const needReset = await db.spiritualTask.findFirst({
+     where: {
+       userId,
+-      isDaily: false,
+-      completed: true,
+-      updatedAt: { lt: resetThreshold }
+-    }
+-  });
+-
+-  // B. 閲嶇疆鏃х殑姣忔棩浠诲姟
+-  // 娉ㄦ剰锛氭樉寮忚缃?updatedAt 鏄繀闇€鐨勶紝鍥犱负 Prisma 鐨?updateMany 涓嶄細鑷姩鏇存柊瀹冦€?-  const updated = await db.spiritualTask.updateMany({
+-    where: {
+-      userId,
+-      isDaily: true,
+-      updatedAt: { lt: resetThreshold }
++      OR: [
++        { isDaily: false, completed: true, updatedAt: { lt: resetThreshold } },
++        { isDaily: true, updatedAt: { lt: resetThreshold } }
++      ]
+     },
+-    data: {
+-      current: 0,
+-      completed: false,
+-      updatedAt: new Date()
+-    }
++    select: { id: true }
+   });
+ 
++
++
++  if (needReset) {
++    // A. 鍒犻櫎鏃╀簬闃堝€间笖宸插畬鎴愮殑闈炴瘡鏃ヤ换鍔?+    await db.spiritualTask.deleteMany({
++      where: {
++        userId,
++        isDaily: false,
++        completed: true,
++        updatedAt: { lt: resetThreshold }
++      }
++    });
++
++    // B. 閲嶇疆鏃х殑姣忔棩浠诲姟
++    await db.spiritualTask.updateMany({
++      where: {
++        userId,
++        isDaily: true,
++        updatedAt: { lt: resetThreshold }
++      },
++      data: {
++        current: 0,
++        completed: false,
++        updatedAt: new Date()
++      }
++    });
++  }
++
+   // 濡傛灉鏈変换浣曟洿鏀癸紝浣夸华琛ㄧ洏璺緞澶辨晥浠ユ樉绀烘柊椴滄暟鎹?   // 娉ㄦ剰锛氱Щ闄?revalidatePath 浠ラ伩鍏嶁€滃湪娓叉煋鏈熼棿鈥濆嚭閿欍€?
+   // 鏃㈢劧鎴戜滑绔嬪嵆鍦ㄤ笅鏂硅幏鍙栨柊椴滄暟鎹紝褰撳墠娓叉煋灏嗘槸姝ｇ‘鐨勩€?@@ -119,8 +134,9 @@ export async function createTask(data: {
+     const task = await db.spiritualTask.create({
+       data: {
+         userId: session.user.id,
+-        isDaily: false, // 鏍规嵁鐢ㄦ埛瑕佹眰锛岄粯璁や负 false
++
+         ...data,
++        isDaily: data.isDaily === true, // 寮哄埗纭繚涓哄竷灏斿€?(闃叉 undefined/null 鎰忓琛屼负)
+       },
+     });
+ 
+@@ -141,6 +157,12 @@ export async function getAvailableSutras() {
+   const userId = session?.user?.id;
+ 
+   const sutras = await db.sutra.findMany({
++    where: {
++      OR: [
++        { isPublic: true },
++        { userId: userId || 'non-existent-user' } // 纭繚鏈櫥褰曟椂涓嶈繑鍥炰换浣曠鏈変經缁?+      ]
++    },
+     select: {
+       id: true,
+       title: true,
+@@ -148,8 +170,11 @@ export async function getAvailableSutras() {
+       type: true,
+       iconId: true,
+       defaultStep: true,
+-      defaultTarget: true
+-    }
++      defaultTarget: true,
++      isPublic: true,
++      userId: true
++    },
++    orderBy: { updatedAt: 'desc' },
+   });
+ 
+   if (!userId) {
+@@ -257,7 +282,8 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
+     },
+   });
+ 
+-  revalidatePath('/dashboard');
++  // 绉婚櫎浜?revalidatePath('/dashboard') 浠ラ伩鍏嶄笉蹇呰鐨勬暣椤甸噸鍒峰拰 SQL 鏌ヨ椋庢毚
++  // 鍓嶇灏嗛€氳繃杩斿洖鍊兼洿鏂版湰鍦扮姸鎬侊紝骞堕€氱煡 PracticeStats 缁勪欢鍒锋柊缁熻鏁版嵁
+   return { success: true, completed: isFinished && !task.completed };
+ }
+ 
+@@ -353,7 +379,7 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
+     });
+   }
+ 
+-  revalidatePath('/dashboard');
++  // 绉婚櫎浜?revalidatePath('/dashboard')
+   return { success: true, task: updated };
+ }
+ 
+4623f58 docs: add Chinese comments to src files and fix isDaily sync issue
+diff --git a/src/actions/tasks.ts b/src/actions/tasks.ts
+index af094a2..39ee068 100644
+--- a/src/actions/tasks.ts
++++ b/src/actions/tasks.ts
+@@ -4,28 +4,34 @@ import { auth } from '@/auth';
+ import { db } from '@/lib/db';
+ import { revalidatePath } from 'next/cache';
+ 
++/**
++ * 鑾峰彇褰撳墠鐢ㄦ埛鐨勬墍鏈夊姛璇句换鍔?+ * 鍖呭惈鑷姩閲嶇疆閫昏緫锛?+ * 1. 鍒犻櫎宸插畬鎴愮殑闈炴瘡鏃ヤ换鍔?+ * 2. 閲嶇疆姣忔棩浠诲姟鐨勮繘搴?+ */
+ export async function getTasks() {
+   const session = await auth();
+   if (!session?.user?.id) return [];
+ 
+   const userId = session.user.id;
+   
+-  // Use local system time for reset threshold (e.g., Today's 00:00)
++  // 浣跨敤鏈湴绯荤粺鏃堕棿浣滀负閲嶇疆闃堝€硷紙渚嬪锛氫粖澶╃殑 00:00锛?   const now = new Date();
+   const resetThreshold = new Date(now);
+   resetThreshold.setHours(0, 0, 0, 0); 
+ 
+-  // If you want to use a specific DAILY_RESET_TIME from env:
++  // 濡傛灉浣犳兂浣跨敤鐜鍙橀噺涓寚瀹氱殑姣忔棩閲嶇疆鏃堕棿锛?   const resetTime = process.env.DAILY_RESET_TIME || '00:00';
+   const [resetHour, resetMinute] = resetTime.split(':').map(n => parseInt(n) || 0);
+   resetThreshold.setHours(resetHour, resetMinute, 0, 0);
+ 
+-  // If current time is before the reset time, the actual threshold was yesterday
++  // 濡傛灉褰撳墠鏃堕棿鏃╀簬閲嶇疆鏃堕棿锛屽垯瀹為檯闃堝€间负鏄ㄥぉ
+   if (now < resetThreshold) {
+     resetThreshold.setDate(resetThreshold.getDate() - 1);
+   }
+ 
+-  // A. Delete completed non-daily tasks older than threshold
++  // A. 鍒犻櫎鏃╀簬闃堝€间笖宸插畬鎴愮殑闈炴瘡鏃ヤ换鍔?   const deleted = await db.spiritualTask.deleteMany({
+     where: { 
+       userId, 
+@@ -35,8 +41,8 @@ export async function getTasks() {
+     }
+   });
+ 
+-  // B. Reset old daily tasks
+-  // NOTE: Explicitly setting updatedAt is required because Prisma's updateMany doesn't auto-update it.
++  // B. 閲嶇疆鏃х殑姣忔棩浠诲姟
++  // 娉ㄦ剰锛氭樉寮忚缃?updatedAt 鏄繀闇€鐨勶紝鍥犱负 Prisma 鐨?updateMany 涓嶄細鑷姩鏇存柊瀹冦€?   const updated = await db.spiritualTask.updateMany({
+     where: { 
+       userId, 
+@@ -50,9 +56,9 @@ export async function getTasks() {
+     }
+   });
+ 
+-  // If any changes were made, invalidate the dashboard path to show fresh data
+-  // Note: revalidatePath removed to avoid "during render" error. 
+-  // Since we fetch fresh data immediately below, the current render will be correct.
++  // 濡傛灉鏈変换浣曟洿鏀癸紝浣夸华琛ㄧ洏璺緞澶辨晥浠ユ樉绀烘柊椴滄暟鎹?+  // 娉ㄦ剰锛氱Щ闄?revalidatePath 浠ラ伩鍏嶁€滃湪娓叉煋鏈熼棿鈥濆嚭閿欍€?
++  // 鏃㈢劧鎴戜滑绔嬪嵆鍦ㄤ笅鏂硅幏鍙栨柊椴滄暟鎹紝褰撳墠娓叉煋灏嗘槸姝ｇ‘鐨勩€?   // if (deleted.count > 0 || updated.count > 0) {
+   //   revalidatePath('/dashboard');
+   // }
+@@ -63,6 +69,10 @@ export async function getTasks() {
+   });
+ }
+ 
++/**
++ * 鍒涘缓鏂板姛璇句换鍔?+ * 濡傛灉宸插瓨鍦ㄧ浉鍚屽悕绉版垨浣涚粡鍏宠仈鐨勪换鍔★紝鍒欐洿鏂板苟閲嶆柊婵€娲诲畠
++ */
+ export async function createTask(data: {
+   text: string;
+   type: string;
+@@ -75,7 +85,7 @@ export async function createTask(data: {
+   const session = await auth();
+   if (!session?.user?.id) throw new Error('Unauthorized');
+ 
+-  // Check for duplicates based on sutraId (preferred) or text
++  // 鏍规嵁浣涚粡 ID锛堥閫夛級鎴栨枃鏈鏌ラ噸澶嶉」
+   const existingTask = await db.spiritualTask.findFirst({
+     where: {
+       userId: session.user.id,
+@@ -87,7 +97,7 @@ export async function createTask(data: {
+   });
+ 
+   if (existingTask) {
+-    // If exists, update its configuration (target/step/text/isDaily) and reactivate if completed
++    // 濡傛灉瀛樺湪锛屾洿鏂板叾閰嶇疆锛堢洰鏍?姝ラ暱/鏂囨湰/鏄惁姣忔棩锛夛紝濡傛灉宸插畬鎴愬垯閲嶆柊婵€娲?     const updated = await db.spiritualTask.update({
+       where: { id: existingTask.id },
+       data: { 
+@@ -96,7 +106,7 @@ export async function createTask(data: {
+         target: data.target,
+         step: data.step,
+         sutraId: data.sutraId,
+-        // Update isDaily if explicitly provided, otherwise preserve existing
++        // 浣跨敤鎻愪緵鐨?isDaily 鎴栦繚鐣欑幇鏈夌殑
+         isDaily: data.isDaily !== undefined ? data.isDaily : existingTask.isDaily,
+         current: existingTask.completed ? 0 : existingTask.current
+       },
+@@ -109,7 +119,7 @@ export async function createTask(data: {
+     const task = await db.spiritualTask.create({
+       data: {
+         userId: session.user.id,
+-        isDaily: false, // Default to false as per user request
++        isDaily: false, // 鏍规嵁鐢ㄦ埛瑕佹眰锛岄粯璁や负 false
+         ...data,
+       },
+     });
+@@ -122,12 +132,60 @@ export async function createTask(data: {
+   }
+ }
+ 
++/**
++ * 鑾峰彇鍙緵閫夋嫨鐨勪經缁忓垪琛?+ * 鍖呭惈鐢ㄦ埛褰撳墠鐨勮缃姸鎬侊紙濡傛灉宸插瓨鍦ㄥ搴斿姛璇撅級锛屽鏄惁涓烘瘡鏃ュ姛璇俱€佸綋鍓嶇洰鏍囩瓑
++ */
+ export async function getAvailableSutras() {
+-  return db.sutra.findMany({
+-    select: { id: true, title: true, description: true, type: true, iconId: true, defaultStep: true }
++  const session = await auth();
++  const userId = session?.user?.id;
++
++  const sutras = await db.sutra.findMany({
++    select: { 
++      id: true, 
++      title: true, 
++      description: true, 
++      type: true, 
++      iconId: true, 
++      defaultStep: true,
++      defaultTarget: true 
++    }
++  });
++
++  if (!userId) {
++    return sutras.map(s => ({
++      ...s,
++      isDaily: false,
++      currentTarget: s.defaultTarget || 1,
++      existingTaskId: null
++    }));
++  }
++
++  // 鑾峰彇鐢ㄦ埛鎵€鏈変换鍔′互鍖归厤鐘舵€?+  const userTasks = await db.spiritualTask.findMany({
++    where: { userId },
++    select: { id: true, sutraId: true, isDaily: true, target: true, text: true }
++  });
++
++  return sutras.map(s => {
++    // 浼樺厛閫氳繃 sutraId 鍖归厤锛屽叾娆″皾璇曢€氳繃鏂囨湰鍖归厤锛堝吋瀹规棫鏁版嵁锛?+    const taskText = s.type === 'sutra' ? `璇昏銆?{s.title}銆媊 : s.title;
++    const existingTask = userTasks.find(t => 
++      t.sutraId === s.id || t.text === taskText
++    );
++
++    return {
++      ...s,
++      isDaily: existingTask ? existingTask.isDaily : false,
++      currentTarget: existingTask?.target || s.defaultTarget || 1,
++      existingTaskId: existingTask?.id || null
++    };
+   });
+ }
+ 
++/**
++ * 鑾峰彇鎸囧畾浣涚粡鐨勬鏂囧唴瀹?+ */
+ export async function getSutraContent(id: string) {
+   return db.sutra.findUnique({
+     where: { id },
+@@ -135,6 +193,10 @@ export async function getSutraContent(id: string) {
+   });
+ }
+ 
++/**
++ * 鏇存柊鍔熻杩涘害
++ * 璁板綍 TaskLog 骞舵洿鏂?SpiritualTask 鐨勫綋鍓嶅€?and 瀹屾垚鐘舵€?+ */
+ export async function updateTaskProgress(id: string, increment?: number, manualValue?: number) {
+   const session = await auth();
+   if (!session?.user?.id) throw new Error('Unauthorized');
+@@ -153,7 +215,7 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
+ 
+   const isFinished = task.target ? nextCurrent >= task.target : true;
+ 
+-  // Create log entry
++  // 鍒涘缓鏃ュ織鏉＄洰
+   await db.taskLog.create({
+     data: {
+       taskId: id,
+@@ -162,7 +224,7 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
+     },
+   });
+ 
+-  // Update task
++  // 鏇存柊浠诲姟
+   const updatedTask = await db.spiritualTask.update({
+     where: { id },
+     data: {
+@@ -175,6 +237,9 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
+   return { success: true, completed: isFinished && !task.completed };
+ }
+ 
++/**
++ * 鍒犻櫎鍔熻浠诲姟
++ */
+ export async function deleteTask(id: string) {
+   const session = await auth();
+   if (!session?.user?.id) throw new Error('Unauthorized');
+@@ -187,6 +252,10 @@ export async function deleteTask(id: string) {
+   return { success: true };
+ }
+ 
++/**
++ * 鏇存柊鍔熻浠诲姟閰嶇疆鎴栬繘搴?+ * 鐏垫椿鏀寔鏇存柊鏄惁姣忔棩銆佸綋鍓嶅€笺€佺洰鏍囧€肩瓑
++ */
+ export async function updateTask(id: string, data: { isDaily?: boolean; current?: number; target?: number; completed?: boolean }) {
+   const session = await auth();
+   if (!session?.user?.id) throw new Error('Unauthorized');
+@@ -208,7 +277,7 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
+   if (isProgressChanged || data.completed !== undefined) {
+     const isFinished = task.target && data.current !== undefined ? data.current >= task.target : true;
+     
+-    // Explicit completion overrides calculation if provided, otherwise use calculation or existing state
++    // 濡傛灉鎻愪緵浜嗘樉寮忓畬鎴愮姸鎬侊紝鍒欒鐩栬绠楃粨鏋滐紝鍚﹀垯浣跨敤璁＄畻缁撴灉鎴栫幇鏈夌姸鎬?     if (data.completed !== undefined) {
+       updates.completed = data.completed;
+     } else if (isProgressChanged) {
+@@ -240,6 +309,9 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
+   return { success: true, task: updated };
+ }
+ 
++/**
++ * 妫€鏌ユ槸鍚﹀瓨鍦ㄥ搴斾經缁忔垨鏂囨湰鐨勫姛璇句换鍔?+ */
+ export async function checkExistingTask(sutraId?: string, text?: string) {
+   const session = await auth();
+   if (!session?.user?.id) return null;
+93f781c fix(tasks): sync existing task state when selecting presets in AddTaskModal
+diff --git a/src/actions/tasks.ts b/src/actions/tasks.ts
+index c66f2e8..af094a2 100644
+--- a/src/actions/tasks.ts
++++ b/src/actions/tasks.ts
+@@ -96,8 +96,8 @@ export async function createTask(data: {
+         target: data.target,
+         step: data.step,
+         sutraId: data.sutraId,
+-        // Preserve isDaily status if it exists, don't reset to false on re-selection
+-        isDaily: existingTask.isDaily,
++        // Update isDaily if explicitly provided, otherwise preserve existing
++        isDaily: data.isDaily !== undefined ? data.isDaily : existingTask.isDaily,
+         current: existingTask.completed ? 0 : existingTask.current
+       },
+     });
+@@ -238,4 +238,19 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
+ 
+   revalidatePath('/dashboard');
+   return { success: true, task: updated };
++}
++
++export async function checkExistingTask(sutraId?: string, text?: string) {
++  const session = await auth();
++  if (!session?.user?.id) return null;
++
++  return db.spiritualTask.findFirst({
++    where: {
++      userId: session.user.id,
++      OR: [
++        { sutraId: sutraId && sutraId !== "" ? sutraId : undefined },
++        { text: text }
++      ].filter(Boolean) as any,
++    },
++  });
+ }
+\ No newline at end of file
+ac6611d Stable 0.1.0
+diff --git a/src/actions/tasks.ts b/src/actions/tasks.ts
+index 553c86e..fa660d7 100644
+--- a/src/actions/tasks.ts
++++ b/src/actions/tasks.ts
+@@ -9,21 +9,32 @@ export async function getTasks() {
+   if (!session?.user?.id) return [];
+ 
+   const userId = session.user.id;
+-  const todayStr = new Date().toLocaleDateString();
+-  const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
++  
++  // Get reset time from env (default to 00:00)
++  const resetTime = process.env.DAILY_RESET_TIME || '00:00';
++  const [resetHour, resetMinute] = resetTime.split(':').map(n => parseInt(n) || 0);
++  
++  const now = new Date();
++  const resetThreshold = new Date(now);
++  resetThreshold.setHours(resetHour, resetMinute, 0, 0);
++  
++  // If we haven't reached the reset time yet today, the threshold should be yesterday's reset time
++  if (now < resetThreshold) {
++    resetThreshold.setDate(resetThreshold.getDate() - 1);
++  }
+ 
+   // 1. Check if we need a reset (Check any task's updatedAt)
+   const needsReset = await db.spiritualTask.findFirst({
+     where: {
+       userId,
+       updatedAt: {
+-        lt: todayStart
++        lt: resetThreshold
+       }
+     }
+   });
+ 
+   if (needsReset) {
+-    console.log(`New day detected (${todayStr}), resetting daily tasks and removing one-off tasks for user ${userId}`);
++    console.log(`Reset threshold reached, resetting daily tasks and removing one-off tasks for user ${userId}`);
+     
+     await db.$transaction([
+       // A. Delete tasks that are NOT marked as daily AND are old
+@@ -31,7 +42,7 @@ export async function getTasks() {
+         where: { 
+           userId, 
+           isDaily: false,
+-          updatedAt: { lt: todayStart }
++          updatedAt: { lt: resetThreshold }
+         }
+       }),
+       // B. Reset progress for tasks marked as daily AND are old
+@@ -39,7 +50,7 @@ export async function getTasks() {
+         where: { 
+           userId, 
+           isDaily: true, 
+-          updatedAt: { lt: todayStart }
++          updatedAt: { lt: resetThreshold }
+         },
+         data: {
+           current: 0,
+@@ -80,7 +91,7 @@ export async function createTask(data: {
+ 
+   if (existingTask) {
+     // If exists, update its configuration (target/step/text/isDaily) and reactivate if completed
+-    return db.spiritualTask.update({
++    const updated = await db.spiritualTask.update({
+       where: { id: existingTask.id },
+       data: { 
+         completed: false, 
+@@ -88,10 +99,13 @@ export async function createTask(data: {
+         target: data.target,
+         step: data.step,
+         sutraId: data.sutraId,
+-        isDaily: data.isDaily ?? false, // Default to false as per user request
++        // Preserve isDaily status if it exists, don't reset to false on re-selection
++        isDaily: existingTask.isDaily,
+         current: existingTask.completed ? 0 : existingTask.current
+       },
+     });
++    revalidatePath('/dashboard');
++    return updated;
+   }
+ 
+   try {
+@@ -195,11 +209,12 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
+ 
+   const isProgressChanged = data.current !== undefined && data.current !== task.current;
+ 
++  let updated;
+   if (isProgressChanged) {
+     const isFinished = task.target ? data.current! >= task.target : true;
+     updates.completed = isFinished || task.completed;
+ 
+-    await db.$transaction(async (tx) => {
++    updated = await db.$transaction(async (tx) => {
+       await tx.taskLog.create({
+         data: {
+           taskId: id,
+@@ -214,12 +229,12 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
+       });
+     });
+   } else {
+-    await db.spiritualTask.update({
++    updated = await db.spiritualTask.update({
+       where: { id },
+       data: updates,
+     });
+   }
+ 
+   revalidatePath('/dashboard');
+-  return { success: true };
++  return { success: true, task: updated };
+ }
+\ No newline at end of file
+fc9015b refactor(tasks): Consolidate updateTask action to handle multiple fields
+diff --git a/src/actions/tasks.ts b/src/actions/tasks.ts
+index ce57978..ee7b385 100644
+--- a/src/actions/tasks.ts
++++ b/src/actions/tasks.ts
+@@ -88,7 +88,7 @@ export async function createTask(data: {
+         target: data.target,
+         step: data.step,
+         sutraId: data.sutraId,
+-        isDaily: data.isDaily ?? true,
++        isDaily: data.isDaily ?? false, // Default to false as per user request
+         current: existingTask.completed ? 0 : existingTask.current
+       },
+     });
+@@ -98,6 +98,7 @@ export async function createTask(data: {
+     const task = await db.spiritualTask.create({
+       data: {
+         userId: session.user.id,
++        isDaily: false, // Default to false as per user request
+         ...data,
+       },
+     });
+@@ -177,7 +178,7 @@ export async function deleteTask(id: string) {
+   return { success: true };
+ }
+ 
+-export async function updateTask(id: string, data: { isDaily?: boolean }) {
++export async function updateTask(id: string, data: { isDaily?: boolean; current?: number }) {
+   const session = await auth();
+   if (!session?.user?.id) throw new Error('Unauthorized');
+ 
+@@ -186,13 +187,38 @@ export async function updateTask(id: string, data: { isDaily?: boolean }) {
+   const task = await db.spiritualTask.findUnique({ where: { id } });
+   if (!task || task.userId !== userId) throw new Error('Forbidden');
+ 
+-  await db.spiritualTask.update({
+-    where: { id },
+-    data: {
+-      isDaily: data.isDaily,
+-    },
+-  });
++  // eslint-disable-next-line @typescript-eslint/no-explicit-any
++  const updates: any = {};
++  if (data.isDaily !== undefined) updates.isDaily = data.isDaily;
++  if (data.current !== undefined) updates.current = data.current;
++
++  const isProgressChanged = data.current !== undefined && data.current !== task.current;
++
++  if (isProgressChanged) {
++    const isFinished = task.target ? data.current! >= task.target : true;
++    updates.completed = isFinished || task.completed;
++
++    await db.$transaction(async (tx) => {
++      await tx.taskLog.create({
++        data: {
++          taskId: id,
++          userId: userId,
++          count: data.current! - task.current,
++        },
++      });
++
++      return tx.spiritualTask.update({
++        where: { id },
++        data: updates,
++      });
++    });
++  } else {
++    await db.spiritualTask.update({
++      where: { id },
++      data: updates,
++    });
++  }
+ 
+   revalidatePath('/dashboard');
+   return { success: true };
+-}
++}
+\ No newline at end of file
+8bd2e10 feat(tasks): Add updateTask action for toggling daily status
+diff --git a/src/actions/tasks.ts b/src/actions/tasks.ts
+index 3a45f25..51b4ffb 100644
+--- a/src/actions/tasks.ts
++++ b/src/actions/tasks.ts
+@@ -167,3 +167,23 @@ export async function deleteTask(id: string) {
+   revalidatePath('/dashboard');
+   return { success: true };
+ }
++
++export async function updateTask(id: string, data: { isDaily?: boolean }) {
++  const session = await auth();
++  if (!session?.user?.id) throw new Error('Unauthorized');
++
++  const userId = session.user.id;
++
++  const task = await db.spiritualTask.findUnique({ where: { id } });
++  if (!task || task.userId !== userId) throw new Error('Forbidden');
++
++  await db.spiritualTask.update({
++    where: { id },
++    data: {
++      isDaily: data.isDaily,
++    },
++  });
++
++  revalidatePath('/dashboard');
++  return { success: true };
++}
+\ No newline at end of file
+0b48d77 feat(db): Add isDaily field and implement automated cleanup logic
+diff --git a/src/actions/tasks.ts b/src/actions/tasks.ts
+index 0a5e61b..3a45f25 100644
+--- a/src/actions/tasks.ts
++++ b/src/actions/tasks.ts
+@@ -11,8 +11,7 @@ export async function getTasks() {
+   const userId = session.user.id;
+   const todayStr = new Date().toLocaleDateString();
+ 
+-  // 1. Check if we need a reset (Check any task's updatedAt or a dedicated lastReset field)
+-  // For simplicity, we check if there are tasks that were updated BEFORE today.
++  // 1. Check if we need a reset (Check any task's updatedAt)
+   const needsReset = await db.spiritualTask.findFirst({
+     where: {
+       userId,
+@@ -23,14 +22,22 @@ export async function getTasks() {
+   });
+ 
+   if (needsReset) {
+-    console.log(`New day detected (${todayStr}), resetting daily tasks for user ${userId}`);
+-    await db.spiritualTask.updateMany({
+-      where: { userId },
+-      data: {
+-        current: 0,
+-        completed: false
+-      }
+-    });
++    console.log(`New day detected (${todayStr}), resetting daily tasks and removing one-off tasks for user ${userId}`);
++    
++    await db.$transaction([
++      // A. Delete tasks that are NOT marked as daily
++      db.spiritualTask.deleteMany({
++        where: { userId, isDaily: false }
++      }),
++      // B. Reset progress for tasks marked as daily
++      db.spiritualTask.updateMany({
++        where: { userId, isDaily: true },
++        data: {
++          current: 0,
++          completed: false
++        }
++      })
++    ]);
+   }
+ 
+   return db.spiritualTask.findMany({
+@@ -46,6 +53,7 @@ export async function createTask(data: {
+   sutraId?: string;
+   target?: number;
+   step?: number;
++  isDaily?: boolean;
+ }) {
+   const session = await auth();
+   if (!session?.user?.id) throw new Error('Unauthorized');
+@@ -62,15 +70,16 @@ export async function createTask(data: {
+   });
+ 
+   if (existingTask) {
+-    // If exists, update its configuration (target/step/text) and reactivate if completed
++    // If exists, update its configuration (target/step/text/isDaily) and reactivate if completed
+     return db.spiritualTask.update({
+       where: { id: existingTask.id },
+       data: { 
+         completed: false, 
+-        text: data.text, // Update text in case Sutra title changed
++        text: data.text,
+         target: data.target,
+         step: data.step,
+         sutraId: data.sutraId,
++        isDaily: data.isDaily ?? true,
+         current: existingTask.completed ? 0 : existingTask.current
+       },
+     });

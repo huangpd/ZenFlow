@@ -99,8 +99,19 @@ body::before {
   font-style: italic !important;
 }
 
-/* 保留换行符 */
+/* 保留换行符并确保空行正确显示 */
 .ql-editor,
 .prose {
   white-space: pre-wrap;
+}
+
+/* 确保空段落有足够高度（Quill 空行通常输出为 <p><br></p>） */
+.ql-editor p {
+  min-height: 1.5em;
+  margin: 0.5em 0;
+}
+
+.ql-editor p:empty,
+.ql-editor p:has(br:only-child) {
+  min-height: 1.5em;
 }
