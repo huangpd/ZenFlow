@@ -37,13 +37,16 @@ export default function AddTaskModal({
 
   useEffect(() => {
     if (isOpen) {
-      // 弹窗打开时滚动到顶部
-      modalRef.current?.scrollTo(0, 0);
-
       // 延迟加载数据，让动画先完成，提升流畅度
       const timer = setTimeout(() => {
-        getAvailableSutras().then(setDbSutras);
-      }, 150);
+        getAvailableSutras().then((data) => {
+          setDbSutras(data);
+          // 数据加载完成后滚动到顶部
+          requestAnimationFrame(() => {
+            modalRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+          });
+        });
+      }, 100);
 
       if (taskToEdit) {
         // 如果是编辑模式，初始化表单状态
@@ -252,8 +255,8 @@ export default function AddTaskModal({
   }));
 
   return (
-    <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-[120] flex items-end justify-center">
-      <div ref={modalRef} className="bg-white w-full max-w-md rounded-t-[3rem] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[95dvh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4" onClick={onClose}>
+      <div ref={modalRef} onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-md rounded-2xl p-6 shadow-xl max-h-[85vh] overflow-y-auto">
         {!configuringTask && !selectedSutra ? (
           <>
             <div className="flex justify-between items-center mb-8">
