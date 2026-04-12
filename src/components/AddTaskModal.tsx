@@ -256,7 +256,7 @@ export default function AddTaskModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4" onClick={onClose}>
-      <div ref={modalRef} onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-md rounded-2xl p-6 shadow-xl max-h-[85vh] overflow-y-auto">
+      <div ref={modalRef} onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-md rounded-2xl p-6 shadow-xl max-h-[85vh] overflow-y-auto overflow-x-hidden">
         {!configuringTask && !selectedSutra ? (
           <>
             <div className="flex justify-between items-center mb-8">
