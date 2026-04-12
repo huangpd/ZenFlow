@@ -22,9 +22,9 @@ export async function getTasks() {
 
   const userId = session.user.id;
 
-  // 使用 Asia/Shanghai 时区计算重置阈值，解决服务器 UTC 时区导致的早晨 8 点重置问题
-  const timezone = 'Asia/Shanghai';
-  const now = dayjs().tz(timezone);
+  // 使用可配置时区计算重置阈值，解决服务器 UTC 时区导致的早晨 8 点重置问题
+  const tz = process.env.DAILY_RESET_TIMEZONE || 'Asia/Shanghai';
+  const now = dayjs().tz(tz);
 
   // 获取每日重置时间 (默认 00:00)
   const resetTime = process.env.DAILY_RESET_TIME || '00:00';
@@ -252,16 +252,16 @@ export async function updateTaskProgress(id: string, increment?: number, manualV
 
   const isFinished = task.target ? nextCurrent >= task.target : true;
 
-  // 查找今日是否已有日志记录
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // 查找今日是否已有日志记录（使用与重置逻辑一致的时区）
+  const tz = process.env.DAILY_RESET_TIMEZONE || 'Asia/Shanghai';
+  const todayStart = dayjs().tz(tz).startOf('day').toDate();
 
   const existingLog = await db.taskLog.findFirst({
     where: {
       taskId: id,
       userId: userId,
       createdAt: {
-        gte: today,
+        gte: todayStart,
       },
     },
   });
@@ -347,15 +347,16 @@ export async function updateTask(id: string, data: { isDaily?: boolean; current?
     }
 
     if (isProgressChanged) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // 使用与重置逻辑一致的时区计算今日起点
+      const tz = process.env.DAILY_RESET_TIMEZONE || 'Asia/Shanghai';
+      const todayStart = dayjs().tz(tz).startOf('day').toDate();
 
       const existingLog = await db.taskLog.findFirst({
         where: {
           taskId: id,
           userId: userId,
           createdAt: {
-            gte: today,
+            gte: todayStart,
           },
         },
       });
